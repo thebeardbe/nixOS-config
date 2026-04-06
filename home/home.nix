@@ -41,8 +41,11 @@
   # 2. Leer SSH welke sleutel bij GitHub hoort (Universal fix)
   programs.ssh = {
     enable = true;
-    addKeysToAgent = "yes";
+    enableDefaultConfig = false;
     matchBlocks = {
+      "*" = {
+        addKeysToAgent = "yes"; # De nieuwe plek voor deze optie
+      };
       "github.com" = {
         hostname = "github.com";
         identityFile = "~/.ssh/github"; # Pad naar je PRIVATE key
@@ -53,8 +56,13 @@
   # 3. Git hoeft nu alleen je user info te weten
   programs.git = {
     enable = true;
-    userName = "TheBeardBE";
-    userEmail = "bunker@achter.be";
+    # Verplaats deze van de root van git naar settings.user
+    settings = {
+      user = {
+        name = "TheBeardBE";
+        email = "bunker@achter.be";
+      };
+    };
     # Je hoeft hier GEEN sshCommand meer te zetten!
   };
 
