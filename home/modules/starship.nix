@@ -3,6 +3,10 @@
 {
   programs.starship = {
     enable = true;
+    # Activeer integratie voor beide shells
+    enableBashIntegration = true;
+    enableZshIntegration = true;
+
     settings = {
       format = "$username$hostname$directory$git_branch$git_status$time$line_break$character";
 
@@ -54,9 +58,31 @@
       };
 
       character = {
-        success_symbol = "[➜](bold green)";
-        error_symbol = "[➜](bold red)";
+        success_symbol = "[➜](bold ${theme.colors.accent})";
+        error_symbol = "[➜](bold ${theme.colors.critical})";
       };
     };
+  };
+  # Configureer Zsh direct in deze module voor een complete shell-ervaring
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+
+    shellAliases = {
+      rebuild = "pushd ~/nixos-config && git add . && sudo nixos-rebuild switch --flake .#foxyNix && popd";
+      v = "nvim";
+      conf = "cd ~/nixos-config && v";
+      ls = "${pkgs.eza}/bin/eza --icons";
+      cat = "${pkgs.bat}/bin/bat";
+    };
+    
+    # Zorg dat de prompt altijd clean start
+    initExtra = ''
+      # Optionele extra Zsh instellingen
+      bindkey '^[[1;5C' forward-word
+      bindkey '^[[1;5D' backward-word
+    '';
   };
 }
