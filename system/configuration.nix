@@ -8,7 +8,14 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-gen.nix
+      # Include all systemwide modules.
+     ./modules/bluetooth.nix 
+     ./modules/touchpad.nix
+     ./modules/users.nix
     ];
+
+  # Activeer de touchpad instellingen voor je laptop
+  mySystem.touchpad.enable = true;
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -51,14 +58,6 @@
   
   # Configure keymap in console
   console.keyMap = "us-acentos";
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.thebeardbe = {
-    isNormalUser = true;
-    description = "TheBeardBE";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [];
-  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;

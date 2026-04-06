@@ -1,9 +1,10 @@
 {
   "colors": {
-    "accent": "#cba6f7",
-    "bg": "#1e1e2e",
-    "fg": "#cdd6f4",
-    "surface": "#313244"
+    "background": "#1a1b26",
+    "text": "#c0caf5",
+    "accent": "#7aa2f7",
+    "critical": "#f7768e",
+    "border": "#bb9af7"
   },
   "spacing": {
     "gaps_in": 5,
@@ -14,5 +15,6 @@
   "font": {
     "family": "FiraCode Nerd Font",
     "size": 11
-  }
+  },
+  "opacity": 0.8
 }

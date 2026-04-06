@@ -18,6 +18,7 @@
     networkmanagerapplet
     pavucontrol
     pamixer
+    fastfetch
 
     # Hier kun je straks gemakkelijk OrcaSlicer en Krita toevoegen
     # orcaslicer

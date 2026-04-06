@@ -9,83 +9,88 @@
         layer = "top";
         position = "top";
         height = 34;
-	spacing = 4;
+        spacing = 4;
         modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
-        modules-center = [ "clock" ];
-        modules-right = [ "cpu" "memory" "battery" "tray" ];
+        modules-center = [ "hyprland/window" "clock" ];
+        modules-right = [ "pulseaudio" "bluetooth" "cpu" "memory" "battery" "tray" "custom/power" ];
 
         "hyprland/workspaces" = {
-	  disable-scroll = true;
-	  all-outputs = true;
+          disable-scroll = true;
+          all-outputs = true;
           format = "{icon}";
           on-click = "activate";
         };
 
-	"tray" = {
-	  icon-size = 18;
-	  spacig = 10;
-	};
+        "hyprland/window" = {
+          format = "󱂬 {title}";
+          max-length = 50;
+	  separate-outputs = true;
+        };
 
         "clock" = {
-          # Jouw vertrouwde ISO-achtige format voor 'time awareness'
           format = "{:%Y-%m-%d %H:%M}";
           tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
         };
 
-        "cpu" = {
-          format = "CPU: {usage}%";
-          interval = 5;
+        "pulseaudio" = {
+          format = "{icon} {volume}%";
+          format-muted = "󰝟";
+          format-icons = { default = ["󰕿" "󰖀" "󰕾"]; };
+          on-click = "${pkgs.pavucontrol}/bin/pavucontrol";
         };
 
-        "memory" = {
-          format = "RAM: {}%";
-          interval = 5;
+        "bluetooth" = {
+          format = "󰂯";
+          on-click = "${pkgs.overskride}/bin/overskride";
         };
 
         "battery" = {
           format = "{icon} {capacity}%";
           format-icons = ["" "" "" "" ""];
         };
+
+        "custom/power" = {
+          format = "󰐥";
+          on-click = "${pkgs.wlogout}/bin/wlogout";
+        };
       };
     };
-    # Minimale styling voor een clean look
+
     style = ''
       * {
-          border: none;
-          font-family: "FiraCode Nerd Font", Roboto, Helvetica, Arial, sans-serif;
-          font-size: 13px;
-	  min-height: 0;
+        border: none;
+        font-family: "FiraCode Nerd Font", sans-serif;
+        font-size: 13px;
       }
+
       window#waybar {
-          background-color: rgba(26, 27, 38, 0.85);
-	  border-bottom: 2px solid rgba(100, 255, 218, 0.2);
-          color: #c0caf5;
-	  transition-property: background-color;
-	  transition-duration: .5s;
+        /* Hier koppelen we de achtergrondkleur EN de transparantie uit de JSON */
+        background-color: rgba(26, 27, 38, ${toString theme.opacity}); 
+        border-bottom: 2px solid ${theme.colors.accent};
+        color: ${theme.colors.text};
       }
-      #workspaces button {
-          padding: 0 5px;
-	  background-color: transparent;
-          color: #c0caf5;
-      }
+
       #workspaces button.active {
-          color: #7aa2f7;
-          border-bottom: 2px solid #7aa2f7;
+        color: ${theme.colors.accent};
+        border-bottom: 2px solid ${theme.colors.accent};
       }
-      #workspaces button.urgent {
-	  color: #f7768e;
-      }
-      #clock, #cpu, #memory, #battery, #tray {
-	  padding: 0 10px;
-	  margin: 4px 0;
-	  border-left: 1px solid rgba(187, 154, 247, 0.3);
+
+      #window {
+        padding: 0 10px;
       }
       #clock {
-	  color: #7aa2f7;
-	  font-weight: bold;
+        color: ${theme.colors.accent};
+        font-weight: bold;
       }
-      #tray {
-	  border-left: none;
+
+      #custom-power {
+        color: ${theme.colors.critical};
+	padding: 0 10px;
+      }
+
+      #clock, #cpu, #memory, #battery, #tray, #pulseaudio, #bluetooth {
+        padding: 0 10px;
+        border-left: 1px solid ${theme.colors.border}; /* 4d = 30% opacity */
       }
     '';
   };
