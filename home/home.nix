@@ -28,11 +28,34 @@
     enable = true;
     shellAliases = {
       ll = "ls -l";
-      hms = "home-manager switch --flake ~/.config/home-manager";
+      # hms = "home-manager switch --flake ~/.config/home-manager";
       conf = "nano ~/.config/home-manager/home.nix";
-      update = "nix flake update && hms";
-      rebuild = "sudo nixos-rebuild switch";
+      # update = "nix flake update && hms";
+      rebuild = "sudo nixos-rebuild switch --flake .#foxyNix";
     };
+  };
+
+  # 1. Zorg dat de agent draait
+  services.ssh-agent.enable = true;
+
+  # 2. Leer SSH welke sleutel bij GitHub hoort (Universal fix)
+  programs.ssh = {
+    enable = true;
+    addKeysToAgent = "yes";
+    matchBlocks = {
+      "github.com" = {
+        hostname = "github.com";
+        identityFile = "~/.ssh/github"; # Pad naar je PRIVATE key
+      };
+    };
+  };
+
+  # 3. Git hoeft nu alleen je user info te weten
+  programs.git = {
+    enable = true;
+    userName = "TheBeardBE";
+    userEmail = "bunker@achter.be";
+    # Je hoeft hier GEEN sshCommand meer te zetten!
   };
 
   # ----------------------------
