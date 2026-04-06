@@ -79,7 +79,7 @@
     };
     
     # Zorg dat de prompt altijd clean start
-    initExtra = ''
+    initContent = ''
       # Optionele extra Zsh instellingen
       bindkey '^[[1;5C' forward-word
       bindkey '^[[1;5D' backward-word

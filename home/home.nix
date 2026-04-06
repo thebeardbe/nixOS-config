@@ -3,6 +3,7 @@
 {
   # Import all program configs. 
   imports = [
+     ./modules/neovim.nix
      ./modules/starship.nix
      ./modules/packages.nix
      ./modules/hyprland.nix

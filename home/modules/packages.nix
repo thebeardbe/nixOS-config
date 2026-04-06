@@ -9,6 +9,7 @@
     firefox
     enpass
     antigravity
+#    neovim
 #    commet
 
     # Fonts & UI
