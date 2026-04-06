@@ -43,11 +43,14 @@
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
-  # Configure keymap in X11
+  # Configure keymap in X11 and wayland
   services.xserver.xkb = {
     layout = "us";
-    variant = "";
+    variant = "intl";
   };
+  
+  # Configure keymap in console
+  console.keyMap = "us-acentos";
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.thebeardbe = {
@@ -65,8 +68,10 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #  wget
+    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    wget
+    git
+    curl
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -101,5 +106,27 @@
   services.displayManager.sddm.wayland.enable = true;
   
   # Zorg dat Hyprland op systeemniveau bekend is
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    # nvidiaPatches = true;
+    xwayland.enable = true;
+  };
+  
+
+  # enviroment settings
+  environment.sessionVariables = {
+     # If cursor becomes invisible
+     WLR_NO_HARDWARE_CURSORS = "1";
+
+     # Hint electron apps to use wayland
+     NIXOS_OZONE_WL = "1";
+  };
+  
+  hardware = {
+    #Opengl
+    graphics.enable = true;
+    
+    # Most Wayland compositors need this
+    # nvidia.modesetting.enable = true;
+  };
 }

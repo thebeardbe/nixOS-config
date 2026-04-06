@@ -19,7 +19,7 @@
     # Laad de centrale styling
     themeConfig = builtins.fromJSON (builtins.readFile ./theme.json);
   in {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.foxyNix = nixpkgs.lib.nixosSystem {
       inherit system;
       specialArgs = { inherit inputs; };
       modules = [
