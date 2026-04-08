@@ -1,5 +1,14 @@
-{ pkgs, theme, ... }:
+{ config, pkgs, lib, theme, ... }:
 
+with lib;
+
+let
+  formatColor = color:
+    let
+      raw = removePrefix "#" color;
+    in
+      toUpper raw;
+in
 {
   wayland.windowManager.hyprland = {
     enable = true;
@@ -21,18 +30,27 @@
         gaps_in = 5;
         gaps_out = 10;
         border_size = 2;
-        "col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
-        "col.inactive_border" = "rgba(595959aa)";
+        # De actieve border blijft Cyan (of je accent kleur)
+        "col.active_border" = "0xff${theme.colors.accent}";
+      
+        # De inactieve border krijgt de kleur van je Waybar achtergrond
+        # We halen deze direct uit je theme.json
+        "col.inactive_border" = "0xaa${theme.colors.background}";
         layout = "dwindle";
         allow_tearing = false;
       };
 
       decoration = {
         rounding = 10;
+	#Transparancy
+	active_opacity = 0.95;
+	inactive_opacity = 0.75;
+	fullscreen_opacity = 1.0;
         blur = {
           enabled = true;
           size = 3;
           passes = 1;
+	  xray = true; # Better rendering only renders what is needed
         };
         shadow = {
           enabled = true;
@@ -41,7 +59,7 @@
           color = "rgba(1a1a1aee)";
         };
       };
-
+      
       animations = {
         enabled = true;
         bezier = "myBezier, 0.05, 0.9, 0.1, 1.05";
@@ -106,6 +124,13 @@
         ", XF86AudioRaiseVolume, exec, pamixer -i 5"
         ", XF86AudioLowerVolume, exec, pamixer -d 5"
         ", XF86AudioMute, exec, pamixer -t"
+	
+	# Systeem locken (Super + L)
+        "$mod, L, exec, hyprlock"
+
+        # Hyprland reloaden (Super + Shift + R)
+        # Dit herlaadt de config zonder programma's te sluiten
+        "$mod SHIFT, R, exec, hyprctl reload"
       ];
 
       # Muis acties (vasthouden om te verplaatsen/resizen)

@@ -12,6 +12,7 @@
      ./modules/bluetooth.nix 
      ./modules/touchpad.nix
      ./modules/users.nix
+     ./modules/security.nix
     ];
 
   # Activeer de touchpad instellingen voor je laptop
@@ -56,6 +57,28 @@
     variant = "intl";
   };
   
+  # Enable stock power management tools
+  powerManagement.enable = true;
+  
+  # Prevent overheating on Intel CPU
+  services.thermald.enable = true;
+
+  # Trim SSD for performance
+  services.fstrim.enable = true;
+
+  # Resolve .local mDNS addresses
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    publish = {
+      enable = true;
+      addresses = true;
+    };
+  };
+
+  # Flatpak
+  services.flatpak.enable = true;
+
   # Configure keymap in console
   console.keyMap = "us-acentos";
 

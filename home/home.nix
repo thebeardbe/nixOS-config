@@ -3,6 +3,9 @@
 {
   # Import all program configs. 
   imports = [
+     ./modules/appearance.nix
+     ./modules/hyprlock.nix
+     ./modules/hypridle.nix
      ./modules/neovim.nix
      ./modules/starship.nix
      ./modules/packages.nix
@@ -68,6 +71,12 @@
   };
 
   # ----------------------------
-
+  
+  # Theme settings define dark
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+    };
+  };
   programs.home-manager.enable = true;
 }

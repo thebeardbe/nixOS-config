@@ -20,7 +20,10 @@
     pavucontrol
     pamixer
     fastfetch
-
+    nwg-look
+    tree
+    btop
+    
     # Hier kun je straks gemakkelijk OrcaSlicer en Krita toevoegen
     # orcaslicer
     # krita
