@@ -12,6 +12,8 @@
       "audio"     # Voor directe audio toegang indien nodig
       "input"     # Voor libinput/touchpad permissies
       "docker"    # Als je dit later toevoegt
+      "lp"        # Voor printen
+      "scanner"   # Voor scannen
     ];
     # Gebruik zsh of fish als je die verkiest boven bash
     shell = pkgs.zsh; 

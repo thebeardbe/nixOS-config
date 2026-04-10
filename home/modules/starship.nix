@@ -20,14 +20,14 @@
 
       hostname = {
         ssh_only = false;
-        format = "@[$hostname](bold yellow) ";
+        format = "@[$hostname](bold ${theme.colors.text}) ";
         disabled = false;
       };
 
       directory = {
         truncation_length = 0;
         truncate_to_repo = false;
-        style = "bold cyan";
+        style = "bold ${theme.colors.accent}";
         format = "in [$path]($style)[$read_only]($read_only_style) ";
       };
 

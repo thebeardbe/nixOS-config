@@ -13,14 +13,28 @@
      ./modules/touchpad.nix
      ./modules/users.nix
      ./modules/security.nix
+     ./modules/hardware.nix
     ];
 
   # Activeer de touchpad instellingen voor je laptop
   mySystem.touchpad.enable = true;
 
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot = {
+    enable = true;
+    consoleMode = "max";
+  };
   boot.loader.efi.canTouchEfiVariables = true;
+  
+  # Enable Plymouth for an Otherland-style boot splash
+  boot.plymouth = {
+    enable = true;
+    # Add a futuristic theme if available
+  };
+  # Silent boot for a more VR-like feel
+  boot.kernelParams = [ "quiet" "splash" "boot.shell_on_fail" "loglevel=3" "rd.systemd.show_status=false" "rd.udev.log_level=3" "udev.log_priority=3" ];
+  boot.consoleLogLevel = 0;
+  boot.initrd.verbose = false;
   # De cruciale toevoeging voor Ubuntu detectie:
   boot.loader.grub.useOSProber = true;
   boot.loader.systemd-boot.extraEntries = {
@@ -151,4 +165,7 @@
     # Most Wayland compositors need this
     # nvidia.modesetting.enable = true;
   };
+  
+  # enable gVFS for mounting sftp in yazi under /run/user/1000/gvfs
+  services.gvfs.enable = true;
 }

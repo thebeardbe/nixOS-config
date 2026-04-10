@@ -22,7 +22,8 @@ in
       # "preferred, auto, 1" kiest de beste resolutie en zet hem op de juiste plek.
       monitor = ", preferred, auto, 1";
       exec-once = [ 
-	"nm-applet --indicator" # Wifi icon in waybar
+	"nm-applet --indicator" # Wifi icon
+	"${pkgs.quickshell}/bin/quickshell -f /home/thebeardbe/.config/quickshell/shell.qml" # Our custom bar and wallpaper
       ];
       
       # --- Look & Feel ---
@@ -30,12 +31,8 @@ in
         gaps_in = 5;
         gaps_out = 10;
         border_size = 2;
-        # De actieve border blijft Cyan (of je accent kleur)
-        "col.active_border" = "0xff${theme.colors.accent}";
-      
-        # De inactieve border krijgt de kleur van je Waybar achtergrond
-        # We halen deze direct uit je theme.json
-        "col.inactive_border" = "0xaa${theme.colors.background}";
+        "col.active_border" = "0xff${formatColor theme.colors.accent}";
+        "col.inactive_border" = "0xaa${formatColor theme.colors.background}";
         layout = "dwindle";
         allow_tearing = false;
       };
@@ -151,11 +148,9 @@ in
     ripgrep      # Snellere content search
     fzf          # Fuzzy finder integratie
 
-    hyprpaper    # Wallpaper
     hyprlock     # Lockscreen
     hypridle     # Auto-sleep
     hyprshot     # Screenshot tool
-    waybar       # De statusbalk bovenaan
     wofi         # De applicatie launcher
     kitty        # Je terminal
     libnotify    # Voor notificaties

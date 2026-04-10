@@ -8,6 +8,7 @@
     signal-desktop
     firefox
     enpass
+    gemini-cli
     antigravity
 #    neovim
 #    commet
@@ -23,6 +24,14 @@
     nwg-look
     tree
     btop
+    eza
+    bat
+    hyprshot
+
+
+    # sftp in yazi
+    glib  # Provides 'gio'
+    sshfs # Backend for mounting
     
     # Hier kun je straks gemakkelijk OrcaSlicer en Krita toevoegen
     # orcaslicer

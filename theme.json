@@ -1,10 +1,10 @@
 {
   "colors": {
-    "background": "#1a1b26",
-    "text": "#c0caf5",
-    "accent": "#7aa2f7",
-    "critical": "#f7768e",
-    "border": "#bb9af7"
+    "background": "#0d0d0d",
+    "text": "#f2e205",
+    "accent": "#00ffff",
+    "critical": "#ff4500",
+    "border": "#ffd700"
   },
   "spacing": {
     "gaps_in": 5,
