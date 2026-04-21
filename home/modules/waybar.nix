@@ -37,16 +37,19 @@
           format-muted = "󰝟";
           format-icons = { default = ["󰕿" "󰖀" "󰕾"]; };
           on-click = "${pkgs.pavucontrol}/bin/pavucontrol";
+          on-click-right = "${pkgs.pamixer}/bin/pamixer -t";
         };
 
         "bluetooth" = {
           format = "󰂯";
           on-click = "${pkgs.overskride}/bin/overskride";
+          on-click-right = "rfkill toggle bluetooth";
         };
 
         "battery" = {
           format = "{icon} {capacity}%";
           format-icons = ["" "" "" "" ""];
+          on-click-right = "${pkgs.kitty}/bin/kitty -e ${pkgs.btop}/bin/btop";
         };
 
         "custom/power" = {

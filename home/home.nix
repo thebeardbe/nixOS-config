@@ -11,6 +11,7 @@
      ./modules/starship.nix
      ./modules/packages.nix
      ./modules/hyprland.nix
+     ./modules/waybar.nix
   ];
 
   home.username = "thebeardbe";
