@@ -74,25 +74,31 @@
     enable = true;
     style = ''
       window {
-        background-color: ${theme.colors.background};
+        background-color: rgba(13, 13, 13, 0.85);
         color: ${theme.colors.text};
         font-family: "${theme.font.family}";
         font-size: 14px;
         border: 2px solid ${theme.colors.accent};
         border-radius: 10px;
+        padding: 20px;
       }
       #inner-box {
         background-color: transparent;
       }
       #input {
-        background-color: ${theme.colors.background};
+        background-color: rgba(255, 255, 255, 0.1);
         color: ${theme.colors.accent};
         border: 1px solid ${theme.colors.border};
-        margin: 10px;
+        margin-bottom: 15px;
+        padding: 10px;
+      }
+      #entry {
+        padding: 10px;
+        border-radius: 5px;
       }
       #entry:selected {
         background-color: ${theme.colors.accent};
-        color: ${theme.colors.background};
+        color: white;
       }
     '';
   };

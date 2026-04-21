@@ -23,7 +23,9 @@ in
       monitor = ", preferred, auto, 1";
       exec-once = [ 
 	"nm-applet --indicator" # Wifi icon
-	"${pkgs.quickshell}/bin/quickshell -f /home/thebeardbe/.config/quickshell/shell.qml" # Our custom bar and wallpaper
+	"blueman-applet" # Bluetooth tray
+	"hyprpaper" # Wallpaper daemon
+	"waybar" # Top bar
       ];
       
       # --- Look & Feel ---
@@ -111,8 +113,11 @@ in
 	"$mod SHIFT, 7, movetoworkspace, 7"
 	"$mod SHIFT, 8, movetoworkspace, 8"
 	"$mod SHIFT, 9, movetoworkspace, 9"
-	"$mod SHIFT, 0, movetoworkspace, 0"
+	"$mod SHIFT, 0, movetoworkspace, 10"
 
+	# Wallpaper per workspace
+	"$mod, 1, workspace, 1"
+	"$mod, 2, workspace, 2"
         # Screenshots (met hyprshot)
         ", Print, exec, hyprshot -m output"
         "$mod, Print, exec, hyprshot -m window"
@@ -155,5 +160,8 @@ in
     kitty        # Je terminal
     libnotify    # Voor notificaties
     swaynotificationcenter # Notificatie paneel
+    hyprpaper         # Dynamic wallpaper manager
   ];
+  
+  xdg.configFile."hypr/hyprpaper.conf".source = ./hyprpaper.conf;
 }

@@ -65,7 +65,7 @@
 
       window#waybar {
         /* Hier koppelen we de achtergrondkleur EN de transparantie uit de JSON */
-        background-color: rgba(26, 27, 38, ${toString theme.opacity}); 
+        background-color: rgba(13, 13, 13, ${toString theme.opacity}); 
         border-bottom: 2px solid ${theme.colors.accent};
         color: ${theme.colors.text};
       }
