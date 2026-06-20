@@ -87,6 +87,9 @@
   # Flatpak
   services.flatpak.enable = true;
 
+  # Let Hyprland handle the power key instead of systemd
+  services.logind.settings.Login.HandlePowerKey = "ignore";
+
   # Docker
   virtualisation.docker.enable = true;
   users.users.thebeardbe.extraGroups = [ "docker" ];
