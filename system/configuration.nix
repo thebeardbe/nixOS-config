@@ -6,10 +6,8 @@
 
 {
   imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-gen.nix
-      # Include all systemwide modules.
-     ./modules/bluetooth.nix
+    [ # Include all systemwide modules.
+     ./modules/bluetooth.nix 
      ./modules/touchpad.nix
      ./modules/users.nix
      ./modules/security.nix
@@ -47,14 +45,6 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  networking.hostName = "foxyNix"; # Define your hostname.
-  #  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
   networking.networkmanager.enable = true;
 
   # Enable tailscale
@@ -92,7 +82,6 @@
 
   # Docker
   virtualisation.docker.enable = true;
-  users.users.thebeardbe.extraGroups = [ "docker" ];
 
   # Configure keymap in console
   console.keyMap = "us-acentos";
@@ -225,7 +214,7 @@
   system.stateVersion = "25.11";
 
   # services.displayManager.sddm.enable = true;
-  
+
   services.greetd = {
     enable = true;
     settings = {
