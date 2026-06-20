@@ -178,26 +178,8 @@ in
   };
 
   # Supporting packages for the Hyprland ecosystem
+  # Scripts for Hyprland (goto-workspace, pick-wallpaper)
   home.packages = with pkgs; [
-    yazi                    # Terminal file manager (default file manager)
-    ffmpegthumbnailer       # Video thumbnails in Yazi
-    jq                      # JSON previews in Yazi
-    poppler                 # PDF previews in Yazi
-    fd                      # Fast file search for Yazi
-    ripgrep                 # Fast content search for Yazi
-    fzf                     # Fuzzy finder integration
-
-    hyprlock                # Lockscreen
-    hypridle                # Auto-sleep/idle daemon
-    hyprshot                # Screenshot tool
-    wofi                    # Application launcher
-    kitty                   # Terminal emulator
-    libnotify               # Notification daemon (notify-send)
-    swaynotificationcenter  # Notification center UI
-    hyprpaper               # Dynamic wallpaper manager
-    wlogout                 # Power menu (also bound to physical power key)
-
-    # Goto workspace — sets wallpaper then switches
     (pkgs.writeShellScriptBin "goto-workspace" ''
       WS="$1"
       WALLDIR="$HOME/Pictures/Wallpapers"

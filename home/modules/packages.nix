@@ -1,8 +1,6 @@
 { pkgs, theme, ... }:
 
 {
-  # User-level packages — apps, tools, and fonts installed per-user
-  # System-level packages are in system/configuration.nix and system/modules/
   home.packages = with pkgs; [
     # Communication & Productivity
     obsidian         # Note-taking / knowledge base
@@ -11,7 +9,6 @@
     firefox          # Web browser
     enpass           # Password manager
     gemini-cli       # Google Gemini CLI
-    antigravity      # Custom FHS env for Playwright-based app
 
     # Fonts & UI
     nerd-fonts.fira-code
@@ -26,15 +23,37 @@
     btop                   # Resource monitor (used in Waybar battery onClick)
     eza                    # Modern ls replacement (used in Zsh ls alias)
     bat                    # cat replacement with syntax highlighting
-    hyprshot               # Screenshot tool
     brightnessctl          # Brightness control (used in Hyprland keybinds)
-    playwright-driver.browsers # Browser engines for Playwright
-    glib                   # GLib utility library (provides 'gio' for SFTP mounting)
+
+    # Hyprland ecosystem
+    hyprlock               # Lockscreen
+    hypridle               # Auto-sleep/idle daemon
+    hyprshot               # Screenshot tool
+    wofi                   # Application launcher
+    kitty                  # Terminal emulator
+    hyprpaper              # Dynamic wallpaper manager
+    wlogout                # Power menu
+
+    # Utilities
+    fzf                    # Fuzzy finder (used by pick-wallpaper)
+    libnotify              # Notification daemon (notify-send)
+    swaynotificationcenter # Notification center UI
+
+    # Yazi dependencies (previews, search)
+    ffmpegthumbnailer      # Video thumbnails
+    jq                     # JSON previews
+    poppler                # PDF previews
+    fd                     # Fast file search
+    ripgrep                # Fast content search
+
+    # Playwright / antigravity
+    playwright-driver.browsers
+    glib                   # GLib (provides 'gio' for SFTP mounting)
     expat                  # XML parser (needed by some Electron apps)
     libxshmfence           # Shared memory fence (needed by Chromium/Electron)
     libGL                  # OpenGL library
 
-    # SFTP mounting in Yazi — allows browsing remote servers
-    sshfs # FUSE-based SSH filesystem
+    # SFTP mounting in Yazi
+    sshfs
   ];
 }

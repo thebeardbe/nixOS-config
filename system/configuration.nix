@@ -1,6 +1,6 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
 { config, pkgs, ... }:
 
@@ -9,7 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-gen.nix
       # Include all systemwide modules.
-     ./modules/bluetooth.nix 
+     ./modules/bluetooth.nix
      ./modules/touchpad.nix
      ./modules/users.nix
      ./modules/security.nix
@@ -26,7 +26,7 @@
     consoleMode = "max";
   };
   boot.loader.efi.canTouchEfiVariables = true;
-  
+
   # Enable Plymouth for an Otherland-style boot splash
   boot.plymouth = {
     enable = true;
@@ -71,10 +71,10 @@
     layout = "us";
     variant = "intl";
   };
-  
+
   # Enable stock power management tools
   powerManagement.enable = true;
-  
+
   # Prevent overheating on Intel CPU
   services.thermald.enable = true;
 
@@ -99,7 +99,7 @@
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  
+
   # use Flakes and experimental
   nix.settings.experimental-features = [ " nix-command" "flakes"];
 
@@ -206,11 +206,6 @@
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
 
   environment.systemPackages = with pkgs; [
     vim
@@ -226,21 +221,10 @@
   services.openssh.enable = true;
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.11"; # Did you read the comment?
+  system.stateVersion = "25.11";
 
   # services.displayManager.sddm.enable = true;
-  # services.displayManager.sddm.wayland.enable = true;
   
   services.greetd = {
     enable = true;
@@ -270,7 +254,7 @@
     TTYVHangup = true;
     TTYVTDisallocate = true;
   };
-  
+
   # Make Hyprland available system-wide (needed for greetd to launch it)
   # The actual theming/binds are configured in home-manager: home/modules/hyprland.nix
   programs.hyprland = {
@@ -278,7 +262,7 @@
     # nvidiaPatches = true;
     xwayland.enable = true;
   };
-  
+
 
   # enviroment settings
   environment.sessionVariables = {
@@ -288,15 +272,15 @@
      # Hint electron apps to use wayland
      NIXOS_OZONE_WL = "1";
   };
-  
+
   hardware = {
     #Opengl
     graphics.enable = true;
-    
+
     # Most Wayland compositors need this
     # nvidia.modesetting.enable = true;
   };
-  
+
   # enable gVFS for mounting sftp in yazi under /run/user/1000/gvfs
   services.gvfs.enable = true;
 }
