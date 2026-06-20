@@ -35,7 +35,7 @@ in
           inner_color = "rgb(${hex theme.colors.background})";
           outer_color = "rgb(${hex theme.colors.accent})";
           outline_thickness = 3;
-          placeholder_text = "<span foreground='#${hex theme.colors.accent}'>ACCESSING THE NET...</span>";
+          placeholder_text = "simulation access code required";
           shadow_passes = 3;
         }
       ];

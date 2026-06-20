@@ -3,11 +3,12 @@
 {
   programs.starship = {
     enable = true;
-    # Activeer integratie voor beide shells
+    # Enable shell integration for both bash and zsh
     enableBashIntegration = true;
     enableZshIntegration = true;
 
     settings = {
+      # Full prompt format: user@hostname in directory on git-branch [git-status] at time
       format = "$username$hostname$directory$git_branch$git_status$time$line_break$character";
 
       username = {
@@ -38,7 +39,7 @@
 
       git_status = {
         format = "([\\[$all_status$ahead_behind\\]]($style) )";
-	conflicted = "=";
+        conflicted = "=";
         ahead = "⇡";
         behind = "⇣";
         diverged = "⇕";
@@ -63,7 +64,8 @@
       };
     };
   };
-  # Configureer Zsh direct in deze module voor een complete shell-ervaring
+
+  # Zsh configuration — the primary interactive shell
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -78,9 +80,9 @@
       cat = "${pkgs.bat}/bin/bat";
     };
     
-    # Zorg dat de prompt altijd clean start
+    # Extra initialization — runs after starship prompt setup
     initContent = ''
-      # Optionele extra Zsh instellingen
+      # Ctrl+Left/Right to jump words in zsh
       bindkey '^[[1;5C' forward-word
       bindkey '^[[1;5D' backward-word
     '';

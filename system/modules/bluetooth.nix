@@ -1,19 +1,19 @@
 { config, pkgs, ... }:
 
 {
-  # 1. Activeer de hardware driver
+  # Enable Bluetooth hardware support
   hardware.bluetooth.enable = true;
 
-  # 2. Forceer de adapter aan bij het opstarten (Activeert de radio)
+  # Power on the Bluetooth adapter at boot
   hardware.bluetooth.powerOnBoot = true;
 
-  # 3. Zorg dat de kernel de juiste permissies geeft
+  # Blueman — provides the Bluetooth tray icon and management UI
   services.blueman.enable = true; 
 
-  # 4. Voeg handige tools toe voor debugging en beheer
+  # CLI and GUI tools for debugging and managing Bluetooth
   environment.systemPackages = with pkgs; [
-    bluez
-    blueman
-    overskride # De moderne GTK4 client die we in Waybar gebruiken
+    bluez       # Core Bluetooth protocol stack + CLI tools (bluetoothctl)
+    blueman     # GTK Bluetooth manager (tray applet)
+    overskride  # Modern GTK4 Bluetooth client (used in Waybar bluetooth module)
   ];
 }

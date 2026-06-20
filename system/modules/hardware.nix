@@ -14,8 +14,8 @@
     extraBackends = [ pkgs.sane-airscan ];
   };
 
-  # Network discovery for printers/scanners (Avahi is already partially in configuration.nix)
-  # Enhancing it here for better discovery support.
+  # Network discovery for printers/scanners via mDNS (Avahi/Bonjour)
+  # Enables automatic discovery on the local network
   services.avahi = {
     enable = true;
     nssmdns4 = true;

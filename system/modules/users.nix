@@ -1,39 +1,25 @@
 { config, pkgs, ... }:
 
 {
-  # Definieer je gebruikersaccount
+  # Define the main user account — thebeardbe
+  # Groups grant specific permissions and access to hardware/services
   users.users.thebeardbe = {
     isNormalUser = true;
     description = "TheBeardBE";
     extraGroups = [ 
-      "networkmanager" 
-      "wheel"     # Voor sudo permissies
-      "video"     # Voor toegang tot hardware (helderheid/webcam)
-      "audio"     # Voor directe audio toegang indien nodig
-      "input"     # Voor libinput/touchpad permissies
-      "docker"    # Als je dit later toevoegt
-      "lp"        # Voor printen
-      "scanner"   # Voor scannen
+      "networkmanager"   # Network management (nm-applet, nmcli)
+      "wheel"            # sudo privileges
+      "video"            # Hardware access (brightness, webcam)
+      "audio"            # Direct audio device access
+      "input"            # libinput/touchpad permissions
+      "docker"           # Docker daemon access (enabled in configuration.nix)
+      "lp"               # Printing (CUPS)
+      "scanner"          # Scanning (SANE)
     ];
-    # Gebruik zsh of fish als je die verkiest boven bash
+    # Shell set to zsh (configured via home-manager in starship.nix)
     shell = pkgs.zsh; 
   };
 
-  # Activeer de shell op systeemniveau
+  # Enable zsh system-wide so it's available as a login shell
   programs.zsh.enable = true;
-
-  # Handige extra's voor Zsh
-  programs.zsh = {
-    autosuggestions.enable = true;
-    syntaxHighlighting.enable = true;
-  };
-
-  # Voeg algemene user-packages toe die op systeemniveau handig zijn
-  environment.systemPackages = with pkgs; [
-    git
-    vim
-    wget
-    curl
-    htop
-  ];
 }

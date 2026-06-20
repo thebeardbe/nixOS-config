@@ -12,11 +12,8 @@
   outputs = { self, nixpkgs, home-manager, ... }@inputs: 
   let
     system = "x86_64-linux";
-    pkgs = import nixpkgs {
-      inherit system;
-      config.allowUnfree = true; # Jouw instelling overgenomen
-    };
-    # Laad de centrale styling
+    # Load the central theme config (colors, fonts, spacing, opacity)
+    # Shared across all modules (hyprland, waybar, kitty, wofi, starship, hyprlock)
     themeConfig = builtins.fromJSON (builtins.readFile ./theme.json);
   in {
     nixosConfigurations.foxyNix = nixpkgs.lib.nixosSystem {
@@ -30,7 +27,8 @@
           home-manager.useUserPackages = true;
           home-manager.users.thebeardbe = import ./home/home.nix;
           
-          # Geef de theme door aan home.nix en alle modules
+          # Pass the theme to home.nix and all imported modules via extraSpecialArgs
+          # Each module that needs styling (appearance, hyprland, waybar, etc.) receives `theme` as an argument
           home-manager.extraSpecialArgs = { 
             theme = themeConfig; 
           };

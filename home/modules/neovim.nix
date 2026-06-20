@@ -3,15 +3,15 @@
 {
   programs.neovim = {
     enable = true;
-    defaultEditor = true; # Zet $EDITOR naar nvim
+    defaultEditor = true; # Sets $EDITOR to nvim
     viAlias = true;
     vimAlias = true;
     
-    # Extra pakketten die Neovim nodig heeft (LSPs, etc.)
+    # Extra packages Neovim needs (LSP servers, clipboard)
     extraPackages = with pkgs; [
-      lua-language-server
-      nil # Nix language server
-      xclip # Voor clipboard ondersteuning
+      lua-language-server  # Lua LSP
+      nil                  # Nix language server
+      xclip                # Clipboard integration (system clipboard)
     ];
   };
 }

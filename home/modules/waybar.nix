@@ -3,7 +3,7 @@
 {
   programs.waybar = {
     enable = true;
-    systemd.enable = true;
+    systemd.enable = true; # Let systemd manage the Waybar process
     settings = {
       mainBar = {
         layer = "top";
@@ -12,19 +12,49 @@
         spacing = 4;
         modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
         modules-center = [ "hyprland/window" "clock" ];
-        modules-right = [ "pulseaudio" "bluetooth" "cpu" "memory" "battery" "tray" "custom/power" ];
+        modules-right = [ "backlight" "pulseaudio" "bluetooth" "cpu" "memory" "battery" "tray" "custom/power" ];
 
         "hyprland/workspaces" = {
           disable-scroll = true;
           all-outputs = true;
-          format = "{icon}";
+          format = "{icon}  {windows}";
+          format-window-separator = " ";
           on-click = "activate";
+          window-rewrite-default = "*";
+          window-rewrite = {
+            "class<firefox>" = "󰈹";         # Firefox
+            "class<kitty>" = "";            # Kitty terminal
+            "class<Alacritty>" = "";       # Alacritty terminal
+            "class<code>" = "󰨞";            # VS Code
+            "class<nautilus>" = "󰉋";        # Files
+            "class<org.gnome.Nautilus>" = "󰉋";
+            "class<thunar>" = "󰉋";          # Thunar file manager
+            "class<discord>" = "󰙯";         # Discord
+            "class<slack>" = "󰒱";           # Slack
+            "class<spotify>" = "󰓇";         # Spotify
+            "class<firefox> title<.*youtube.*>" = "";  # YouTube
+            "class<zen>" = "󰈹";             # Zen browser
+            "class<google-chrome>" = "";   # Chrome
+            "class<chromium>" = "";         # Chromium
+            "class<obsidian>" = "󰠮";        # Obsidian
+            "class<evince>" = "󰈙";          # Document viewer
+            "class<hyprlock>" = "󰌾";        # Lock screen
+            "class<pavucontrol>" = "󰓃";     # Audio controls
+            "class<blueman-manager>" = "󰂯"; # Bluetooth
+          };
+        };
+
+        "backlight" = {
+          format = "{icon} {percent}%";
+          format-icons = ["󰃞" "󰃟" "󰃠"];
+          on-scroll-up = "brightnessctl set 1%+";
+          on-scroll-down = "brightnessctl set 1%-";
         };
 
         "hyprland/window" = {
           format = "󱂬 {title}";
           max-length = 50;
-	  separate-outputs = true;
+          separate-outputs = true;
         };
 
         "clock" = {
@@ -67,15 +97,24 @@
       }
 
       window#waybar {
-        /* Hier koppelen we de achtergrondkleur EN de transparantie uit de JSON */
+        /* Background color + transparency pulled from theme.json */
         background-color: rgba(13, 13, 13, ${toString theme.opacity}); 
         border-bottom: 2px solid ${theme.colors.accent};
         color: ${theme.colors.text};
       }
 
+      #workspaces button {
+        padding: 0 6px;
+        min-width: 40px;
+      }
       #workspaces button.active {
         color: ${theme.colors.accent};
         border-bottom: 2px solid ${theme.colors.accent};
+      }
+      #workspaces .workspace-label {
+        font-size: 11px;
+        opacity: 0.7;
+        margin-left: 4px;
       }
 
       #window {
@@ -88,12 +127,12 @@
 
       #custom-power {
         color: ${theme.colors.critical};
-	padding: 0 10px;
+        padding: 0 10px;
       }
 
-      #clock, #cpu, #memory, #battery, #tray, #pulseaudio, #bluetooth {
+      #clock, #cpu, #memory, #battery, #tray, #pulseaudio, #bluetooth, #backlight {
         padding: 0 10px;
-        border-left: 1px solid ${theme.colors.border}; /* 4d = 30% opacity */
+        border-left: 1px solid ${theme.colors.border};
       }
     '';
   };

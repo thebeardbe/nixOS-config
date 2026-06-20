@@ -1,12 +1,14 @@
 { config, pkgs, ... }:
 
 {
-  # Zorg dat Hyprlock permissie heeft om je wachtwoord te controleren via PAM
+  # PAM service for hyprlock — allows the lockscreen to validate your password
   security.pam.services.hyprlock = {};
 
-  # Optioneel: Schakel kwaliteitscontroles voor wachtwoorden in (veiligheid)
+  # Enable Gnome Keyring integration with login PAM
+  # Stores secrets (SSH keys, GPG, application passwords) unlocked on login
   security.pam.services.login.enableGnomeKeyring = true;
 
-  # Voor een 'Radical Generalist' is polkit essentieel voor permissies in GUI apps
+  # PolicyKit — grants permission elevation for GUI apps (mounting drives, etc.)
+  # Required for many desktop operations to work without terminal sudo
   security.polkit.enable = true;
 }

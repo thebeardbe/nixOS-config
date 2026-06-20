@@ -1,11 +1,11 @@
 { pkgs, theme, ... }:
 
 {
-  # 1. GTK Apps (Gnome-stijl apps, Firefox, etc.)
+  # 1. GTK Theme (affects GTK3/GTK4 apps: Firefox, Nautilus, GNOME apps, etc.)
   gtk = {
     enable = true;
     theme = {
-      name = "Adwaita-dark"; # De standaard donkere look
+      name = "Adwaita-dark"; # Default dark GTK theme
       package = pkgs.gnome-themes-extra;
     };
     iconTheme = {
@@ -14,26 +14,26 @@
     };
     gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
-
+    # Let GTK4 apps use their own libadwaita styling (Adwaita-dark via portal)
     gtk4.theme = null;
   };
 
-  # 2. Qt Apps (OBS, VLC, etc.) - Zorg dat ze de GTK-stijl overnemen
+  # 2. Qt Theme — make Qt apps (OBS, VLC, etc.) follow the GTK dark style
   qt = {
     enable = true;
     platformTheme.name = "gtk";
     style.name = "adwaita-dark";
   };
 
-  # 3. Omgevingsvariabelen voor "Dark First"
+  # 3. Environment variables enforcing dark mode everywhere
   home.sessionVariables = {
     GTK_THEME = "Adwaita-dark";
     COLORTERM = "truecolor";
-    # Forceert veel moderne apps (zoals LibAdwaita) naar dark mode
+    # Forces libadwaita apps (GNOME Settings, etc.) into dark mode
     ADW_DISABLE_PORTAL = "0"; 
   };
 
-  # 4. Cursor (Consistentie is key)
+  # 4. Cursor theme — consistency across GTK and X11 apps
   home.pointerCursor = {
     gtk.enable = true;
     x11.enable = true;
@@ -42,34 +42,20 @@
     size = 24;
   };
 
-  # 5. Kitty (Terminal)
+  # 5. Kitty (Terminal emulator) — themed via central theme.json
   programs.kitty = {
     enable = true;
+    themeFile = "Cyberpunk-Neon";
     font = {
       name = theme.font.family;
       size = theme.font.size;
     };
     settings = {
-      background = theme.colors.background;
-      foreground = theme.colors.text;
-      cursor = theme.colors.accent;
-      selection_background = theme.colors.accent;
-      selection_foreground = theme.colors.background;
       background_opacity = toString theme.opacity;
-      
-      # Basic colors using theme
-      color0 = theme.colors.background;
-      color1 = theme.colors.critical;
-      color2 = theme.colors.accent;
-      color3 = theme.colors.text; # Yellow-ish
-      color4 = theme.colors.accent;
-      color5 = theme.colors.accent;
-      color6 = theme.colors.accent;
-      color7 = theme.colors.text;
     };
   };
 
-  # 6. Wofi (Launcher)
+  # 6. Wofi (Application launcher) — themed via central theme.json
   programs.wofi = {
     enable = true;
     style = ''

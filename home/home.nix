@@ -1,17 +1,18 @@
 { config, pkgs, theme, ... }:
 
 {
-  # Import all program configs. 
+  # Import all program/config modules — each one enables+configures a specific tool
   imports = [
-     ./modules/yazi.nix
-     ./modules/appearance.nix
-     ./modules/hyprlock.nix
-     ./modules/hypridle.nix
-     ./modules/neovim.nix
-     ./modules/starship.nix
-     ./modules/packages.nix
-     ./modules/hyprland.nix
-     ./modules/waybar.nix
+     ./modules/yazi.nix       # Terminal file manager
+     ./modules/appearance.nix # GTK/Qt theming, cursor, kitty, wofi
+     ./modules/hyprlock.nix   # Lockscreen
+     ./modules/hypridle.nix   # Auto-sleep / idle management
+     ./modules/neovim.nix     # Neovim editor with LSPs
+     ./modules/starship.nix   # Shell prompt + Zsh config
+     ./modules/packages.nix   # General user packages (apps, fonts, tools)
+     ./modules/hyprland.nix   # Window manager + keybinds + hypr ecosystem
+     ./modules/waybar.nix     # Status bar
+     ./modules/agent.nix      # Node.js / npm / pi-coding-agent
   ];
 
   home.username = "thebeardbe";
@@ -21,63 +22,61 @@
   targets.genericLinux.enable = true;
 
   home.file = {
-    # Hier kun je later specifieke dotfiles naar de Nix store laten wijzen
+    # Additional dotfiles can be added here later (e.g. .config/foo sourced from Nix store)
   };
 
   home.sessionVariables = {
-    # EDITOR = "vim";
+    # EDITOR = "vim";  # Set default editor (neovim handles this via defaultEditor)
   };
 
-  # --- Define program specific configs ---
+  # --- Bash config ---
   programs.bash = {
     enable = true;
     shellAliases = {
       ll = "ls -l";
-      # hms = "home-manager switch --flake ~/.config/home-manager";
-      conf = "nano ~/.config/home-manager/home.nix";
-      # update = "nix flake update && hms";
+      conf = "cd ~/nixos-config && v";      # Open config in neovim
       rebuild = "sudo nixos-rebuild switch --flake .#foxyNix";
     };
   };
 
-  # 1. Zorg dat de agent draait
+  # Enable the SSH agent (manages keys, auto-adds to agent)
   services.ssh-agent.enable = true;
 
-  # 2. Leer SSH welke sleutel bij GitHub hoort (Universal fix)
+  # --- SSH config ---
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
     matchBlocks = {
+      # Auto-add all keys to the running SSH agent
       "*" = {
-        addKeysToAgent = "yes"; # De nieuwe plek voor deze optie
+        addKeysToAgent = "yes";
       };
+      # GitHub-specific: use the dedicated GitHub SSH key
       "github.com" = {
         hostname = "github.com";
-        identityFile = "~/.ssh/github"; # Pad naar je PRIVATE key
+        identityFile = "~/.ssh/github"; # Path to your PRIVATE key
       };
     };
   };
 
-  # 3. Git hoeft nu alleen je user info te weten
+  # --- Git config ---
   programs.git = {
     enable = true;
-    # Verplaats deze van de root van git naar settings.user
     settings = {
       user = {
         name = "TheBeardBE";
         email = "bunker@achter.be";
       };
     };
-    # Je hoeft hier GEEN sshCommand meer te zetten!
+    # No sshCommand needed here — SSH config above handles the correct key
   };
 
-  # ----------------------------
-  
-  # Theme settings define dark
+  # Force dark mode for GTK4/libadwaita apps (Settings, Nautilus, etc.)
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
     };
   };
+
   programs.home-manager.enable = true;
 }
