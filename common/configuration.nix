@@ -17,34 +17,7 @@
   # Enable touchpad settings (custom module defined in ./modules/touchpad.nix)
   # Toggle this to true on machines with a touchpad
 
-  # Bootloader.
-  boot.loader.systemd-boot = {
-    enable = true;
-    consoleMode = "max";
-  };
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  # Enable Plymouth for an Otherland-style boot splash
-  boot.plymouth = {
-    enable = true;
-    # Add a futuristic theme if available
-  };
-  # Silent boot for a more VR-like feel
-  boot.kernelParams = [ "quiet" "splash" "boot.shell_on_fail" "loglevel=3" "rd.systemd.show_status=false" "rd.udev.log_level=3" "udev.log_priority=3" ];
-  boot.consoleLogLevel = 0;
-  boot.initrd.verbose = false;
-  # Dual-boot with Ubuntu: detect and add Ubuntu entry to systemd-boot
-  boot.loader.grub.useOSProber = true;
-  boot.loader.systemd-boot.extraEntries = {
-    "ubuntu.conf" = ''
-      title Ubuntu
-      efi /EFI/ubuntu/shimx64.efi
-    '';
-  };
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
-  networking.networkmanager.enable = true;
+  # Bootloader — moved per-host systems/
 
   # Enable tailscale
   services.tailscale.enable = true;
@@ -58,7 +31,7 @@
   # Configure keymap in X11 and wayland
   services.xserver.xkb = {
     layout = "us";
-    variant = "intl";
+    variant = "altgr-intl";
   };
 
   # Enable stock power management tools
