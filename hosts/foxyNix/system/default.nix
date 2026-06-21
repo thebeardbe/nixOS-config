@@ -6,4 +6,5 @@
   ];
 
   networking.hostName = "foxyNix";
+  mySystem.touchpad.enable = true;
 }

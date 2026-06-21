@@ -15,8 +15,7 @@
     ];
 
   # Enable touchpad settings (custom module defined in ./modules/touchpad.nix)
-  # Toggle this to false to use default libinput settings
-  mySystem.touchpad.enable = true;
+  # Toggle this to true on machines with a touchpad
 
   # Bootloader.
   boot.loader.systemd-boot = {
