@@ -1,10 +1,10 @@
-# Laptop: foxyNix (current machine)
+# Laptop: foxyNix
 { config, pkgs, ... }:
 
 {
   imports = [
-    ./hardware-gen.nix
-    ./configuration.nix
+    ../hardware/laptop.nix
+    ../configuration.nix
   ];
 
   networking.hostName = "foxyNix";

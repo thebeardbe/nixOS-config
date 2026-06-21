@@ -1,4 +1,6 @@
-# Desktop hardware configuration — AMD Ryzen 5600 + NVIDIA RTX 3060 Ti
+# The Construct hardware — AMD Ryzen 5600 + NVIDIA RTX 3060 Ti
+# Note: run `nixos-generate-config` on the Construct and save the result as
+# system/hardware/theConstruct-gen.nix, then add it to the imports below.
 { config, lib, pkgs, modulesPath, ... }:
 
 {
