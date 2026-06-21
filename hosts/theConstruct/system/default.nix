@@ -9,11 +9,14 @@
 
   networking.hostName = "theConstruct";
 
-  # Bootloader — configure during install (e.g. GRUB for Windows dual-boot)
-  # boot.loader.grub = {
-  #   enable = true;
-  #   devices = [ "nodev" ];
-  #   efiSupport = true;
-  #   enableCryptodisk = true;
-  # };
+  # Bootloader — GRUB for Windows dual-boot
+  boot.loader = {
+    efi.canTouchEfiVariables = true;
+    grub = {
+      enable = true;
+      efiSupport = true;
+      device = "nodev";
+      useOSProber = true;
+    };
+  };
 }
