@@ -42,7 +42,7 @@
   in {
     nixosConfigurations = {
       foxyNix = mkMachine "laptop";
-      desktop  = mkMachine "theConstruct";
+      theConstruct  = mkMachine "theConstruct";
     };
   };
 }
