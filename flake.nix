@@ -26,7 +26,7 @@
           home-manager.users.thebeardbe = { ... }: {
             imports = [
               ./home/home.nix
-              ./hosts/${host}/home.nix
+              ./hosts/${host}/home/default.nix
             ];
           };
           home-manager.extraSpecialArgs = { theme = themeConfig; };
@@ -35,8 +35,8 @@
     };
   in {
     nixosConfigurations = {
-      foxyNix     = mkHost "laptop";
-      theConstruct = mkHost "desktop";
+      foxyNix      = mkHost "foxyNix";
+      theConstruct = mkHost "theConstruct";
     };
   };
 }
