@@ -13,6 +13,7 @@
      ./modules/hyprland.nix   # Window manager + keybinds + hypr ecosystem
      ./modules/waybar.nix     # Status bar
      ./modules/agent.nix      # Node.js / npm / pi-coding-agent
+     ./modules/secrets.nix   # Secret option declarations
   ];
 
   home.username = "thebeardbe";

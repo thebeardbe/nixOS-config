@@ -1,8 +1,7 @@
 { config, pkgs, ... }:
 
 let
-  authFile = ../files/agent/auth.json;
-  hasAuth = builtins.pathExists authFile;
+  authJson = config.mySecrets.piAuth;
 in
 {
   home.packages = with pkgs; [
@@ -15,7 +14,7 @@ in
 
   home.file = {
     ".pi/agent/settings.json".source = ../files/agent/settings.json;
-  } // (if hasAuth then {
-    ".pi/agent/auth.json".source = ../files/agent/auth.json;
+  } // (if authJson != null then {
+    ".pi/agent/auth.json".text = authJson;
   } else {});
 }
