@@ -1,7 +1,7 @@
 { pkgs, ... }: {
   imports = [
+    ./waybar.nix
     # Host-specific home modules go here
-    # Example: ./touchpad-fix.nix
   ];
 
   home.packages = with pkgs; [

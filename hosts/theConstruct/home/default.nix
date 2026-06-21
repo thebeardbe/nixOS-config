@@ -1,6 +1,6 @@
 { ... }: {
   imports = [
+    ./waybar.nix
     ./gaming.nix
-    # Additional host-specific home modules go here
   ];
 }
