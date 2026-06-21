@@ -14,34 +14,35 @@
     system = "x86_64-linux";
     themeConfig = builtins.fromJSON (builtins.readFile ./theme.json);
 
-    # Shared home-manager config (same for all machines)
-    homeConfig = {
+    # Shared home-manager base (same for all machines)
+    sharedHomeConfig = {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
-      home-manager.users.thebeardbe = import ./home/home.nix;
       home-manager.extraSpecialArgs = { theme = themeConfig; };
+    };
+
+    # Helper to build a machine config
+    mkMachine = machine: nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = { inherit inputs; };
+      modules = [
+        ./system/machines/${machine}.nix
+        home-manager.nixosModules.home-manager
+        sharedHomeConfig
+        {
+          home-manager.users.thebeardbe = { ... }: {
+            imports = [
+              ./home/home.nix
+              ./home/machines/${machine}.nix
+            ];
+          };
+        }
+      ];
     };
   in {
     nixosConfigurations = {
-      foxyNix = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./system/machines/laptop.nix
-          home-manager.nixosModules.home-manager
-          homeConfig
-        ];
-      };
-
-      desktop = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./system/machines/desktop.nix
-          home-manager.nixosModules.home-manager
-          homeConfig
-        ];
-      };
+      foxyNix = mkMachine "laptop";
+      desktop  = mkMachine "theConstruct";
     };
   };
 }
