@@ -1,6 +1,5 @@
 { pkgs, ... }: {
   imports = [
-    ./waybar.nix
     # Host-specific home modules go here
   ];
 
