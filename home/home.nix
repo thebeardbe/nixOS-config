@@ -9,7 +9,7 @@
      ./modules/hypridle.nix   # Auto-sleep / idle management
      ./modules/neovim.nix     # Neovim editor with LSPs
      ./modules/starship.nix   # Shell prompt + Zsh config
-     ./modules/packages.nix   # General user packages (apps, fonts, tools)
+     ./packages.nix          # All user packages (apps, fonts, tools)
      ./modules/hyprland.nix   # Window manager + keybinds + hypr ecosystem
      ./modules/waybar.nix     # Status bar
      ./modules/agent.nix      # Node.js / npm / pi-coding-agent
