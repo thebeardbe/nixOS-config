@@ -1,0 +1,39 @@
+# GNU Screen config — tabs, colors, and sane defaults
+startup_message off
+vbell off
+bell_msg ""
+
+# Tabs / hardstatus line
+hardstatus alwayslastline
+hardstatus string '%{= kG} %{= kw}%-w%{= kG}%{+b}[ %n %t ]%{-b}%{= kw}%+w %{= kG} %{= kw}%= %{= kW}%Y-%m-%d %c'
+
+# Terminal capabilities
+term xterm-256color
+defutf8 on
+shell -$SHELL
+
+# Scrolling
+defscrollback 10000
+
+# Mouse support
+termcapinfo xterm* ti@:te@
+
+# Keybindings
+bindkey -k k1 select 1     # F1 = tab 1
+bindkey -k k2 select 2     # F2 = tab 2
+bindkey -k k3 select 3     # F3 = tab 3
+bindkey -k k4 select 4     # F4 = tab 4
+bindkey -k k5 select 5     # F5 = tab 5
+bindkey -k k6 select 6     # F6 = tab 6
+bindkey -k k7 select 7     # F7 = tab 7
+bindkey -k k8 select 8     # F8 = tab 8
+bindkey -k k9 select 9     # F9 = tab 9
+bindkey -k F1 prev         # F11 = previous tab
+bindkey -k F2 next         # F12 = next tab
+
+# Create tab names on startup
+screen -t shell 0
+screen -t shell 1
+screen -t shell 2
+screen -t shell 3
+select 0
