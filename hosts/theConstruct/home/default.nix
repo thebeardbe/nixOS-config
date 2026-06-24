@@ -1,6 +1,6 @@
 { ... }: {
   imports = [
-    ./gaming.nix
+    ./packages.nix
   ];
 
   # Override shared waybar module list — no bluetooth, battery, backlight

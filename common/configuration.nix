@@ -17,7 +17,10 @@
   # Enable touchpad settings (custom module defined in ./modules/touchpad.nix)
   # Toggle this to true on machines with a touchpad
 
-  # Bootloader — moved per-host systems/
+  # Bootloader — moved per-host systems
+
+  # Enable networking
+  networking.networkmanager.enable = true;
 
   # Enable tailscale
   services.tailscale.enable = true;
