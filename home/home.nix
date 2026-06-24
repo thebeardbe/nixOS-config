@@ -23,7 +23,7 @@
   targets.genericLinux.enable = true;
 
   home.file = {
-    # Additional dotfiles can be added here later (e.g. .config/foo sourced from Nix store)
+    ".screenrc".source = ./files/screenrc;
   };
 
   home.sessionVariables = {
