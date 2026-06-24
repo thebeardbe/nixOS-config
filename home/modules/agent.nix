@@ -12,16 +12,17 @@ in
     PATH = "$HOME/.npm-global/bin:$PATH";
   };
 
-  # Deploy pi config files on first install only
-  home.activation.setupPiConfig = pkgs.lib.mkAfter ''
-    mkdir -p "$HOME/.pi/agent"
-    
-    if [ ! -f "$HOME/.pi/agent/settings.json" ]; then
-      cp ${../files/agent/settings.json} "$HOME/.pi/agent/settings.json"
-    fi
+  # settings.json — always deployed from repo (identical on all machines)
+  home.file.".pi/agent/settings.json" = {
+    source = ../files/agent/settings.json;
+    force = true;
+  };
 
+  # auth.json — only deployed on first install (per-machine secrets)
+  home.activation.setupPiAuth = pkgs.lib.mkAfter ''
     ${if mySecrets.piAuth != null then ''
       if [ ! -f "$HOME/.pi/agent/auth.json" ]; then
+        mkdir -p "$HOME/.pi/agent"
         cat > "$HOME/.pi/agent/auth.json" << 'EOF'
 ${mySecrets.piAuth}
 EOF
