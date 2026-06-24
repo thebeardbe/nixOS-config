@@ -23,7 +23,11 @@
   networking.networkmanager.enable = true;
 
   # Enable tailscale
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    # Don't accept routes from other nodes — avoids interfering with local LAN
+    extraUpFlags = [ "--accept-routes=false" ];
+  };
 
   # Set your time zone.
   time.timeZone = "Europe/Brussels";
@@ -185,7 +189,8 @@
   services.openssh.enable = true;
 
   # Open ports in the firewall.
-  networking.firewall.enable = false;
+  # networking.firewall.allowedTCPPorts = [ ... ];
+  # networking.firewall.allowedUDPPorts = [ ... ];
 
   system.stateVersion = "25.11";
 
