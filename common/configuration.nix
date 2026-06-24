@@ -185,6 +185,7 @@
   services.openssh.enable = true;
 
   # Open ports in the firewall.
+  networking.firewall.enable = false;
 
   system.stateVersion = "25.11";
 
