@@ -4,7 +4,7 @@
   imports = [
     ./gpu.nix
     ./steam.nix
-    ./monitors.nix
+    # Future: ./audio.nix, ./boot.nix, etc.
   ];
 
   networking.hostName = "theConstruct";
