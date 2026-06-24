@@ -19,6 +19,9 @@
 
   # Bootloader — moved per-host systems
 
+  # Use dbus-broker (GNOME default, avoids switch inhibitor warning)
+  services.dbus.implementation = "broker";
+
   # Enable networking
   networking.networkmanager.enable = true;
 

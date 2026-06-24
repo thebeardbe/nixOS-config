@@ -23,7 +23,9 @@ in
 
       # --- Monitor ---
       # "preferred, auto, 1" = best resolution, auto position, scale 1
-      monitor = ", preferred, auto, 1";
+      monitor = [
+        ", preferred, auto, 1"
+      ];
 
       # --- Autostart ---
       exec-once = [ 
