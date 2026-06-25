@@ -16,7 +16,7 @@
 
         "hyprland/workspaces" = {
           disable-scroll = true;
-          all-outputs = true;
+          all-outputs = false;
           format = "{icon}  {windows}";
           format-window-separator = " ";
           on-click = "activate";
