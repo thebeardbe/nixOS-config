@@ -93,9 +93,6 @@
       * {
         border: none;
         font-family: "FiraCode Nerd Font", sans-serif;
-* {
-        border: none;
-        font-family: "FiraCode Nerd Font", sans-serif;
         font-size: 10px;
       }
 
