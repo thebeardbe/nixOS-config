@@ -1,6 +1,7 @@
 { lib, ... }: {
   imports = [
     ./packages.nix
+    ./monitors.nix
   ];
 
   # Override shared waybar module list — no bluetooth, battery, backlight
