@@ -10,6 +10,7 @@ in
 
   home.sessionVariables = {
     PATH = "$HOME/.npm-global/bin:$PATH";
+    NPM_CONFIG_PREFIX = "$HOME/.npm-global";
   };
 
   # settings.json — always deployed from repo (identical on all machines)
@@ -29,5 +30,9 @@ EOF
         chmod 600 "$HOME/.pi/agent/auth.json"
       fi
     '' else ""}
+
+    # Set npm prefix so global installs go to ~/.npm-global
+    mkdir -p "$HOME/.npm-global"
+    npm config set prefix "$HOME/.npm-global" 2>/dev/null || true
   '';
 }
