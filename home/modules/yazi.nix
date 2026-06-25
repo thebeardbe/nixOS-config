@@ -137,12 +137,12 @@ in {
     keymap = {
       manager.prepend_keymap = [
         {
-          on = [ "m" ];
+          on = [ "M" ];
           run = "shell 'ssh-mount-select'";
           desc = "Mount remote host via SSH";
         }
         {
-          on = [ "u" ];
+          on = [ "U" ];
           run = "shell 'ssh-umount'";
           desc = "Unmount remote host";
         }
@@ -152,7 +152,7 @@ in {
           desc = "Go to SSH mounts";
         }
         {
-          on = [ "c" "p" ];
+          on = [ "C" ];
           run = ''shell 'ssh-upload "$@"' --confirm'';
           desc = "Copy selected files to remote";
         }
