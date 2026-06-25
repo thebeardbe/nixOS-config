@@ -5,41 +5,59 @@ let
     set -euo pipefail
 
     SSH_CONFIG="$HOME/.ssh/config"
-    MOUNT_BASE="/tmp/ssh-mounts"
-    mkdir -p "$MOUNT_BASE"
 
-    # ── List SSH hosts from config ──
+    # ── List SSH hosts from config (exclude wildcards) ──
     list_hosts() {
       grep -i "^Host " "$SSH_CONFIG" 2>/dev/null | \
         awk '{for (i=2; i<=NF; i++) print $i}' | \
         grep -v "[*?]" | sort -u
     }
 
-    # ── List currently mounted hosts ──
+    # ── List currently mounted hosts via gio ──
     list_mounted() {
-      for d in "$MOUNT_BASE"/*/; do
-        [ -d "$d" ] || continue
-        mountpoint -q "$d" 2>/dev/null && basename "$d"
-      done | sort -u
+      gio mount -l 2>/dev/null | grep "sftp://" | \
+        sed 's/.*sftp:\/\/\([^@]*@\)\?\([^/]*\).*/\2/' | sort -u || true
     }
 
-    # ── Mount a host ──
+    # ── Get GVfs URI for a host ──
+    gvfs_uri() {
+      local HOST="$1"
+      local USER
+      USER=$(grep -A5 "^Host $HOST$" "$SSH_CONFIG" 2>/dev/null | grep -i "user " | awk '{print $2}') || true
+      USER="${USER:-$USER}"
+      echo "sftp://$USER@$HOST/"
+    }
+
+    # ── Get local GVfs mount path for a host ──
+    mount_point() {
+      local HOST="$1"
+      local USER
+      USER=$(grep -A5 "^Host $HOST$" "$SSH_CONFIG" 2>/dev/null | grep -i "user " | awk '{print $2}') || true
+      USER="${USER:-$USER}"
+      echo "/run/user/$(id -u)/gvfs/sftp:host=$HOST,user=$USER"
+    }
+
+    # ── Check if a host is already mounted ──
+    is_mounted() {
+      local HOST="$1"
+      local MP
+      MP=$(mount_point "$HOST")
+      [ -d "$MP" ] && ls "$MP" &>/dev/null 2>&1
+    }
+
+    # ── Mount a host via gio (shows password dialog) ──
     cmd_mount() {
       local HOST="$1"
-      local MP="$MOUNT_BASE/$HOST"
-      mkdir -p "$MP"
-
-      if mountpoint -q "$MP" 2>/dev/null; then
+      if is_mounted "$HOST"; then
         echo "already-mounted"
         return 0
       fi
-
-      if sshfs "$HOST": "$MP" \
-        -o idmap=user,allow_other,follow_symlinks,reconnect 2>/dev/null; then
+      local URI
+      URI=$(gvfs_uri "$HOST")
+      if gio mount "$URI" 2>/tmp/remote-mount-err; then
         echo "mounted"
         return 0
       else
-        rmdir "$MP" 2>/dev/null
         echo "failed"
         return 1
       fi
@@ -48,29 +66,27 @@ let
     # ── Unmount a host ──
     cmd_umount() {
       local HOST="$1"
-      local MP="$MOUNT_BASE/$HOST"
-      fusermount3 -u "$MP" 2>/dev/null || \
-        fusermount -u "$MP" 2>/dev/null || \
-        sudo umount "$MP" 2>/dev/null || true
-      rmdir "$MP" 2>/dev/null
+      local URI
+      URI=$(gvfs_uri "$HOST")
+      gio mount -u "$URI" 2>/dev/null || true
     }
 
     # ── Main menu ──
-    case "''${1:-}" in
+    case "${1:-}" in
       mount)
-        HOST="''${2:-}"
+        HOST="${2:-}"
         if [ -z "$HOST" ]; then
           HOST=$(list_hosts | wofi --dmenu --prompt "Mount remote:")
           [ -z "$HOST" ] && exit 0
         fi
         case $(cmd_mount "$HOST") in
-          mounted)  notify-send "Remote" "Mounted $HOST at $MOUNT_BASE/$HOST" ;;
+          mounted)         notify-send "Remote" "Mounted $HOST" ;;
           already-mounted) notify-send "Remote" "$HOST already mounted" ;;
-          failed)   notify-send -u critical "Remote" "Failed to mount $HOST" ;;
+          failed)          notify-send -u critical "Remote" "Failed to mount $HOST" ;;
         esac
         ;;
       umount|unmount)
-        HOST="''${2:-}"
+        HOST="${2:-}"
         if [ -z "$HOST" ]; then
           HOST=$(list_mounted | wofi --dmenu --prompt "Unmount:")
           [ -z "$HOST" ] && exit 0
@@ -79,15 +95,15 @@ let
         notify-send "Remote" "Unmounted $HOST"
         ;;
       browse)
-        HOST="''${2:-}"
+        HOST="${2:-}"
         if [ -z "$HOST" ]; then
           HOST=$(list_hosts | wofi --dmenu --prompt "Browse remote:")
           [ -z "$HOST" ] && exit 0
         fi
         case $(cmd_mount "$HOST") in
           mounted|already-mounted)
-            yazi "$MOUNT_BASE/$HOST"
-            cmd_umount "$HOST" # auto-unmount when yazi closes
+            yazi "$(mount_point "$HOST")"
+            cmd_umount "$HOST"
             ;;
           failed) notify-send -u critical "Remote" "Failed to mount $HOST" ;;
         esac
@@ -131,7 +147,7 @@ in {
       manager.prepend_keymap = [
         {
           on = [ "M" ];
-          run = "shell 'gio mount sftp://\${1:?Enter host} --block' --block";
+          run = ''shell 'gio mount sftp://${1:?Enter host} --block' --block'';
           desc = "Mount SFTP server via GNOME";
         }
         {
