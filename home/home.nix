@@ -47,7 +47,7 @@
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks = {
+    settings = {
       # Auto-add all keys to the running SSH agent
       "*" = {
         addKeysToAgent = "yes";

@@ -14,6 +14,7 @@ in
 {
   wayland.windowManager.hyprland = {
     enable = true;
+    configType = "hyprlang";
     settings = {
       # --- Variables ---
       "$mod" = "SUPER";
@@ -110,7 +111,7 @@ in
         "$mod, V, togglefloating,"
         "$mod, space, exec, $menu"
         "$mod, P, pseudo,"      # dwindle: toggle pseudo-tiling
-        "$mod, J, togglesplit," # dwindle: toggle split direction
+        "$mod, J, layoutmsg, togglesplit" # dwindle: toggle split direction
         "$mod, F, fullscreen,"
 
         # Move focus (Vim-style with arrow keys)
