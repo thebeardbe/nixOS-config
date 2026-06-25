@@ -32,7 +32,6 @@ in
       exec-once = [ 
         "nm-applet --indicator"  # NetworkManager tray icon
         "blueman-applet"         # Bluetooth tray icon
-        "bash -c 'sleep 2 && hyprshell run'"  # Alt+Tab window switcher daemon
         "hyprpaper"              # Wallpaper daemon
         "bash -c 'hyprctl hyprpaper \"wallpaper ,/home/thebeardbe/Pictures/Wallpapers/solid-bg.png\" 2>/dev/null; sleep 1 && goto-workspace 1'"  # Solid bg then workspace
       ];
@@ -114,6 +113,10 @@ in
         "$mod, P, pseudo,"      # dwindle: toggle pseudo-tiling
         "$mod, J, layoutmsg, togglesplit" # dwindle: toggle split direction
         "$mod, F, fullscreen,"
+
+        # Window switching
+        # Alt+Tab — toggle between current and last focused window (works across workspaces)
+        "ALT, Tab, focuscurrentorlast,"
 
         # Move focus (Vim-style with arrow keys)
         "$mod, left, movefocus, l"

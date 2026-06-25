@@ -37,7 +37,6 @@
     # Utilities
     fzf                    # Fuzzy finder (used by pick-wallpaper)
     screen                 # Terminal multiplexer
-    hyprshell              # Alt+Tab window switcher with thumbnails
     libnotify              # Notification daemon (notify-send)
     swaynotificationcenter # Notification center UI
 

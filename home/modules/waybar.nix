@@ -25,7 +25,7 @@ in
         spacing = 4;
         modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
         modules-center = [ "hyprland/window" "clock" ];
-        modules-right = [ "backlight" "pulseaudio" "bluetooth" "cpu" "memory" "battery" "tray" "custom/power" ];
+        modules-right = [ "backlight" "pulseaudio" "bluetooth" "cpu" "memory" "battery" "tray" "custom/notification" "custom/power" ];
 
         "hyprland/workspaces" = {
           disable-scroll = true;
@@ -95,6 +95,22 @@ in
           on-click-right = "${pkgs.kitty}/bin/kitty -e ${pkgs.btop}/bin/btop";
         };
 
+        "custom/notification" = {
+          tooltip = true;
+          format = "{icon}  {text}";
+          format-icons = {
+            notification = "";
+            none = "";
+            "dnd-notification" = "";
+            "dnd-none" = "";
+          };
+          return-type = "json";
+          exec = "swaync-client -swb";
+          on-click = "swaync-client -op";
+          on-click-right = "swaync-client -d";
+          escape = true;
+        };
+
         "custom/power" = {
           format = "󰐥";
           on-click = "${pkgs.wlogout}/bin/wlogout";
@@ -138,12 +154,17 @@ in
         font-weight: bold;
       }
 
+      #custom-notification {
+        color: ${theme.colors.accent};
+        padding: 0 10px;
+      }
+
       #custom-power {
         color: ${theme.colors.critical};
         padding: 0 10px;
       }
 
-      #clock, #cpu, #memory, #battery, #tray, #pulseaudio, #bluetooth, #backlight {
+      #clock, #cpu, #memory, #battery, #tray, #pulseaudio, #bluetooth, #backlight, #custom-notification {
         padding: 0 10px;
         border-left: 1px solid ${theme.colors.border};
       }

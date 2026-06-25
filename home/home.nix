@@ -24,7 +24,6 @@
 
   home.file = {
     ".screenrc".source = ./files/screenrc;
-    ".config/hyprshell/config.toml".source = ./files/hyprshell-config.toml;
   };
 
   home.sessionVariables = {
@@ -37,7 +36,7 @@
     shellAliases = {
       ll = "ls -l";
       conf = "cd ~/nixos-config && v";      # Open config in neovim
-      rebuild = "sudo nixos-rebuild switch --flake .#foxyNix";
+      rebuild = "sudo nixos-rebuild switch --flake .#$(hostname)";
     };
   };
 

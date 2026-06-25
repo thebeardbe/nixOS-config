@@ -73,7 +73,7 @@
     syntaxHighlighting.enable = true;
 
     shellAliases = {
-      rebuild = "pushd ~/nixos-config && git add . && sudo nixos-rebuild switch --flake .#foxyNix && popd";
+      rebuild = "pushd ~/nixos-config && git add . && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
       v = "nvim";
       conf = "cd ~/nixos-config && v";
       ls = "${pkgs.eza}/bin/eza --icons";
