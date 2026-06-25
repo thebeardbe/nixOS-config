@@ -14,7 +14,6 @@
     consoleMode = "max";
   };
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub.useOSProber = true;
   boot.loader.systemd-boot.extraEntries = {
     "ubuntu.conf" = ''
       title Ubuntu

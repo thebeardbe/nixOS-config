@@ -1,11 +1,11 @@
-{ pkgs, theme, ... }:
+{ pkgs, unstable, theme, ... }:
 
 {
   home.packages = with pkgs; [
     # Communication & Productivity
     obsidian         # Note-taking / knowledge base
     discord          # Voice/text chat
-    signal-desktop   # Encrypted messaging
+    unstable.signal-desktop   # Encrypted messaging (from unstable for latest version)
     firefox          # Web browser
     enpass           # Password manager
     gemini-cli       # Google Gemini CLI

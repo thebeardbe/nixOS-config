@@ -8,19 +8,21 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Bleeding-edge nixpkgs for specific packages (signal-desktop, etc.)
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+
     # Private secrets — optional flake input.
-    # Uncomment once your Proxmox git server is set up:
-    #
     # nix-secrets = {
     #   url = "git+ssh://git@your-server/filip/nix-secrets";
     #   flake = true;
     # };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs: 
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, ... }@inputs: 
   let
     system = "x86_64-linux";
     themeConfig = builtins.fromJSON (builtins.readFile ./theme.json);
+    unstable = import nixpkgs-unstable { inherit system; config.allowUnfree = true; };
 
     secretModulesFor = host: if inputs ? nix-secrets then [
       inputs.nix-secrets.nixosModules.common
@@ -29,7 +31,7 @@
 
     mkHost = host: nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit inputs; };
+      specialArgs = { inherit inputs; unstable = unstable; };
       modules = [
         ./hosts/${host}/default.nix
         home-manager.nixosModules.home-manager
@@ -42,7 +44,10 @@
               ./hosts/${host}/home/default.nix
             ];
           };
-          home-manager.extraSpecialArgs = { theme = themeConfig; };
+          home-manager.extraSpecialArgs = { 
+            inherit unstable;
+            theme = themeConfig; 
+          };
         }
       ] ++ secretModulesFor host;
     };
