@@ -21,6 +21,7 @@
 
   # Use dbus-broker (GNOME default, avoids switch inhibitor warning)
   services.dbus.implementation = "broker";
+  services.resolved.enable = true;
 
   # Enable networking
   networking.networkmanager.enable = true;
