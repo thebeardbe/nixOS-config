@@ -1,6 +1,6 @@
 {
   "colors": {
-    "background": "#0d0d0d",
+    "background": "#000b1e",
     "text": "#c0c0c0",
     "accent": "#0abdc6",
     "critical": "#ff4500",
@@ -16,5 +16,5 @@
     "family": "FiraCode Nerd Font",
     "size": 11
   },
-  "opacity": 0.8
+  "opacity": 0.92
 }
