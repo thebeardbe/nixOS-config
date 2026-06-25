@@ -204,15 +204,7 @@
     enable = true;
     settings = {
       default_session = {
-        command = ''
-          ${pkgs.tuigreet}/bin/tuigreet \
-            --time \
-            --remember \
-            --user-menu \
-            --asterisks \
-            --theme 'border=blue;text=blue;prompt=blue;time=blue;action=blue;button=blue;container=black;input=blue' \
-            --cmd Hyprland
-        '';
+        command = ''${pkgs.tuigreet}/bin/tuigreet --time --remember --user-menu --asterisks --theme 'border=blue;text=blue;prompt=blue;time=blue;action=blue;button=blue;container=black;input=blue' --cmd Hyprland'';
         user = "greeter";
       };
     };
