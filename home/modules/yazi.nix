@@ -2,42 +2,37 @@
 
 let
   remote = pkgs.writeShellScriptBin "remote" ''
-    set -euo pipefail
+    set -eo pipefail
 
     SSH_CONFIG="$HOME/.ssh/config"
 
-    # ── List SSH hosts from config (exclude wildcards) ──
     list_hosts() {
       grep -i "^Host " "$SSH_CONFIG" 2>/dev/null | \
-        awk '{for (i=2; i<=NF; i++) print $i}' | \
+        awk "{for (i=2; i<=NF; i++) print \$i}" | \
         grep -v "[*?]" | sort -u
     }
 
-    # ── List currently mounted hosts via gio ──
     list_mounted() {
       gio mount -l 2>/dev/null | grep "sftp://" | \
-        sed 's/.*sftp:\/\/\([^@]*@\)\?\([^/]*\).*/\2/' | sort -u || true
+        sed "s/.*sftp:\\/\\/\\([^@]*@\\)\\?\\([^/]*\\).*/\\2/" | sort -u || true
     }
 
-    # ── Get GVfs URI for a host ──
     gvfs_uri() {
       local HOST="$1"
       local USER
-      USER=$(grep -A5 "^Host $HOST$" "$SSH_CONFIG" 2>/dev/null | grep -i "user " | awk '{print $2}') || true
-      USER="${USER:-$USER}"
+      USER=$(grep -A5 "^Host $HOST$" "$SSH_CONFIG" 2>/dev/null | grep -i "user " | awk "{print \$2}") || true
+      if [ -z "$USER" ]; then USER="$USER"; fi
       echo "sftp://$USER@$HOST/"
     }
 
-    # ── Get local GVfs mount path for a host ──
     mount_point() {
       local HOST="$1"
       local USER
-      USER=$(grep -A5 "^Host $HOST$" "$SSH_CONFIG" 2>/dev/null | grep -i "user " | awk '{print $2}') || true
-      USER="${USER:-$USER}"
+      USER=$(grep -A5 "^Host $HOST$" "$SSH_CONFIG" 2>/dev/null | grep -i "user " | awk "{print \$2}") || true
+      if [ -z "$USER" ]; then USER="$USER"; fi
       echo "/run/user/$(id -u)/gvfs/sftp:host=$HOST,user=$USER"
     }
 
-    # ── Check if a host is already mounted ──
     is_mounted() {
       local HOST="$1"
       local MP
@@ -45,7 +40,6 @@ let
       [ -d "$MP" ] && ls "$MP" &>/dev/null 2>&1
     }
 
-    # ── Mount a host via gio (shows password dialog) ──
     cmd_mount() {
       local HOST="$1"
       if is_mounted "$HOST"; then
@@ -63,7 +57,6 @@ let
       fi
     }
 
-    # ── Unmount a host ──
     cmd_umount() {
       local HOST="$1"
       local URI
@@ -71,10 +64,12 @@ let
       gio mount -u "$URI" 2>/dev/null || true
     }
 
-    # ── Main menu ──
-    case "${1:-}" in
+    CMD="$1"
+    HOST_ARG="$2"
+
+    case "$CMD" in
       mount)
-        HOST="${2:-}"
+        HOST="$HOST_ARG"
         if [ -z "$HOST" ]; then
           HOST=$(list_hosts | wofi --dmenu --prompt "Mount remote:")
           [ -z "$HOST" ] && exit 0
@@ -86,7 +81,7 @@ let
         esac
         ;;
       umount|unmount)
-        HOST="${2:-}"
+        HOST="$HOST_ARG"
         if [ -z "$HOST" ]; then
           HOST=$(list_mounted | wofi --dmenu --prompt "Unmount:")
           [ -z "$HOST" ] && exit 0
@@ -95,7 +90,7 @@ let
         notify-send "Remote" "Unmounted $HOST"
         ;;
       browse)
-        HOST="${2:-}"
+        HOST="$HOST_ARG"
         if [ -z "$HOST" ]; then
           HOST=$(list_hosts | wofi --dmenu --prompt "Browse remote:")
           [ -z "$HOST" ] && exit 0
@@ -147,7 +142,7 @@ in {
       manager.prepend_keymap = [
         {
           on = [ "M" ];
-          run = ''shell 'gio mount sftp://${1:?Enter host} --block' --block'';
+          run = ''shell 'gio mount sftp://$'' + "{1:?Enter host}" + '' --block' --block'';
           desc = "Mount SFTP server via GNOME";
         }
         {
