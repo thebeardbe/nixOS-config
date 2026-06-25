@@ -3,15 +3,19 @@
 {
   programs.neovim = {
     enable = true;
-    defaultEditor = true; # Sets $EDITOR to nvim
+    defaultEditor = true;
     viAlias = true;
     vimAlias = true;
+
+    # Disable deprecated language providers
+    withPython3 = false;
+    withRuby = false;
+    withNodeJs = false;
     
-    # Extra packages Neovim needs (LSP servers, clipboard)
     extraPackages = with pkgs; [
-      lua-language-server  # Lua LSP
+      lua-language-server
       nil                  # Nix language server
-      xclip                # Clipboard integration (system clipboard)
+      xclip                # Clipboard integration
     ];
   };
 }
