@@ -52,10 +52,24 @@
       "*" = {
         addKeysToAgent = "yes";
       };
+      # Remote hosts (via Tailscale MagicDNS)
+      "foxyNix" = {
+        hostname = "foxyNix";
+        user = "thebeardbe";
+      };
+      "sellars" = {
+        hostname = "sellars";
+        user = "thebeardbe";
+      };
+      "vps" = {
+        hostname = "vps";
+        user = "thebeardbe";
+      };
+
       # GitHub-specific: use the dedicated GitHub SSH key
       "github.com" = {
         hostname = "github.com";
-        identityFile = "~/.ssh/github"; # Path to your PRIVATE key
+        identityFile = "~/.ssh/github";
       };
     };
   };
