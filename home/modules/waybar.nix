@@ -1,5 +1,18 @@
 { pkgs, theme, ... }:
 
+let
+  # Convert hex color string to RGB values
+  hexDigit = c: {
+    "0" = 0; "1" = 1; "2" = 2; "3" = 3; "4" = 4;
+    "5" = 5; "6" = 6; "7" = 7; "8" = 8; "9" = 9;
+    "a" = 10; "b" = 11; "c" = 12; "d" = 13; "e" = 14; "f" = 15;
+  }.${c};
+  hex2 = s: hexDigit (builtins.substring 0 1 s) * 16 + hexDigit (builtins.substring 1 1 s);
+  bg = theme.colors.background;
+  bgR = hex2 (builtins.substring 1 2 bg);
+  bgG = hex2 (builtins.substring 3 2 bg);
+  bgB = hex2 (builtins.substring 5 2 bg);
+in
 {
   programs.waybar = {
     enable = true;
@@ -98,7 +111,7 @@
 
       window#waybar {
         /* Background color + transparency pulled from theme.json */
-        background-color: rgba(13, 13, 13, ${toString theme.opacity}); 
+        background-color: rgba(${toString bgR}, ${toString bgG}, ${toString bgB}, ${toString theme.opacity}); 
         border-bottom: 2px solid ${theme.colors.accent};
         color: ${theme.colors.text};
       }
