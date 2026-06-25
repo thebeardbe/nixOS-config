@@ -115,8 +115,11 @@ in
         "$mod, F, fullscreen,"
 
         # Window switching
-        # Alt+Tab — toggle between current and last focused window (works across workspaces)
-        "ALT, Tab, focuscurrentorlast,"
+        # Alt+Tab — cycle through windows on the current workspace
+        "ALT, Tab, cyclenext,"
+        "ALT SHIFT, Tab, cyclenext, prev"
+        # Alt+Grave (`) — jump to last focused window on ANY workspace (switches workspace)
+        "ALT, grave, focuscurrentorlast,"
 
         # Move focus (Vim-style with arrow keys)
         "$mod, left, movefocus, l"
