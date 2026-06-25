@@ -4,7 +4,8 @@
     ./monitors.nix
   ];
 
-  # Override shared waybar module list — no bluetooth, battery, backlight
+  # Smaller kitty font on the big ultrawide
+  programs.kitty.font.size = lib.mkForce 9;
   programs.waybar.settings.mainBar.modules-right = lib.mkForce [
     "pulseaudio" "cpu" "memory" "tray" "custom/power"
   ];
