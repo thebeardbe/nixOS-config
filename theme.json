@@ -2,9 +2,9 @@
   "colors": {
     "background": "#0d0d0d",
     "text": "#c0c0c0",
-    "accent": "#0000FF",
+    "accent": "#0abdc6",
     "critical": "#ff4500",
-    "border": "#0000FF"
+    "border": "#0abdc6"
   },
   "spacing": {
     "gaps_in": 5,
