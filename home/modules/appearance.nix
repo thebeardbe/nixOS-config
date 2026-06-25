@@ -21,7 +21,7 @@
   # 2. Qt Theme — make Qt apps (OBS, VLC, etc.) follow the GTK dark style
   qt = {
     enable = true;
-    platformTheme.name = "gtk";
+    platformTheme.name = "gtk3";
     style.name = "adwaita-dark";
   };
 
