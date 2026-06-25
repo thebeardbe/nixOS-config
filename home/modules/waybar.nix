@@ -93,7 +93,7 @@
       * {
         border: none;
         font-family: "FiraCode Nerd Font", sans-serif;
-        font-size: 13px;
+        font-size: 9px;
       }
 
       window#waybar {
@@ -112,7 +112,7 @@
         border-bottom: 2px solid ${theme.colors.accent};
       }
       #workspaces .workspace-label {
-        font-size: 11px;
+        font-size: 7px;
         opacity: 0.7;
         margin-left: 4px;
       }
