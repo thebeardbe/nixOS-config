@@ -32,6 +32,7 @@ in
       exec-once = [ 
         "nm-applet --indicator"  # NetworkManager tray icon
         "blueman-applet"         # Bluetooth tray icon
+        "hyprshell run"          # Alt+Tab window switcher daemon
         "hyprpaper"              # Wallpaper daemon
         "bash -c 'hyprctl hyprpaper \"wallpaper ,/home/thebeardbe/Pictures/Wallpapers/solid-bg.png\" 2>/dev/null; sleep 1 && goto-workspace 1'"  # Solid bg then workspace
       ];
