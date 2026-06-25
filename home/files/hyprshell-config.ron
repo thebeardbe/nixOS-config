@@ -1,18 +1,16 @@
-// hyprshell config
-Config(
-    windows: Some(WindowConfig (
-        scale: 8.0,
-        overview: Some(OverviewConfig (
-            enable: true,
-            key: "super_l",
-            modifier: "super",
-            launcher: Some(LauncherConfig (
-                max_items: 6,
-            )),
-        )),
-        switch: Some(SwitchConfig (
-            enable: true,
-            modifier: "alt",
-        )),
-    )),
-)
+{
+    "scale": 8.0,
+    "items_per_row": 3,
+    "overview": {
+        "enable": true,
+        "key": "super_l",
+        "modifier": "super",
+        "launcher": {
+            "max_items": 6
+        }
+    },
+    "switch": {
+        "enable": true,
+        "modifier": "alt"
+    }
+}

@@ -24,7 +24,7 @@
 
   home.file = {
     ".screenrc".source = ./files/screenrc;
-    ".config/hyprshell/config.ron".source = ./files/hyprshell-config.ron;
+    ".config/hyprshell/config.toml".source = ./files/hyprshell-config.toml;
   };
 
   home.sessionVariables = {

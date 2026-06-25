@@ -1,0 +1,14 @@
+scale = 8.0
+items_per_row = 3
+
+[overview]
+enable = true
+key = "super_l"
+modifier = "super"
+
+[overview.launcher]
+max_items = 6
+
+[switch]
+enable = true
+modifier = "alt"
