@@ -1,125 +1,118 @@
 { pkgs, ... }:
 
 let
-  sshMountSelect = pkgs.writeShellScriptBin "ssh-mount-select" ''
+  remote = pkgs.writeShellScriptBin "remote" ''
+    set -euo pipefail
+
     SSH_CONFIG="$HOME/.ssh/config"
     MOUNT_BASE="/tmp/ssh-mounts"
     mkdir -p "$MOUNT_BASE"
 
-    # Extract host entries from SSH config, excluding wildcards
-    HOSTS=$(grep -i "^Host " "$SSH_CONFIG" 2>/dev/null | \
-      awk '{for (i=2; i<=NF; i++) print $i}' | \
-      grep -v "[*?]" | sort -u)
+    # ── List SSH hosts from config ──
+    list_hosts() {
+      grep -i "^Host " "$SSH_CONFIG" 2>/dev/null | \
+        awk '{for (i=2; i<=NF; i++) print $i}' | \
+        grep -v "[*?]" | sort -u
+    }
 
-    if [ -z "$HOSTS" ]; then
-      notify-send "SSH Mount" "No SSH hosts found in ~/.ssh/config"
-      exit 1
-    fi
+    # ── List currently mounted hosts ──
+    list_mounted() {
+      for d in "$MOUNT_BASE"/*/; do
+        [ -d "$d" ] || continue
+        mountpoint -q "$d" 2>/dev/null && basename "$d"
+      done | sort -u
+    }
 
-    # Pick a host via wofi
-    HOST=$(echo "$HOSTS" | wofi --dmenu --prompt "Mount remote:")
-    [ -z "$HOST" ] && exit 0
+    # ── Mount a host ──
+    cmd_mount() {
+      local HOST="$1"
+      local MP="$MOUNT_BASE/$HOST"
+      mkdir -p "$MP"
 
-    MOUNT_POINT="$MOUNT_BASE/$HOST"
-    mkdir -p "$MOUNT_POINT"
+      if mountpoint -q "$MP" 2>/dev/null; then
+        echo "already-mounted"
+        return 0
+      fi
 
-    # Check if already mounted
-    if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
-      notify-send "SSH Mount" "Opening $HOST..."
-    else
-      # Mount via sshfs
-      notify-send "SSH Mount" "Mounting $HOST..."
-      if sshfs "$HOST": "$MOUNT_POINT" \
-        -o idmap=user,allow_other,follow_symlinks,reconnect 2>/tmp/ssh-mount-err; then
-        notify-send "SSH Mount" "Mounted $HOST at $MOUNT_POINT"
+      if sshfs "$HOST": "$MP" \
+        -o idmap=user,allow_other,follow_symlinks,reconnect 2>/dev/null; then
+        echo "mounted"
+        return 0
       else
-        err=$(cat /tmp/ssh-mount-err)
-        notify-send -u critical "SSH Mount" "Failed: $err"
-        rmdir "$MOUNT_POINT" 2>/dev/null
-        exit 1
+        rmdir "$MP" 2>/dev/null
+        echo "failed"
+        return 1
       fi
-    fi
+    }
 
-    # Navigate Yazi to the mount point
-    ya emit cd "$MOUNT_POINT"
-  '';
+    # ── Unmount a host ──
+    cmd_umount() {
+      local HOST="$1"
+      local MP="$MOUNT_BASE/$HOST"
+      fusermount3 -u "$MP" 2>/dev/null || \
+        fusermount -u "$MP" 2>/dev/null || \
+        sudo umount "$MP" 2>/dev/null || true
+      rmdir "$MP" 2>/dev/null
+    }
 
-  sshUmount = pkgs.writeShellScriptBin "ssh-umount" ''
-    MOUNT_BASE="/tmp/ssh-mounts"
-
-    # Find active mounts
-    MOUNT_LIST=""
-    for d in "$MOUNT_BASE"/*/; do
-      [ -d "$d" ] || continue
-      if mountpoint -q "$d" 2>/dev/null; then
-        HOST=$(basename "$d")
-        MOUNT_LIST="$MOUNT_LIST$HOST\n"
-      fi
-    done
-
-    if [ -z "$MOUNT_LIST" ]; then
-      notify-send "SSH Umount" "No active mounts"
-      exit 0
-    fi
-
-    HOST=$(echo -e "$MOUNT_LIST" | wofi --dmenu --prompt "Unmount:")
-    [ -z "$HOST" ] && exit 0
-
-    MOUNT_POINT="$MOUNT_BASE/$HOST"
-    fusermount3 -u "$MOUNT_POINT" 2>/dev/null || \
-      fusermount -u "$MOUNT_POINT" 2>/dev/null || \
-      (sudo umount "$MOUNT_POINT" 2>/dev/null)
-
-    rmdir "$MOUNT_POINT" 2>/dev/null
-    notify-send "SSH Umount" "Unmounted $HOST"
-
-    # Go back to home in Yazi
-    ya emit cd ~
-  '';
-
-  # Upload selected files to remote
-  sshUpload = pkgs.writeShellScriptBin "ssh-upload" ''
-    MOUNT_BASE="/tmp/ssh-mounts"
-
-    # Find active mounts
-    MOUNT_LIST=""
-    for d in "$MOUNT_BASE"/*/; do
-      [ -d "$d" ] || continue
-      if mountpoint -q "$d" 2>/dev/null; then
-        HOST=$(basename "$d")
-        MOUNT_LIST="$MOUNT_LIST$HOST\n"
-      fi
-    done
-
-    if [ -z "$MOUNT_LIST" ]; then
-      notify-send "SSH Upload" "No active mounts. Mount a host first."
-      exit 0
-    fi
-
-    HOST=$(echo -e "$MOUNT_LIST" | wofi --dmenu --prompt "Upload to:")
-    [ -z "$HOST" ] && exit 0
-
-    MOUNT_POINT="$MOUNT_BASE/$HOST"
-
-    # Copy selected files to the mount (Yazi sets $1, $2, etc. for selections)
-    # If we receive args from Yazi, use them; otherwise copy current file
-    if [ $# -gt 0 ]; then
-      for f in "$@"; do
-        cp -r "$f" "$MOUNT_POINT/" 2>/tmp/ssh-cp-err || true
-      done
-    else
-      notify-send "SSH Upload" "No files selected"
-      exit 0
-    fi
-
-    notify-send "SSH Upload" "Copied to $HOST"
+    # ── Main menu ──
+    case "''${1:-}" in
+      mount)
+        HOST="''${2:-}"
+        if [ -z "$HOST" ]; then
+          HOST=$(list_hosts | wofi --dmenu --prompt "Mount remote:")
+          [ -z "$HOST" ] && exit 0
+        fi
+        case $(cmd_mount "$HOST") in
+          mounted)  notify-send "Remote" "Mounted $HOST at $MOUNT_BASE/$HOST" ;;
+          already-mounted) notify-send "Remote" "$HOST already mounted" ;;
+          failed)   notify-send -u critical "Remote" "Failed to mount $HOST" ;;
+        esac
+        ;;
+      umount|unmount)
+        HOST="''${2:-}"
+        if [ -z "$HOST" ]; then
+          HOST=$(list_mounted | wofi --dmenu --prompt "Unmount:")
+          [ -z "$HOST" ] && exit 0
+        fi
+        cmd_umount "$HOST"
+        notify-send "Remote" "Unmounted $HOST"
+        ;;
+      browse)
+        HOST="''${2:-}"
+        if [ -z "$HOST" ]; then
+          HOST=$(list_hosts | wofi --dmenu --prompt "Browse remote:")
+          [ -z "$HOST" ] && exit 0
+        fi
+        case $(cmd_mount "$HOST") in
+          mounted|already-mounted)
+            yazi "$MOUNT_BASE/$HOST"
+            cmd_umount "$HOST" # auto-unmount when yazi closes
+            ;;
+          failed) notify-send -u critical "Remote" "Failed to mount $HOST" ;;
+        esac
+        ;;
+      list)
+        echo "=== Mounted ==="
+        list_mounted || echo "(none)"
+        echo "=== Available ==="
+        list_hosts || echo "(none)"
+        ;;
+      *)
+        echo "Usage: remote <command> [host]"
+        echo ""
+        echo "Commands:"
+        echo "  browse [host]   Mount and open in Yazi, auto-unmount on exit"
+        echo "  mount  [host]   Mount host (stays mounted)"
+        echo "  umount [host]   Unmount a host"
+        echo "  list            Show mounted and available hosts"
+        ;;
+    esac
   '';
 
 in {
   home.packages = with pkgs; [
-    sshMountSelect
-    sshUmount
-    sshUpload
+    remote
   ];
 
   programs.yazi = {
@@ -138,23 +131,13 @@ in {
       manager.prepend_keymap = [
         {
           on = [ "M" ];
-          run = "shell 'ssh-mount-select'";
-          desc = "Mount remote host via SSH";
+          run = "shell 'gio mount sftp://\${1:?Enter host} --block' --block";
+          desc = "Mount SFTP server via GNOME";
         }
         {
-          on = [ "U" ];
-          run = "shell 'ssh-umount'";
-          desc = "Unmount remote host";
-        }
-        {
-          on = [ "g" "m" ];
-          run = "cd /tmp/ssh-mounts";
-          desc = "Go to SSH mounts";
-        }
-        {
-          on = [ "C" ];
-          run = ''shell 'ssh-upload "$@"' --confirm'';
-          desc = "Copy selected files to remote";
+          on = [ "g" "v" ];
+          run = "cd /run/user/1000/gvfs";
+          desc = "Go to GVfs mounts";
         }
       ];
     };
