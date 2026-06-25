@@ -1,0 +1,18 @@
+// hyprshell config
+Config(
+    windows: Some(WindowConfig (
+        scale: 8.0,
+        overview: Some(OverviewConfig (
+            enable: true,
+            key: "super_l",
+            modifier: "super",
+            launcher: Some(LauncherConfig (
+                max_items: 6,
+            )),
+        )),
+        switch: Some(SwitchConfig (
+            enable: true,
+            modifier: "alt",
+        )),
+    )),
+)
