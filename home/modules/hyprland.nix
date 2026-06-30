@@ -8,6 +8,7 @@ with lib;
     # Module generates hypr/hyprland.conf (hyprlang, just systemd activation).
     # The main Hyprland config is in Lua at ~/.config/hypr/hyprland.lua
     # loaded via greetd's -c flag in common/configuration.nix
+    # Host-specific overrides in ~/.config/hypr/host.lua (loaded by hyprland.lua)
     settings = { };
   };
 
