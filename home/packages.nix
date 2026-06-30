@@ -29,6 +29,7 @@
     hyprlock               # Lockscreen
     hypridle               # Auto-sleep/idle daemon
     hyprshot               # Screenshot tool
+    hyprshell              # GTK4 window switcher with thumbnails (Alt+Tab)
     wofi                   # Application launcher
     kitty                  # Terminal emulator
     hyprpaper              # Dynamic wallpaper manager

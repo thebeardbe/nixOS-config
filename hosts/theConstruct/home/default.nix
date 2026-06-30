@@ -1,7 +1,6 @@
-{ lib, ... }: {
+{ lib, pkgs, ... }: {
   imports = [
     ./packages.nix
-    ./monitors.nix
   ];
 
   # Smaller GTK font for the ultrawide (affects Firefox UI, etc.)
@@ -15,4 +14,7 @@
   programs.waybar.settings.mainBar.modules-right = lib.mkForce [
     "pulseaudio" "cpu" "memory" "tray" "custom/notification" "custom/power"
   ];
+
+  # Host-specific Hyprland Lua config (monitors, workspace assignments)
+  home.file.".config/hypr/host.lua".source = ./hypr-host.lua;
 }

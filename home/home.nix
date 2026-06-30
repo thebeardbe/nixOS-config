@@ -7,6 +7,7 @@
      ./modules/appearance.nix # GTK/Qt theming, cursor, kitty, wofi
      ./modules/hyprlock.nix   # Lockscreen
      ./modules/hypridle.nix   # Auto-sleep / idle management
+    ./modules/battery-monitor.nix # Battery alerts at 10% and 5%
      ./modules/neovim.nix     # Neovim editor with LSPs
      ./modules/starship.nix   # Shell prompt + Zsh config
      ./packages.nix          # All user packages (apps, fonts, tools)
@@ -24,6 +25,8 @@
 
   home.file = {
     ".screenrc".source = ./files/screenrc;
+    ".config/hyprshell/config.toml".source = ./files/hyprshell-config.toml;
+    ".config/hypr/hyprland.lua".source = ./files/hyprland.lua;
   };
 
   home.sessionVariables = {

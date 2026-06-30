@@ -1,0 +1,26 @@
+# Hyprshell 4.x config — TOML format
+# Window switcher with thumbnails + overview launcher
+version = 4
+
+[windows]
+scale = 8.0
+items_per_row = 5
+
+[windows.switch]
+modifier = "alt"
+key = "Tab"
+filter_by = []
+switch_workspaces = true
+kill_key = "q"
+
+[windows.overview]
+modifier = "super"
+key = "Super_L"
+top_offset = 430
+
+[windows.overview.launcher]
+width = 650
+max_items = 6
+show_when_empty = true
+default_terminal = "kitty"
+launch_modifier = "ctrl"
