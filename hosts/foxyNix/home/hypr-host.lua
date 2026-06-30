@@ -8,7 +8,6 @@ hl.monitor({
 })
 
 -- Touchpad settings (laptop built-in)
--- Note: Lua API uses different key names than hyprlang
 hl.config({
     input = {
         touchpad = {
@@ -18,3 +17,10 @@ hl.config({
         },
     },
 })
+
+-- Signal on workspace 6
+hl.window_rule({ match = { class = "Signal|signal-desktop" }, rule_extra = "workspace 6" })
+
+hl.on("hyprland.start", function()
+    hl.exec_cmd("bash -c 'sleep 6 && signal-desktop &'")
+end)

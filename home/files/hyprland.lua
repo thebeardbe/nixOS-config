@@ -34,6 +34,11 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("hyprshell run -c ~/.config/hyprshell/config.toml")
     hl.exec_cmd("bash -c 'hyprctl hyprpaper \"wallpaper ,/home/thebeardbe/Pictures/Wallpapers/solid-bg.png\" 2>/dev/null; sleep 1 && goto-workspace 1'")
+
+    -- Autostart programs on all machines (after workspace 1 is ready)
+    hl.exec_cmd("kitty")                                           -- workspace 1
+    hl.exec_cmd("bash -c 'sleep 3 && kitty --class yazi -e yazi'")  -- workspace 3 (via window rule)
+    hl.exec_cmd("bash -c 'sleep 4 && kitty --class btop -e btop'")  -- workspace 10 (via window rule)
 end)
 
 -- Load host-specific overrides (monitors, touchpad, etc.)
@@ -192,6 +197,10 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 ----------------------------
 ---- WINDOW RULES ----
 ----------------------------
+-- Autostart workspace assignments
+hl.window_rule({ match = { class = "yazi" }, rule_extra = "workspace 3" })
+hl.window_rule({ match = { class = "btop" }, rule_extra = "workspace 10" })
+
 -- Fix dragging issues with XWayland
 hl.window_rule({
     name  = "fix-xwayland-drags",
