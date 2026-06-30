@@ -21,12 +21,12 @@ for i = 7, 10 do
 end
 
 -- Window rules: signal and firefox on workspace 7
-hl.window_rule({ match = { class = "Signal|signal-desktop" }, rule_extra = "workspace 7" })
-hl.window_rule({ match = { class = "firefox|Firefox" },       rule_extra = "workspace 7" })
+hl.window_rule({ match = { class = "Signal|signal-desktop" }, workspace = "7" })
+hl.window_rule({ match = { class = "firefox|Firefox" },       workspace = "7" })
 
 -- Autostart: signal + firefox on workspace 7 with 1/3-2/3 split
 hl.on("hyprland.start", function()
-    hl.exec_cmd("bash -c 'sleep 6 && hyprctl dispatch workspace 7 && signal-desktop &'")
+    hl.exec_cmd("bash -c 'sleep 5 && hyprctl dispatch workspace 7 && signal-desktop &'")
     hl.exec_cmd("bash -c 'sleep 7 && hyprctl dispatch workspace 7 && firefox &'")
-    hl.exec_cmd("bash -c 'sleep 10 && hyprctl dispatch workspace 7 && hyprctl dispatch layoutmsg setsplitratio 0.33'")
+    hl.exec_cmd("bash -c 'sleep 12 && hyprctl dispatch workspace 7 && hyprctl dispatch layoutmsg setsplitratio 0.33'")
 end)

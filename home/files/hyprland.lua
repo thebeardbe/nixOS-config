@@ -198,8 +198,8 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 ---- WINDOW RULES ----
 ----------------------------
 -- Autostart workspace assignments
-hl.window_rule({ match = { class = "yazi" }, rule_extra = "workspace 3" })
-hl.window_rule({ match = { class = "btop" }, rule_extra = "workspace 10" })
+hl.window_rule({ match = { class = "yazi" }, workspace = "3" })
+hl.window_rule({ match = { class = "btop" }, workspace = "10" })
 
 -- Fix dragging issues with XWayland
 hl.window_rule({
