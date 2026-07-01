@@ -193,11 +193,34 @@ hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Resize windows with keyboard (repeating for smooth adjustment)
-hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.exec_cmd("hyprctl dispatch resizeactive -30 0"),  { repeating = true })
-hl.bind(mainMod .. " + SHIFT + right", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 30 0"),   { repeating = true })
-hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 -30"),  { repeating = true })
-hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 30"),   { repeating = true })
+-- Resize mode: Super + Shift + R enters resize submap, arrows resize, Escape exits
+-- Factory function creates a fresh dispatcher table each call (required for repeating)
+local function resizeWindow(x, y)
+  return function()
+    hl.dispatch(hl.dsp.window.resize({ x = x, y = y, relative = true }))
+  end
+end
+
+local function moveWin(dir)
+  return function()
+    hl.dispatch(hl.dsp.window.move({ direction = dir }))
+  end
+end
+
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.submap("resize"))
+
+hl.define_submap("resize", function()
+  hl.bind("left",  resizeWindow(-30, 0),  { repeating = true })
+  hl.bind("right", resizeWindow(30, 0),   { repeating = true })
+  hl.bind("up",    resizeWindow(0, -30),  { repeating = true })
+  hl.bind("down",  resizeWindow(0, 30),   { repeating = true })
+  hl.bind("SHIFT + left",  moveWin("l"), { repeating = true })
+  hl.bind("SHIFT + right", moveWin("r"), { repeating = true })
+  hl.bind("SHIFT + up",    moveWin("u"), { repeating = true })
+  hl.bind("SHIFT + down",  moveWin("d"), { repeating = true })
+  hl.bind("escape", hl.dsp.submap("reset"))
+  hl.bind(mainMod .. " + SHIFT + S", hl.dsp.submap("reset"))
+end)
 
 
 ----------------------------

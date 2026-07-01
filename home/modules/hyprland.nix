@@ -3,17 +3,29 @@
 with lib;
 
 {
-  wayland.windowManager.hyprland = {
-    enable = true;
-    # Module generates hypr/hyprland.conf (hyprlang, just systemd activation).
-    # The main Hyprland config is in Lua at ~/.config/hypr/hyprland.lua
-    # loaded via greetd's -c flag in common/configuration.nix
-    # Host-specific overrides in ~/.config/hypr/host.lua (loaded by hyprland.lua)
-    settings = { };
+  # Hyprland is enabled system-wide via programs.hyprland in common/configuration.nix.
+  # We do NOT use home-manager's hyprland module because:
+  # 1. We deploy our own Lua config via home.file (not hyprlang)
+  # 2. Systemd activation is handled in the Lua autostart block (hl.on("hyprland.start"))
+  # 3. greetd launches Hyprland with -c pointing to our Lua file
+  #
+  # We DO need hyprland-session.target for systemd-based services (waybar, hypridle, etc.)
+  # to bind to. This is normally created by the home-manager hyprland module.
+  wayland.systemd.target = "hyprland-session.target";
+  systemd.user.targets.hyprland-session = {
+    Unit = {
+      Description = "Hyprland compositor session";
+      Documentation = [ "man:systemd.special(7)" ];
+      BindsTo = [ "graphical-session.target" ];
+      Wants = [ "graphical-session-pre.target" ];
+      After = [ "graphical-session-pre.target" ];
+    };
   };
 
   # Scripts for Hyprland (goto-workspace, pick-wallpaper)
   home.packages = with pkgs; [
+    luajit
+
     (pkgs.writeShellScriptBin "goto-workspace" ''
       WS="$1"
       WALLDIR="$HOME/Pictures/Wallpapers"

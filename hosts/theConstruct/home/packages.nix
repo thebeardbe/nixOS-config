@@ -3,5 +3,6 @@
     steam-run
     mangohud
     prismlauncher
+    heroic
   ];
 }

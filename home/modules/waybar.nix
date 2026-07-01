@@ -16,7 +16,10 @@ in
 {
   programs.waybar = {
     enable = true;
-    systemd.enable = true; # Let systemd manage the Waybar process
+    systemd = {
+      enable = true; # Let systemd manage the Waybar process
+      targets = [ "hyprland-session.target" ];
+    };
     settings = {
       mainBar = {
         layer = "top";

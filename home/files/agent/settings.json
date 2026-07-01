@@ -1,4 +1,7 @@
 {
+  "packages": [
+    "npm:pi-web-access"
+  ],
   "lastChangelogVersion": "0.79.8",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-flash",
