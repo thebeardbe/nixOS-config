@@ -230,6 +230,18 @@ end)
 hl.window_rule({ match = { class = "yazi" }, workspace = "3" })
 hl.window_rule({ match = { class = "btop" }, workspace = "10" })
 
+-- Center floating windows
+hl.window_rule({ match = { class = "Enpass" }, center = true })
+hl.window_rule({ match = { class = "steam" }, center = true })
+hl.window_rule({ match = { class = "org.remmina.Remmina" }, center = true })  -- common RDP client
+
+-- Pin Steam's in-game overlay / friend list popups
+hl.window_rule({
+    name  = "steam-overlay",
+    match = { class = "^steam$", float = true },
+    center = true,
+})
+
 -- Fix dragging issues with XWayland
 hl.window_rule({
     name  = "fix-xwayland-drags",

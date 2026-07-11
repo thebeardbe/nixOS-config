@@ -4,7 +4,7 @@
     enable = true;
     drivers = with pkgs; [
       gutenprint
-      # Add specific drivers here if needed, e.g., hplip, brlaser
+      epson-escpr
     ];
   };
 

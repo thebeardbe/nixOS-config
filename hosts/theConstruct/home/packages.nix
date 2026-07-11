@@ -4,5 +4,6 @@
     mangohud
     prismlauncher
     heroic
+    p7zip
   ];
 }
