@@ -252,7 +252,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Alt + Tab` | **hyprshell window switcher** (thumbnails, all workspaces) |
 | `Alt + Shift + Tab` | hyprshell switcher (reversed) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
-| `Super + L` | Lock screen via `loginctl lock-session` (hypridle runs hyprlock via `lock_cmd`) |
+| `Super + L` | Lock screen (`hyprlock` — hypridle handles idle DPMS) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
 | `Super + Shift + R` | Reload Hyprland config |
 | `Print` | Screenshot full output |
@@ -568,7 +568,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
-| `Super + L` | Lock screen via `loginctl lock-session` |
+| `Super + L` | Lock screen (`hyprlock`) |
 | `Super + Shift + R` | Reload Hyprland |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |
 | `Alt + Grave` | hyprshell switcher (reversed) |

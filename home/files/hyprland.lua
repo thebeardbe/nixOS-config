@@ -188,8 +188,8 @@ hl.bind("XF86PowerOff", hl.dsp.exec_cmd("wlogout"))
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"), { repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
 
--- Lock screen via logind (hypridle's lock_cmd runs hyprlock, listeners handle DPMS)
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("loginctl lock-session"))
+-- Lock screen (hypridle handles idle DPMS via listeners)
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 
 -- Pick wallpaper (Super + Shift + W)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
