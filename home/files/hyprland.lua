@@ -152,8 +152,8 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 -- hyprshell run is started in hl.on("hyprland.start") above
 
 -- Right Alt (AltGr) → send Super key to Moonlight for remote streaming
--- This lets you use Super-based shortcuts on the remote PC via Moonlight/Sunshine
-hl.bind("ISO_Level3_Shift", hl.dsp.send_shortcut({ mods = "SUPER", key = "", window = "class:^(com\\.moonlight_stream\\.Moonlight)$" }))
+-- Sends Super_L as a key to Moonlight, which forwards it as Super to the remote PC
+hl.bind("ISO_Level3_Shift", hl.dsp.send_shortcut({ mods = "", key = "Super_L", window = "class:^(com\\.moonlight_stream\\.Moonlight)$" }))
 
 -- Move focus (Vim-style with arrow keys)
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
