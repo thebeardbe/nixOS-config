@@ -1,5 +1,5 @@
 { pkgs, ... }: {
   home.packages = with pkgs; [
-    # Laptop-specific packages go here
+    moonlight-qt  # Game streaming client (connects to Sunshine on theConstruct)
   ];
 }

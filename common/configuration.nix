@@ -196,6 +196,8 @@
     git
     curl
     htop
+    pulseaudio  # pactl CLI for PipeWire-Pulse audio profile switching
+    pavucontrol  # PulseAudio GUI (switch audio profiles)
   ];
 
   # List services that you want to enable:

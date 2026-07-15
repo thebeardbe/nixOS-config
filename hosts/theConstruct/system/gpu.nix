@@ -5,6 +5,10 @@
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
 
+  environment.systemPackages = with pkgs; [
+    nvidia-vaapi-driver  # Hardware video decode for Steam/Chromium
+  ];
+
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = false;

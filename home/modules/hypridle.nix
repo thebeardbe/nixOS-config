@@ -11,6 +11,9 @@
         before_sleep_cmd = "loginctl lock-session";
         # Turn the display back on after waking
         after_sleep_cmd = "hyprctl dispatch dpms on";
+        # Turn off display 5s after lock screen appears (works for manual lock too)
+        on_lock_cmd = "sleep 5 && hyprctl dispatch dpms off";
+        on_unlock_cmd = "hyprctl dispatch dpms on";
       };
 
       listener = [
@@ -19,7 +22,7 @@
           on-timeout = "loginctl lock-session";
         }
         {
-          timeout = 330; # 5.5 minutes — lock first, then turn off display
+          timeout = 305; # 5s after lock — turn off display
           on-timeout = "hyprctl dispatch dpms off";
           on-resume = "hyprctl dispatch dpms on";
         }

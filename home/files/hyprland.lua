@@ -57,6 +57,11 @@ hl.env("HOME", "/home/thebeardbe")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 
+-- NVIDIA hardware acceleration
+hl.env("LIBVA_DRIVER_NAME", "nvidia")
+hl.env("GBM_BACKEND", "nvidia-drm")
+hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+
 
 -----------------------
 ---- LOOK AND FEEL ----
@@ -76,7 +81,7 @@ hl.config({
 
     decoration = {
         rounding          = 10,
-        active_opacity    = 0.95,
+        active_opacity    = 1.0,
         inactive_opacity  = 0.75,
         fullscreen_opacity = 1.0,
 
@@ -89,8 +94,8 @@ hl.config({
 
         blur = {
             enabled = true,
-            size    = 3,
-            passes  = 1,
+            size    = 6,
+            passes  = 2,
             xray    = true,
         },
     },
@@ -167,6 +172,9 @@ hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }))
 -- Screenshots
 hl.bind("Print",          hl.dsp.exec_cmd("hyprshot -m output"))
 hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("hyprshot -m window"))
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"))  -- select area
+hl.bind(mainMod .. " + CTRL + P",  hl.dsp.exec_cmd("hyprshot -m window"))   -- active window
+hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd("hyprshot -m output"))   -- full screen
 
 -- Volume control (repeating for smooth adjustment)
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pamixer -i 5"), { repeating = true })
@@ -181,7 +189,7 @@ hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"), { rep
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
 
 -- Lock screen
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("loginctl lock-session"))
 
 -- Pick wallpaper (Super + Shift + W)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
@@ -234,6 +242,9 @@ hl.window_rule({ match = { class = "btop" }, workspace = "10" })
 hl.window_rule({ match = { class = "Enpass" }, center = true })
 hl.window_rule({ match = { class = "steam" }, center = true })
 hl.window_rule({ match = { class = "org.remmina.Remmina" }, center = true })  -- common RDP client
+
+-- Firefox: keep mostly opaque even when unfocused (less background bleed)
+hl.window_rule({ match = { class = "firefox" }, opacity = 0.90 })
 
 -- Pin Steam's in-game overlay / friend list popups
 hl.window_rule({

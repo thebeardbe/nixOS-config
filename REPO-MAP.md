@@ -4,7 +4,7 @@
 > **Current:** Built for `theConstruct` (desktop), also manages `foxyNix` (laptop)
 > **Theme:** Otherland network (cyberpunk/VR-simulation aesthetic)
 > **Hyprland config format:** Lua (`hl.*` API) — `home/files/hyprland.lua`
-> **Last build:** 2026-06-29
+> **Last build:** 2026-06-30
 
 ---
 
@@ -152,7 +152,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Users** | `thebeardbe` user with groups: networkmanager, wheel, video, audio, input, docker, lp, scanner. Shell: zsh |
 | **Env vars** | `WLR_NO_HARDWARE_CURSORS=1`, `NIXOS_OZONE_WL=1` |
 | **Graphical** | GVfs enabled (for Yazi SFTP), GPU acceleration, xwayland |
-| **Packages** | vim, wget, git, curl, htop |
+| **Packages** | vim, wget, git, curl, htop, pulseaudio (pactl CLI), pavucontrol (audio profile GUI) |
 
 ### Common Modules (`common/modules/`)
 
@@ -252,11 +252,14 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Alt + Tab` | **hyprshell window switcher** (thumbnails, all workspaces) |
 | `Alt + Shift + Tab` | hyprshell switcher (reversed) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
-| `Super + L` | Lock screen (hyprlock) |
+| `Super + L` | Lock screen (`loginctl lock-session` — triggers DPMS-off after 5s) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
 | `Super + Shift + R` | Reload Hyprland config |
 | `Print` | Screenshot full output |
 | `Super + Print` | Screenshot active window |
+| `Super + Shift + P` | Screenshot selected region |
+| `Super + Ctrl + P` | Screenshot active window |
+| `Super + Alt + P` | Screenshot full screen |
 | `XF86AudioRaiseVolume` / `LowerVolume` / `Mute` | Volume control (repeating) |
 | `XF86MonBrightnessUp` / `Down` | Brightness control (repeating) |
 | `XF86PowerOff` | Power menu (wlogout) |
@@ -297,9 +300,10 @@ Otherland-themed lock screen:
 - All colors from `theme.json`
 
 #### `hypridle.nix` — Auto-Sleep System
-- 5 min inactivity → lock screen
-- 5.5 min → turn off display (DPMS)
-- Uses `pidof hyprlock || hyprlock` to prevent stacking multiple lock instances
+- 5 min inactivity → lock screen (`loginctl lock-session`)
+- 5 min 5 sec (305s) → turn off display (DPMS) — 5s after lock
+- **Display turns off automatically 5s after manual lock too** (via `on_lock_cmd`)
+- Display turns back on via `on_unlock_cmd` when unlocked
 
 #### `neovim.nix` — Text Editor
 - Neovim with vi/vim aliases
@@ -367,8 +371,11 @@ key = "Super_L"
 - `nvidia_drm.modeset=1` kernel param
 - 32-bit graphics enabled (for Steam/Proton)
 - Stable driver package
+- `nvidia-vaapi-driver` for hardware video decode in Steam/Chromium
 
 **`steam.nix`:** Steam with remote play + dedicated server firewall ports open
+- **Sunshine** game streaming host enabled (`capSysAdmin` for Wayland/KMS capture, firewall open)
+- Moonlight client on foxyNix connects here
 
 ### Home (`hosts/theConstruct/home/`)
 
@@ -423,7 +430,7 @@ hl.config({
 })
 ```
 
-**`packages.nix`:** Empty — ready for laptop-specific packages.
+**`packages.nix`:** `moonlight-qt` — game streaming client (connects to Sunshine on theConstruct)
 
 ---
 
@@ -558,7 +565,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
-| `Super + L` | Lock screen |
+| `Super + L` | Lock screen (display turns off after 5s) |
 | `Super + Shift + R` | Reload Hyprland |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
@@ -566,9 +573,14 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `blueman-applet` | Bluetooth tray |
 | `hyprshot -m output` | Screenshot full screen |
 | `hyprshot -m window` | Screenshot active window |
+| `hyprshot -m region` | Screenshot selected area |
+| `Super + Shift + P` | Screenshot selected region |
+| `Super + Ctrl + P` | Screenshot active window |
+| `Super + Alt + P` | Screenshot full screen |
 | `wlogout` | Power menu |
 | `btop` | Resource monitor (click battery in Waybar) |
-| `pavucontrol` | Audio settings (click volume in Waybar) |
+| `pavucontrol` | Audio profile GUI (click volume in Waybar) |
+| `pactl list cards` | List audio devices for profile switching |
 | `overskride` | Bluetooth manager (click Bluetooth in Waybar) |
 | `swaync-client -op` | Open notification center (click bell in Waybar) |
 
