@@ -4,7 +4,8 @@
 > **Current:** Built for `theConstruct` (desktop), also manages `foxyNix` (laptop)
 > **Theme:** Otherland network (cyberpunk/VR-simulation aesthetic)
 > **Hyprland config format:** Lua (`hl.*` API) — `home/files/hyprland.lua`
-> **Last build:** 2026-06-30
+<<<<<<< HEAD
+> **Last build:** 2026-07-15
 
 ---
 
@@ -13,40 +14,32 @@
 ```
 flake.nix                    # Entry point — exports nixosConfigurations for all hosts
 theme.json                   # Central design tokens — shared by ALL modules
+├── .pi/skills/nixos-hyprland/  # Pi agent skill: Lua API ref, troubleshooting, patterns
 ├── common/                  # Shared system-level config
-│   ├── configuration.nix    # Everything common to both machines
-│   └── modules/             # Reusable system modules (touchpad, security, etc.)
+│   ├── configuration.nix    # Everything common (greetd, PipeWire, Tailscale, etc.)
+│   └── modules/             # Reusable system modules
 ├── home/                    # Shared home-manager config (user-level)
-│   ├── home.nix             # Entry point for user config
-│   ├── packages.nix         # Shared user packages (apps, fonts, tools)
-│   ├── files/               # Static dotfiles (screenrc, agent settings, Lua config)
-│   └── modules/             # Reusable home-manager modules
+│   ├── home.nix             # Entry point
+│   ├── packages.nix         # Shared user packages
+│   ├── files/               # Dotfiles (hyprland.lua, hyprshell-config.toml, screenrc)
+│   └── modules/             # Home-manager modules (14 modules)
 ├── hosts/
 │   ├── theConstruct/        # Desktop: AMD Ryzen 5600 + RTX 3060 Ti
-│   │   ├── default.nix      # Host entry — imports hardware + system + common
-│   │   ├── hardware-configuration.nix  # Auto-generated
-│   │   ├── system/          # System-level overrides
-│   │   │   ├── default.nix  # Hostname, bootloader, drives
-│   │   │   ├── gpu.nix      # NVIDIA config
-│   │   │   └── steam.nix    # Steam + remote play
-│   │   └── home/            # User-level overrides
-│   │       ├── default.nix  # Font overrides, waybar, host.lua deployment
-│   │       ├── hypr-host.lua # Dual monitor layout
-│   │       └── packages.nix # steam-run, mangohud, prismlauncher
+│   │   ├── default.nix      # Host entry
+│   │   ├── hardware-configuration.nix
+│   │   ├── system/          # Hostname, GRUB, NVIDIA, Steam, drives
+│   │   └── home/            # Fonts, waybar, host.lua, gaming packages
 │   └── foxyNix/             # Laptop: Intel
 │       ├── default.nix
 │       ├── hardware-configuration.nix
 │       ├── system/          # Touchpad, silent boot, Ubuntu dual-boot
-│       └── home/
-│           ├── default.nix  # host.lua deployment
-│           ├── hypr-host.lua # Touchpad settings
-│           └── packages.nix # (empty — ready for laptop-specific packages)
-├── secrets/                 # Docs for the private nix-secrets flake
+│       └── home/            # host.lua, (laptop packages empty)
+├── secrets/                 # Docs for private nix-secrets flake
 ├── wallpapers/              # 6 Otherland-themed wallpapers
-├── antigravity-fhs.nix      # FHS environment for Playwright (Electron testing)
+├── antigravity-fhs.nix      # FHS env for Playwright
 ├── theme.json               # Central colors, fonts, opacity, spacing
-├── flake.lock               # Locked Nixpkgs revisions
-├── README.md                # Quick-start README
+├── flake.lock
+├── README.md
 └── REPO-MAP.md              # ← This file
 ```
 
@@ -142,6 +135,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Networking** | NetworkManager, Tailscale (`--accept-routes=false`), `resolved` DNS |
 | **Time/Locale** | `Europe/Brussels`, `en_US.UTF-8`, US keyboard with `altgr-intl` |
 | **Power** | thermald (Intel), fstrim (SSD trim), 8GB swapfile |
+| **Audio** | PipeWire with rtkit, 32-bit ALSA for Proton, low-latency config |
 | **Nix GC** | Daily auto-GC + weekly tiered profile cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d) |
 | **Docker** | Enabled |
 | **Flatpak** | Enabled |
@@ -207,14 +201,13 @@ Imports all home modules and sets:
 - **Kitty**: Cyberpunk-Neon theme, font from `theme.json`, opacity from `theme.json`
 - **Wofi**: Custom CSS using `theme.json` colors
 
-#### `hyprland.nix` — Window Manager (package + scripts only)
+#### `hyprland.nix` — Window Manager scripts + hyprpaper (NOT home-manager module)
 
-**No longer contains hyprlang settings.** The Hyprland configuration is now entirely in `home/files/hyprland.lua` (Lua format).
+**The home-manager hyprland module is NOT used.** Hyprland is enabled system-wide via `programs.hyprland` in `common/configuration.nix`. The entire Hyprland config is in `home/files/hyprland.lua` (Lua format).
 
-This module now only handles:
-- Enabling Hyprland via home-manager (for systemd integration)
+This module only handles:
 - Deploying the `goto-workspace` and `pick-wallpaper` scripts
-- Deploying the `hyprpaper.conf`
+- Deploying the `hyprpaper.conf` (legacy; wallpaper is set via Lua autostart now)
 
 #### `home/files/hyprland.lua` — The Main Hyprland Config (Lua)
 
@@ -255,6 +248,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Super + L` | Lock screen (`hyprlock` — hypridle handles idle DPMS) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
 | `Super + Shift + R` | Reload Hyprland config |
+| `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
 | `Print` | Screenshot full output |
 | `Super + Print` | Screenshot active window |
 | `Super + Shift + P` | Screenshot selected region |
@@ -270,7 +264,11 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 - `Alt_L/R` release → closes switcher, focuses selected window
 - `Shift_L/R` release → closes switcher
 
-**Autostart:** Systemd session activation → nm-applet → blueman-applet → hyprpaper → hyprshell run → goto-workspace 1
+**Autostart:** Systemd session activation → nm-applet → blueman-applet → hyprpaper → hyprshell run → goto-workspace 1 → kitty(ws1) → yazi(ws3, 3s delay) → btop(ws10, 4s delay)
+
+**Host-specific autostart** (in `hypr-host.lua` via `hl.on("hyprland.start")`):
+- theConstruct: Signal + Firefox on workspace 7 with 1/3-2/3 split
+- foxyNix: Signal on workspace 6
 
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
@@ -327,6 +325,15 @@ Otherland-themed lock screen:
 
 #### `secrets.nix` — Secret Option Declarations
 Declares `mySecrets.piAuth` option (nullable string). Values provided by the optional `nix-secrets` flake input.
+
+#### `battery-monitor.nix` — Battery Alerts
+
+**File:** `home/modules/battery-monitor.nix`
+
+Systemd user timer that checks battery level every 2 minutes:
+- **10%**: Low urgency notification, 5s timeout
+- **5%**: Critical urgency, persistent notification
+- Only fires when discharging (not on charger)
 
 #### `hyprshell-config.toml` — Hyprshell Window Switcher Config
 
@@ -391,14 +398,12 @@ key = "Super_L"
 - Deploys `hypr-host.lua`
 
 **`hypr-host.lua`:**
-```lua
--- Dual monitor setup
-hl.monitor({ output = "DP-2", mode = "1920x1080@165", position = "0x0",    scale = "1" })
-hl.monitor({ output = "DP-1", mode = "3440x1440@60",  position = "-760x-1440", scale = "1" })
--- Workspaces 1-7 → DP-2 (gaming), 8-10 → DP-1 (ultrawide)
-```
+- Dual monitor: DP-2 (1920x1080@165, gaming), DP-1 (3440x1440@60, ultrawide)
+- Workspaces 1-6 → DP-2, workspaces 7-10 → DP-1 (ws7 moved to ultrawide)
+- Window rules: Signal + Firefox on workspace 7 with 1/3-2/3 split
+- Autostart: Signal at 5s, Firefox at 7s, setsplitratio at 12s
 
-**`packages.nix`:** steam-run, mangohud, prismlauncher (Minecraft)
+**`packages.nix`:** steam-run, mangohud, prismlauncher, heroic (Heroic Games Launcher), gamescope
 
 ---
 
@@ -422,24 +427,26 @@ hl.monitor({ output = "DP-1", mode = "3440x1440@60",  position = "-760x-1440", s
 - Deploys `hypr-host.lua`
 
 **`hypr-host.lua`:**
-```lua
--- Touchpad settings (Hyprland-native, replaces services.libinput)
-hl.config({
-    input = {
-        touchpad = {
-            natural_scroll = true,
-            click_method   = "clickfinger",
-            tap            = true,
-        },
-    },
-})
-```
+- Monitor: eDP-1 at preferred resolution, scale 1.0
+- Touchpad: natural_scroll=true, tap_to_click=true, disable_while_typing=true
+- Window rule: Signal on workspace 6
+- Autostart: signal-desktop at 6s
+
+**NOTE:** Touchpad options use Lua API names (tap_to_click), not hyprlang names (tap).
 
 **`packages.nix`:** `moonlight-qt` — game streaming client (connects to Sunshine on theConstruct)
 
 ---
 
 ## 8. Additional Files
+
+### `.pi/skills/nixos-hyprland/`
+Pi coding agent skill providing:
+- `SKILL.md` — Skill manifest with Lua API reference, verify script invocation
+- `references/hyprland-lua-api.md` — Complete `hl.*()` API reference (monitor, config, bind, curve, animation, window_rule, layer_rule, on, env, exec_cmd, dsp, gesture, etc.)
+- `references/nixos-patterns.md` — NixOS patterns for Lua config, host overrides, waybar, hyprlock, hypridle
+- `references/troubleshooting.md` — Common issues and solutions
+- `scripts/verify-config.sh` — Validates Lua config syntax and common mistakes
 
 ### `antigravity-fhs.nix`
 FHS environment for running `antigravity` (a Playwright/Electron app that needs browser libraries). Provides all the `.so` files Chromium/Electron need under a clean FHS chroot.
@@ -573,6 +580,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `Super + Shift + Space` | Fuzzel app launcher |
 | `Super + L` | Lock screen (`hyprlock`) |
 | `Super + Shift + R` | Reload Hyprland |
+| `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
 | `nm-applet` | NetworkManager tray |

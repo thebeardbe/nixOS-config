@@ -2,7 +2,7 @@
 
 {
   imports = [
-    # Future: ./gpu.nix, ./monitors.nix, ./audio.nix, etc.
+    ./steam.nix
   ];
 
   networking.hostName = "foxyNix";
