@@ -303,7 +303,7 @@ Otherland-themed lock screen:
 #### `hypridle.nix` — Auto-Sleep System
 - 5 min inactivity → `lock-screen` script runs hyprlock + turns off display after 5s
 - 5 min 30 sec (330s) → safety DPMS off (backup if `lock-screen`'s DPMS was interrupted)
-- user input → `on-resume` (`hyprctl dispatch dpms on`) wakes display
+- user input → `on-resume` (`hyprctl eval "hl.dsp.dpms('on')"`) wakes display (Lua syntax needed under Lua config)
 - Manual `Super+L` also runs `lock-screen` — same lock+DPMS-off-after-5s behavior
 
 #### `neovim.nix` — Text Editor

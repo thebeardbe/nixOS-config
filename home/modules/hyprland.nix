@@ -80,7 +80,7 @@ with lib;
     (pkgs.writeShellScriptBin "lock-screen" ''
       pidof hyprlock || hyprlock &
       sleep 5
-      pidof hyprlock >/dev/null && hyprctl dispatch dpms off
+      pidof hyprlock >/dev/null && hyprctl eval "hl.dsp.dpms('off')"
     '')
   ];
 
