@@ -7,12 +7,11 @@ in
 {
   programs.hyprlock = {
     enable = true;
+    # Grace period and fade options are CLI flags only (--grace, --no-fade-in, --immediate-render)
+    # Not config options in hyprlock v0.9.5
     settings = {
       general = {
-        disable_loading = true;
         hide_cursor = true;
-        grace = 0;
-        no_fade_in = false;
       };
 
       background = [
