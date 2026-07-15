@@ -152,9 +152,10 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 -- (eval hl.dispatch works because Lua config is active)
 -- hyprshell run is started in hl.on("hyprland.start") above
 
--- Right Alt (AltGr) → send Super key to Moonlight for remote streaming
--- Sends Super_L as a key to Moonlight, which forwards it as Super to the remote PC
-hl.bind("ISO_Level3_Shift", hl.dsp.send_shortcut({ mods = "", key = "Super_L", window = "class:^(com\\.moonlight_stream\\.Moonlight)$" }))
+-- Menu key → send Super key to Moonlight for remote streaming
+-- Sends Super_L as a key event to Moonlight, which forwards it as Super to the remote PC
+-- (Right Alt/AltGr only generates Mod5 modifier, not a bindable key event)
+hl.bind("Menu", hl.dsp.send_shortcut({ mods = "", key = "Super_L", window = "class:^(com\\.moonlight_stream\\.Moonlight)$" }))
 
 -- Move focus (Vim-style with arrow keys)
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
