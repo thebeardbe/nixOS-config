@@ -92,34 +92,39 @@
   # 7. Fuzzel (alternative launcher) — Super+Shift+Space
   xdg.configFile."fuzzel/fuzzel.ini" = {
     enable = true;
-    text = ''
-      [main]
-      font = ${theme.font.family}:size=${toString (theme.font.size - 2)}
-      prompt = run:
-      terminal = kitty
-      icons-enabled = yes
-      icon-theme = Papirus-Dark
-      layer = overlay
-      width = 35
-      lines = 12
-      horizontal-pad = 30
-      vertical-pad = 8
-      inner-pad = 4
+    text =
+      let
+        # Strip # prefix and append ff for full alpha (fuzzel uses RGBA hex)
+        rgba = color: builtins.substring 1 6 color + "ff";
+      in
+      ''
+        [main]
+        font = ${theme.font.family}:size=${toString (theme.font.size - 2)}
+        prompt = run:
+        terminal = kitty
+        icons-enabled = yes
+        icon-theme = Papirus-Dark
+        layer = overlay
+        width = 35
+        lines = 12
+        horizontal-pad = 30
+        vertical-pad = 8
+        inner-pad = 4
 
-      [colors]
-      background = 000b1eff
-      text = c0c0c0ff
-      prompt = 0abdc6ff
-      input = c0c0c0ff
-      match = 0abdc6ff
-      selection = 0abdc6ff
-      selection-text = 000b1eff
-      selection-match = ffffffff
-      border = 0abdc6ff
+        [colors]
+        background = ${rgba theme.colors.background}
+        text = ${rgba theme.colors.text}
+        prompt = ${rgba theme.colors.accent}
+        input = ${rgba theme.colors.text}
+        match = ${rgba theme.colors.accent}
+        selection = ${rgba theme.colors.accent}
+        selection-text = ${rgba theme.colors.background}
+        selection-match = ffffffff
+        border = ${rgba theme.colors.border}
 
-      [border]
-      width = 2
-      radius = 10
-    '';
+        [border]
+        width = 2
+        radius = 10
+      '';
   };
 }
