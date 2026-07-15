@@ -362,11 +362,13 @@ key = "Super_L"
 - Hostname: `theConstruct`
 - Bootloader: GRUB with EFI support + OS prober (Windows dual-boot)
 - exfat filesystem support
-- 4 auto-mounted exfat drives:
-  - `/mnt/golden-city` (B89B-399D)
-  - `/mnt/blue-fire` (8CB1-7A97)
-  - `/mnt/black-glass` (32CA-F4E4)
-  - `/mnt/silver-light` (BAE0-0704)
+- 6 auto-mounted data drives (all with `nofail` — don't block boot):
+  - `/mnt/golden-city` (exfat, B89B-399D)
+  - `/mnt/blue-fire` (exfat, 8CB1-7A97)
+  - `/mnt/black-glass` (exfat, 32CA-F4E4)
+  - `/mnt/silver-light` (exfat, BAE0-0704)
+  - `/mnt/middle-country` (NTFS, F270574F705719A5)
+  - `/mnt/the-other` (NTFS, 368035BA80358203)
 
 **`gpu.nix`:** NVIDIA config
 - `nvidia` video driver (proprietary, not open)
