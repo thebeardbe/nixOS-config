@@ -88,4 +88,38 @@
       }
     '';
   };
+
+  # 7. Fuzzel (alternative launcher) — Super+Shift+Space
+  xdg.configFile."fuzzel/fuzzel.ini" = {
+    enable = true;
+    text = ''
+      [main]
+      font = ${theme.font.family}:size=${toString (theme.font.size - 2)}
+      prompt = run:
+      terminal = kitty
+      icons-enabled = yes
+      icon-theme = Papirus-Dark
+      layer = overlay
+      width = 35
+      lines = 12
+      horizontal-pad = 30
+      vertical-pad = 8
+      inner-pad = 4
+
+      [colors]
+      background = 000b1eff
+      text = c0c0c0ff
+      prompt = 0abdc6ff
+      input = c0c0c0ff
+      match = 0abdc6ff
+      selection = 0abdc6ff
+      selection-text = 000b1eff
+      selection-match = ffffffff
+      border = 0abdc6ff
+
+      [border]
+      width = 2
+      radius = 10
+    '';
+  };
 }

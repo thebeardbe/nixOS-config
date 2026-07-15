@@ -570,6 +570,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
+| `Super + Shift + Space` | Fuzzel app launcher |
 | `Super + L` | Lock screen (`hyprlock`) |
 | `Super + Shift + R` | Reload Hyprland |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |

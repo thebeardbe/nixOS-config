@@ -30,7 +30,8 @@
     hypridle               # Auto-sleep/idle daemon
     hyprshot               # Screenshot tool
     hyprshell              # GTK4 window switcher with thumbnails (Alt+Tab)
-    wofi                   # Application launcher
+    wofi                   # Application launcher (Super + Space)
+    fuzzel                 # Application launcher (Super + Shift + Space)
     kitty                  # Terminal emulator
     hyprpaper              # Dynamic wallpaper manager
     wlogout                # Power menu
