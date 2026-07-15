@@ -252,7 +252,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Alt + Tab` | **hyprshell window switcher** (thumbnails, all workspaces) |
 | `Alt + Shift + Tab` | hyprshell switcher (reversed) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
-| `Super + L` | Lock screen (`lock-screen` — shows hyprlock, display turns off after 5s) |
+| `Super + L` | Lock screen via `loginctl lock-session` (hypridle runs hyprlock via `lock_cmd`) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
 | `Super + Shift + R` | Reload Hyprland config |
 | `Print` | Screenshot full output |
@@ -275,7 +275,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
-- `lock-screen` — Shows hyprlock (if not already running), waits 5s, then turns off display via DPMS (only if still locked)
+- `lock-screen` — Shows hyprlock (if not already running)
 
 #### `waybar.nix` — Status Bar
 
@@ -301,11 +301,12 @@ Otherland-themed lock screen:
 - All colors from `theme.json`
 
 #### `hypridle.nix` — Auto-Sleep System
-- 5 min inactivity → `lock-screen` runs hyprlock
-- 5.5 min (330s) → DPMS off via dispatch (display turns off)
-- user input → `on-resume` re-enables DPMS (display turns back on)
-- Manual `Super+L` locks but **does not** turn off display (only idle timeout does)
-- Before suspend → `lock-screen`, after resume → DPMS on
+- `lock_cmd` = `pidof hyprlock || hyprlock` — runs when D-Bus lock event received
+- 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
+- 5.5 min (330s) → DPMS off via dispatch
+- user input → `on-resume` re-enables DPMS
+- Manual `Super+L` → `loginctl lock-session` → same path as idle (hyprlock runs, DPMS works)
+- Before suspend → `loginctl lock-session`, after resume → DPMS on
 
 #### `neovim.nix` — Text Editor
 - Neovim with vi/vim aliases
@@ -567,7 +568,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
-| `Super + L` | Lock screen (`lock-screen` — hyprlock + display off after 5s) |
+| `Super + L` | Lock screen via `loginctl lock-session` |
 | `Super + Shift + R` | Reload Hyprland |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
