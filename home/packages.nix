@@ -39,6 +39,7 @@
     wlogout                # Power menu
 
     # Utilities
+    wtype                  # Virtual keyboard input (Moonlight streaming key injection)
     fzf                    # Fuzzy finder (used by pick-wallpaper)
     screen                 # Terminal multiplexer
     libnotify              # Notification daemon (notify-send)

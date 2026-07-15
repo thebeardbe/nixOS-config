@@ -153,9 +153,10 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 -- hyprshell run is started in hl.on("hyprland.start") above
 
 -- Menu key → send Super key to Moonlight for remote streaming
--- Sends Super_L as a key event to Moonlight, which forwards it as Super to the remote PC
--- (Right Alt/AltGr only generates Mod5 modifier, not a bindable key event)
-hl.bind("Menu", hl.dsp.send_shortcut({ mods = "", key = "Super_L", window = "class:^(com\\.moonlight_stream\\.Moonlight)$" }))
+-- Uses wtype to inject a real key event via virtual-keyboard protocol
+-- (send_shortcut sends synthetic events that Moonlight ignores)
+-- wtype uses 'logo' for the Super/Windows key
+hl.bind("Menu", hl.dsp.exec_cmd("wtype -M logo -m logo"))
 
 -- Move focus (Vim-style with arrow keys)
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
