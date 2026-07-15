@@ -76,9 +76,11 @@ with lib;
       done
     '')
 
-    # Lock screen — shows hyprlock (if not already running)
+    # Lock screen — shows hyprlock, then turns off display after 5s (only if still locked)
     (pkgs.writeShellScriptBin "lock-screen" ''
-      pidof hyprlock || hyprlock
+      pidof hyprlock || hyprlock &
+      sleep 5
+      pidof hyprlock >/dev/null && hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'
     '')
   ];
 
