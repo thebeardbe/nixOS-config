@@ -213,7 +213,7 @@ Imports all home modules and sets:
 
 This module now only handles:
 - Enabling Hyprland via home-manager (for systemd integration)
-- Deploying the `goto-workspace`, `pick-wallpaper`, and `lock-screen` scripts
+- Deploying the `goto-workspace` and `pick-wallpaper` scripts
 - Deploying the `hyprpaper.conf`
 
 #### `home/files/hyprland.lua` — The Main Hyprland Config (Lua)
@@ -275,7 +275,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
-- `lock-screen` — Shows hyprlock (if not already running)
+- (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
 
 #### `waybar.nix` — Status Bar
 

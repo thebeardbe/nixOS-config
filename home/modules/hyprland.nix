@@ -22,7 +22,7 @@ with lib;
     };
   };
 
-  # Scripts for Hyprland (goto-workspace, pick-wallpaper)
+  # Scripts for Hyprland: workspace wallpaper + wallpaper picker
   home.packages = with pkgs; [
     luajit
 
@@ -76,10 +76,6 @@ with lib;
       done
     '')
 
-    # Lock screen — shows hyprlock (if not already running)
-    (pkgs.writeShellScriptBin "lock-screen" ''
-      pidof hyprlock || hyprlock
-    '')
   ];
 
   # Deploy hyprpaper config from the modules directory
