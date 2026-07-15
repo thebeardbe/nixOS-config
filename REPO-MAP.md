@@ -301,11 +301,11 @@ Otherland-themed lock screen:
 - All colors from `theme.json`
 
 #### `hypridle.nix` — Auto-Sleep System
-- 5 min inactivity → `lock-screen` runs hyprlock + turns off display after 5s
-- 5 min 30s (330s) → safety DPMS off via `hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'`
-- user input → `on-resume` turns display back on via dispatch
+- 5 min inactivity → `lock-screen` runs hyprlock
+- 5.5 min (330s) → DPMS off via dispatch (display turns off)
+- user input → `on-resume` re-enables DPMS (display turns back on)
+- Manual `Super+L` locks but **does not** turn off display (only idle timeout does)
 - Before suspend → `lock-screen`, after resume → DPMS on
-- Manual `Super+L` also runs `lock-screen` — same lock+DPMS-off-after-5s
 
 #### `neovim.nix` — Text Editor
 - Neovim with vi/vim aliases
