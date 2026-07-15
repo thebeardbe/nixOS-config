@@ -75,6 +75,13 @@ with lib;
         fi
       done
     '')
+
+    # Lock screen — shows hyprlock, then turns off display after 5s (only if still locked)
+    (pkgs.writeShellScriptBin "lock-screen" ''
+      pidof hyprlock || hyprlock &
+      sleep 5
+      pidof hyprlock >/dev/null && hyprctl dispatch dpms off
+    '')
   ];
 
   # Deploy hyprpaper config from the modules directory

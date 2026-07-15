@@ -213,7 +213,7 @@ Imports all home modules and sets:
 
 This module now only handles:
 - Enabling Hyprland via home-manager (for systemd integration)
-- Deploying the `goto-workspace` and `pick-wallpaper` scripts
+- Deploying the `goto-workspace`, `pick-wallpaper`, and `lock-screen` scripts
 - Deploying the `hyprpaper.conf`
 
 #### `home/files/hyprland.lua` — The Main Hyprland Config (Lua)
@@ -252,7 +252,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Alt + Tab` | **hyprshell window switcher** (thumbnails, all workspaces) |
 | `Alt + Shift + Tab` | hyprshell switcher (reversed) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
-| `Super + L` | Lock screen (`loginctl lock-session` — triggers DPMS-off after 5s) |
+| `Super + L` | Lock screen (`lock-screen` — shows hyprlock, display turns off after 5s) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
 | `Super + Shift + R` | Reload Hyprland config |
 | `Print` | Screenshot full output |
@@ -275,6 +275,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
+- `lock-screen` — Shows hyprlock (if not already running), waits 5s, then turns off display via DPMS (only if still locked)
 
 #### `waybar.nix` — Status Bar
 
@@ -300,10 +301,10 @@ Otherland-themed lock screen:
 - All colors from `theme.json`
 
 #### `hypridle.nix` — Auto-Sleep System
-- 5 min inactivity → lock screen (`loginctl lock-session`)
-- 5 min 5 sec (305s) → turn off display (DPMS) — 5s after lock
-- **Display turns off automatically 5s after manual lock too** (via `on_lock_cmd`)
-- Display turns back on via `on_unlock_cmd` when unlocked
+- 5 min inactivity → `lock-screen` script runs hyprlock + turns off display after 5s
+- 5 min 30 sec (330s) → safety DPMS off (backup if `lock-screen`'s DPMS was interrupted)
+- user input → `on-resume` (`hyprctl dispatch dpms on`) wakes display
+- Manual `Super+L` also runs `lock-screen` — same lock+DPMS-off-after-5s behavior
 
 #### `neovim.nix` — Text Editor
 - Neovim with vi/vim aliases
@@ -565,7 +566,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
-| `Super + L` | Lock screen (display turns off after 5s) |
+| `Super + L` | Lock screen (`lock-screen` — hyprlock + display off after 5s) |
 | `Super + Shift + R` | Reload Hyprland |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |
 | `Alt + Grave` | hyprshell switcher (reversed) |

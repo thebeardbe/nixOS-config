@@ -188,8 +188,8 @@ hl.bind("XF86PowerOff", hl.dsp.exec_cmd("wlogout"))
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"), { repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
 
--- Lock screen
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("loginctl lock-session"))
+-- Lock screen (shows hyprlock, turns off display after 5s)
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("lock-screen"))
 
 -- Pick wallpaper (Super + Shift + W)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
