@@ -247,7 +247,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Alt + Grave` | hyprshell switcher (reversed) |
 | `Super + L` | Lock screen (`hyprlock` — hypridle handles idle DPMS) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
-| `Super + Shift + R` | Reload Hyprland config |
+| `Super + Shift + R` | Reload Lua config via `dofile` (picks up file changes) |
 | `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
 | `Print` | Screenshot full output |
 | `Super + Print` | Screenshot active window |
@@ -574,12 +574,13 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `nix-env --list-generations -p /nix/var/nix/profiles/system` | List boot entries |
 | `sudo nix-env --delete-generations -p /nix/var/nix/profiles/system <N>` | Remove specific generation |
 | `hyprctl reload` | Reload Hyprland config (no reboot needed) |
+| `Super + Shift + R` | Re-evaluate the Lua config via `hyprctl eval 'dofile(...)'` (picks up file changes) |
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
 | `Super + Shift + Space` | Fuzzel app launcher |
 | `Super + L` | Lock screen (`hyprlock`) |
-| `Super + Shift + R` | Reload Hyprland |
+| `Super + Shift + R` | Reload Lua config via `dofile` |
 | `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
 | `Alt + Tab` | hyprshell window switcher (thumbnails) |
 | `Alt + Grave` | hyprshell switcher (reversed) |

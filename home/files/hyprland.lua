@@ -199,8 +199,8 @@ hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 -- Pick wallpaper (Super + Shift + W)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
 
--- Reload Hyprland config (Super + Shift + R)
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
+-- Reload Lua config (Super + Shift + R) — re-evaluates the entire Lua file at runtime
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl eval 'dofile(os.getenv(\"HOME\") .. \"/.config/hypr/hyprland.lua\")'"))
 
 -- Mouse bindings: move/resize with Super + drag
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
