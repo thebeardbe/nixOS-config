@@ -248,8 +248,8 @@ hl.window_rule({ match = { class = "Enpass" }, center = true })
 hl.window_rule({ match = { class = "steam" }, center = true })
 hl.window_rule({ match = { class = "org.remmina.Remmina" }, center = true })  -- common RDP client
 
--- Firefox: keep mostly opaque even when unfocused (less background bleed)
-hl.window_rule({ match = { class = "firefox" }, opacity = 0.90 })
+-- Firefox: 100% when focused, 90% when unfocused (less background bleed)
+hl.window_rule({ match = { class = "firefox" }, opacity = "1.0 0.90" })
 
 -- Pin Steam's in-game overlay / friend list popups
 hl.window_rule({
