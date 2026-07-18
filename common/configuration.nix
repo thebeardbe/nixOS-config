@@ -187,6 +187,31 @@
     };
   };
 
+  # Weekly flake update + rebuild (Monday 4am, randomized)
+  systemd.services.nix-flake-update = {
+    description = "Update Nix flake inputs and rebuild";
+    environment.HOME = "/home/thebeardbe";
+    serviceConfig = {
+      Type = "oneshot";
+      WorkingDirectory = "/home/thebeardbe/nixos-config";
+      User = "root";
+    };
+    script = ''
+      cd /home/thebeardbe/nixos-config
+      ${pkgs.nix}/bin/nix flake update 2>&1 | logger -t nix-flake-update
+      ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake /home/thebeardbe/nixos-config#theConstruct 2>&1 | logger -t nix-flake-update
+    '';
+  };
+  systemd.timers.nix-flake-update = {
+    description = "Weekly Nix flake update timer";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "Mon 04:00";
+      Persistent = true;
+      RandomizedDelaySec = "2h";
+    };
+  };
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
 
