@@ -76,6 +76,49 @@ with lib;
       done
     '')
 
+    # Fix JBL Quantum headset — reinitialize USB audio without reboot
+    (pkgs.writeShellScriptBin "fix-jbl" ''
+      CARD="alsa_card.usb-JBL_JBL_Quantum_360X_Wireless-00"
+      PROFILE="output:analog-stereo+input:mono-fallback"
+
+      echo "🔊 Fixing JBL Quantum headset..."
+
+      # Step 1: Switch profile off and back on to reinitialize
+      echo "→ Switching profile to off..."
+      pactl set-card-profile "$CARD" off 2>/dev/null
+      sleep 1
+      echo "→ Switching profile to $PROFILE..."
+      pactl set-card-profile "$CARD" "$PROFILE" 2>/dev/null
+      sleep 0.5
+
+      # Check if it worked
+      if pactl list sinks 2>/dev/null | grep -q "JBL.*RUNNING"; then
+        echo "✅ JBL headset is working!"
+        exit 0
+      fi
+
+      # Step 2: Try restarting PipeWire
+      echo "→ Restarting PipeWire..."
+      systemctl --user restart pipewire pipewire-pulse 2>/dev/null
+      sleep 2
+
+      # Step 3: Try USB reset if still not working (needs sudo)
+      USB_PATH="/sys/bus/usb/devices/3-1.3"
+      if [ -d "$USB_PATH" ]; then
+        echo "→ Resetting USB device..."
+        echo 0 | sudo tee "$USB_PATH/authorized" >/dev/null 2>&1
+        sleep 1
+        echo 1 | sudo tee "$USB_PATH/authorized" >/dev/null 2>&1
+        sleep 2
+      fi
+
+      # Final check
+      if pactl list sinks 2>/dev/null | grep -q "JBL"; then
+        echo "✅ JBL headset is working!"
+      else
+        echo "❌ Could not fix JBL headset. Try unplugging and re-plugging the USB dongle."
+      fi
+    '')
   ];
 
   # Deploy hyprpaper config from the modules directory
