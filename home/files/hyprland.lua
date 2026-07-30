@@ -82,7 +82,7 @@ hl.config({
     decoration = {
         rounding          = 10,
         active_opacity    = 1.0,
-        inactive_opacity  = 0.75,
+        inactive_opacity  = 0.90,
         fullscreen_opacity = 1.0,
 
         shadow = {
@@ -251,8 +251,7 @@ hl.window_rule({ match = { class = "Enpass" }, center = true })
 hl.window_rule({ match = { class = "steam" }, center = true })
 hl.window_rule({ match = { class = "org.remmina.Remmina" }, center = true })  -- common RDP client
 
--- Firefox: 100% when focused, 90% when unfocused (less background bleed)
-hl.window_rule({ match = { class = "firefox" }, opacity = "1.0 0.90" })
+-- (Firefox uses global inactive_opacity = 0.90)
 
 -- Pin Steam's in-game overlay / friend list popups
 hl.window_rule({
