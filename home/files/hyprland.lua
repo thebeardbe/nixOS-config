@@ -251,7 +251,8 @@ hl.window_rule({ match = { class = "Enpass" }, center = true })
 hl.window_rule({ match = { class = "steam" }, center = true })
 hl.window_rule({ match = { class = "org.remmina.Remmina" }, center = true })  -- common RDP client
 
--- (Firefox uses global inactive_opacity = 0.90)
+-- Firefox: always 100% opaque (ignore global inactive_opacity)
+hl.window_rule({ match = { class = "firefox" }, opacity = 1.0 })
 
 -- Pin Steam's in-game overlay / friend list popups
 hl.window_rule({
