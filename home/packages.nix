@@ -17,6 +17,7 @@
     networkmanagerapplet   # NM tray icon (launched in Hyprland's exec-once)
     pavucontrol            # PulseAudio volume mixer
     pamixer                # CLI volume control (used in Hyprland keybinds)
+    playerctl              # MPRIS media control (used to detect video playback)
     fastfetch              # System info display
     nwg-look               # GTK settings GUI for Hyprland
     tree                   # Directory tree viewer

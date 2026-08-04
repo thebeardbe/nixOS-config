@@ -20,11 +20,12 @@
         }
         {
           timeout = 330; # 5.5 minutes → turn off display (on-resume wakes it)
-          # ignore_inhibit: apps (Steam, Firefox) hold idle inhibitors which would
-          # make hypridle SKIP on-resume → display never wakes. This listener
-          # must always respond to real input.
+          # ignore_inhibit: apps (Steam) hold idle inhibitors which would make
+          # hypridle SKIP on-resume → display never wakes. This listener must
+          # always respond to real input.
           ignore_inhibit = true;
-          on-timeout = "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'";
+          # dpms-off script skips if media is playing (MPRIS via playerctl)
+          on-timeout = "dpms-off";
           on-resume = "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'";
         }
       ];

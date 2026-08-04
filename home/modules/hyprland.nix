@@ -76,6 +76,16 @@ with lib;
       done
     '')
 
+    # Turn display off via DPMS — but skip if media is playing (YouTube, etc.)
+    (pkgs.writeShellScriptBin "dpms-off" ''
+      if command -v playerctl >/dev/null 2>&1; then
+        if playerctl status 2>/dev/null | grep -q "^Playing$"; then
+          exit 0  # media playing — keep display on
+        fi
+      fi
+      hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'
+    '')
+
     # Fix JBL Quantum headset — reinitialize USB audio without reboot
     (pkgs.writeShellScriptBin "fix-jbl" ''
       CARD="alsa_card.usb-JBL_JBL_Quantum_360X_Wireless-00"
