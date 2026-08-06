@@ -267,6 +267,18 @@
     xwayland.enable = true;
   };
 
+  # GNOME portal provides org.freedesktop.portal.Background (needed by Packet's
+  # "run in background" mode). Only Background is routed to it — everything else
+  # keeps using the gtk/hyprland portals.
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+  xdg.portal.config.common = {
+    "org.freedesktop.impl.portal.Background" = "gnome";
+    "org.freedesktop.impl.portal.Screenshot" = "hyprland";
+    "org.freedesktop.impl.portal.ScreenCast" = "hyprland";
+    "org.freedesktop.impl.portal.GlobalShortcuts" = "hyprland";
+    "org.freedesktop.impl.portal.RemoteDesktop" = "hyprland";
+  };
+
 
   # enviroment settings
   environment.sessionVariables = {
