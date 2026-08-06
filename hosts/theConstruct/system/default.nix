@@ -23,9 +23,9 @@
   # Filesystem support for storage drives (exfat + NTFS via ntfs-3g)
   boot.supportedFilesystems = [ "exfat" ];
 
-  # Firewall: LocalSend (file sharing with Android)
-  networking.firewall.allowedTCPPorts = [ 53317 ];
-  networking.firewall.allowedUDPPorts = [ 53317 ];
+  # Firewall: Packet (Quick Share with Android) — Quick Share protocol ports + mDNS
+  networking.firewall.allowedTCPPorts = [ 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];
+  networking.firewall.allowedUDPPorts = [ 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 5353 ];
 
   # Storage drives — auto-mount at boot (nofail = don't block boot)
   fileSystems = {
