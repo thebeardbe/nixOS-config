@@ -21,6 +21,10 @@
     '';
   };
 
+  # Firewall: Packet (Quick Share with Android) — same ports as theConstruct
+  networking.firewall.allowedTCPPorts = [ 9300 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];
+  networking.firewall.allowedUDPPorts = [ 5353 5355 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];
+
   # Silent boot
   boot.plymouth.enable = true;
   boot.kernelParams = [
