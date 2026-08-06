@@ -23,9 +23,9 @@
   # Filesystem support for storage drives (exfat + NTFS via ntfs-3g)
   boot.supportedFilesystems = [ "exfat" ];
 
-  # Firewall: Packet (Quick Share with Android) — Quick Share protocol ports + mDNS
-  networking.firewall.allowedTCPPorts = [ 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];
-  networking.firewall.allowedUDPPorts = [ 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 5353 ];
+  # Firewall: Packet (Quick Share with Android) — per GitHub issues: 9300/tcp, 5353/udp (mDNS), 5355/udp (LLMNR)
+  networking.firewall.allowedTCPPorts = [ 9300 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];
+  networking.firewall.allowedUDPPorts = [ 5353 5355 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];
 
   # Storage drives — auto-mount at boot (nofail = don't block boot)
   fileSystems = {
