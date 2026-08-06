@@ -33,6 +33,7 @@
     hyprshell              # GTK4 window switcher with thumbnails (Alt+Tab)
     wofi                   # Application launcher (Super + Space)
     fuzzel                 # Application launcher (Super + Shift + Space)
+    localsend              # File sharing with Android (Quick Share alternative)
     kitty                  # Terminal emulator
     hyprpaper              # Dynamic wallpaper manager
     wlogout                # Power menu

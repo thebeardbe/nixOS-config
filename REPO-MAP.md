@@ -388,6 +388,7 @@ key = "Super_L"
 **`steam.nix`:** Steam with remote play + dedicated server firewall ports open
 - **Sunshine** game streaming host enabled (`capSysAdmin` for Wayland/KMS capture, firewall open)
 - Moonlight client on foxyNix connects here
+- **LocalSend** (port 53317 TCP+UDP open) — file sharing with Android
 
 ### Home (`hosts/theConstruct/home/`)
 
