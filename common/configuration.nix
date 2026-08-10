@@ -193,13 +193,13 @@
     environment.HOME = "/home/thebeardbe";
     serviceConfig = {
       Type = "oneshot";
-      WorkingDirectory = "/home/thebeardbe/nixos-config";
+      WorkingDirectory = "/home/thebeardbe/nixOS-config";
       User = "root";
     };
     script = ''
-      cd /home/thebeardbe/nixos-config
+      cd /home/thebeardbe/nixOS-config
       ${pkgs.nix}/bin/nix flake update 2>&1 | logger -t nix-flake-update
-      ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake /home/thebeardbe/nixos-config#theConstruct 2>&1 | logger -t nix-flake-update
+      ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake /home/thebeardbe/nixOS-config#theConstruct 2>&1 | logger -t nix-flake-update
     '';
   };
   systemd.timers.nix-flake-update = {
