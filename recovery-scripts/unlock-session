@@ -1,0 +1,44 @@
+#!/run/current-system/sw/bin/bash
+# unlock-session — recovery when hyprlock crashes on a locked screen
+#
+# hyprlock crashes leave the logind session locked. The old advice
+# ("loginctl unlock-session" without args) no longer works on modern
+# logind — it requires an explicit session ID. This script finds the
+# graphical session and unlocks it.
+#
+# Usage (from a free TTY, e.g. Ctrl+Alt+F2):
+#   unlock-session
+#
+# Then switch back with Ctrl+Alt+F1.
+
+set -e
+
+echo "🔓 unlock-session recovery tool"
+echo "   Finding your graphical session..."
+
+# Prefer the seat0 session belonging to the current user
+SESSION=$(loginctl list-sessions --no-legend 2>/dev/null |
+    awk -v u="$USER" '$3 == u && $4 == "seat0" {print $1; exit}')
+
+# Fallback: any seat0 session
+if [ -z "$SESSION" ]; then
+    SESSION=$(loginctl list-sessions --no-legend 2>/dev/null |
+        awk '$4 == "seat0" {print $1; exit}')
+fi
+
+if [ -z "$SESSION" ]; then
+    echo "❌ No graphical (seat0) session found. Sessions:" >&2
+    loginctl list-sessions >&2
+    exit 1
+fi
+
+echo "   Found session $SESSION — unlocking..."
+loginctl unlock-session "$SESSION"
+
+# If a zombie/hung hyprlock is still around, clean it up so the next
+# lock starts fresh (hypridle's lock_cmd uses 'pidof hyprlock || hyprlock')
+pkill -f "^hyprlock$" 2>/dev/null || true
+
+echo "✅ Session $SESSION unlocked."
+echo "   Switch back to the desktop with Ctrl+Alt+F1."
+echo "   Note: if the screen is black, run: hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"
