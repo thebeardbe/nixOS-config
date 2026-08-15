@@ -281,6 +281,15 @@
     "org.freedesktop.impl.portal.GlobalShortcuts" = "hyprland";
     "org.freedesktop.impl.portal.RemoteDesktop" = "hyprland";
   };
+  # The GNOME portal segfaults on resume (libgtk-4). Auto-restart it so
+  # Packet's background mode recovers without a manual restart.
+  systemd.user.services."xdg-desktop-portal-gnome" = {
+    overrideStrategy = "asDropin";
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "2";
+    };
+  };
 
 
   # enviroment settings
