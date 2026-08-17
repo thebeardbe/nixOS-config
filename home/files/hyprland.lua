@@ -53,7 +53,6 @@ end
 -------------------------------
 ---- ENVIRONMENT VARIABLES ----
 -------------------------------
-hl.env("PLAYWRIGHT_BROWSERS_PATH", "/home/thebeardbe/.nix-profile/lib/playwright")
 hl.env("HOME", "/home/thebeardbe")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")

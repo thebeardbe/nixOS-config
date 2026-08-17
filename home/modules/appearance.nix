@@ -35,6 +35,7 @@
 
   # 4. Cursor theme — consistency across GTK and X11 apps
   home.pointerCursor = {
+    enable = true;
     gtk.enable = true;
     x11.enable = true;
     package = pkgs.bibata-cursors;

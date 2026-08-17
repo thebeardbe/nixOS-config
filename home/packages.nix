@@ -8,7 +8,6 @@
     unstable.signal-desktop   # Encrypted messaging (from unstable for latest version)
     firefox          # Web browser
     enpass           # Password manager
-    gemini-cli       # Google Gemini CLI
 
     # Fonts & UI
     nerd-fonts.fira-code
@@ -52,8 +51,7 @@
     fd                     # Fast file search
     ripgrep                # Fast content search
 
-    # Playwright / antigravity
-    playwright-driver.browsers
+    # Shared libraries (Electron apps, yazi SFTP)
     glib                   # GLib (provides 'gio' for SFTP mounting)
     expat                  # XML parser (needed by some Electron apps)
     libxshmfence           # Shared memory fence (needed by Chromium/Electron)
