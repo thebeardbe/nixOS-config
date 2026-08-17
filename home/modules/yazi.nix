@@ -23,6 +23,11 @@
           run = "cd /run/user/1000/gvfs";
           desc = "Go to GVfs mounts";
         }
+        {
+          on = [ "g" "d" ];
+          run = "cd /run/media/thebeardbe";
+          desc = "Go to removable drives (USB/SD)";
+        }
       ];
     };
   };
