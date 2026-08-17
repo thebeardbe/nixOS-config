@@ -52,6 +52,9 @@
     };
     settings = {
       background_opacity = toString theme.opacity;
+      # Disable shell integration over SSH to fix Enter key issues
+      # (screen handles its own shell integration locally)
+      shell_integration = "disabled";
     };
   };
 
