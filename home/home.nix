@@ -9,6 +9,7 @@
      ./modules/hypridle.nix   # Auto-sleep / idle management
     ./modules/battery-monitor.nix # Battery alerts at 10% and 5%
      ./modules/neovim.nix     # Neovim editor with LSPs
+     ./modules/udiskie.nix   # Auto-mount USB/SD/external drives
      ./modules/starship.nix   # Shell prompt + Zsh config
      ./packages.nix          # All user packages (apps, fonts, tools)
      ./modules/hyprland.nix   # Window manager + keybinds + hypr ecosystem

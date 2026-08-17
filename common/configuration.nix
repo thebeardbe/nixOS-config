@@ -65,6 +65,14 @@
   # Trim SSD for performance
   services.fstrim.enable = true;
 
+  # UDisks2 — daemon for mounting removable media (USB sticks, SD cards, external drives)
+  # udiskie (home-manager) talks to this over D-Bus to auto-mount on insertion
+  services.udisks2.enable = true;
+
+  # Kernel support for removable-media filesystems: exFAT (SD cards/USB sticks)
+  # and NTFS (Windows drives, via kernel ntfs3 driver)
+  boot.supportedFilesystems = [ "exfat" "ntfs3" ];
+
   # Swap file
   swapDevices = [ { device = "/swapfile"; size = 8192; } ];
 

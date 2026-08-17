@@ -11,4 +11,15 @@
   # PolicyKit — grants permission elevation for GUI apps (mounting drives, etc.)
   # Required for many desktop operations to work without terminal sudo
   security.polkit.enable = true;
+
+  # Allow wheel users to mount/unmount/eject drives via UDisks2 without password
+  # prompts (used by udiskie automounter for USB sticks, SD cards, external drives)
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (action.id.indexOf("org.freedesktop.udisks2.") == 0 &&
+          subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+      }
+    });
+  '';
 }
