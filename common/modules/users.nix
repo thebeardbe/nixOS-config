@@ -15,6 +15,7 @@
       "docker"           # Docker daemon access (enabled in configuration.nix)
       "lp"               # Printing (CUPS)
       "scanner"          # Scanning (SANE)
+      "dialout"          # Serial port access (USB-UART: Heltec V3, ESP32 flashing)
     ];
     # Shell set to zsh (configured via home-manager in starship.nix)
     shell = pkgs.zsh; 
