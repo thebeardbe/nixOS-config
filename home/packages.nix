@@ -7,6 +7,7 @@
     discord          # Voice/text chat
     unstable.signal-desktop   # Encrypted messaging (from unstable for latest version)
     firefox          # Web browser
+    chromium         # Alternative web browser
     enpass           # Password manager
 
     # Fonts & UI
