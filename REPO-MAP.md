@@ -1,11 +1,10 @@
 # Renaissance Man Unified Config — Full Repository Guide
 
-> **Repo root:** `/home/thebeardbe/nixos-config` (or `~/nixos-config`)
+> **Repo root:** `/home/thebeardbe/nixOS-config` (or `~/nixOS-config`)
 > **Current:** Built for `theConstruct` (desktop), also manages `foxyNix` (laptop)
 > **Theme:** Otherland network (cyberpunk/VR-simulation aesthetic)
 > **Hyprland config format:** Lua (`hl.*` API) — `home/files/hyprland.lua`
-<<<<<<< HEAD
-> **Last build:** 2026-07-15
+> **Last build:** 2026-08-29
 
 ---
 
@@ -22,7 +21,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
 │   ├── files/               # Dotfiles (hyprland.lua, hyprshell-config.toml, screenrc)
-│   └── modules/             # Home-manager modules (14 modules)
+│   └── modules/             # Home-manager modules (12 modules + hyprpaper.conf)
 ├── hosts/
 │   ├── theConstruct/        # Desktop: AMD Ryzen 5600 + RTX 3060 Ti
 │   │   ├── default.nix      # Host entry
@@ -33,10 +32,10 @@ theme.json                   # Central design tokens — shared by ALL modules
 │       ├── default.nix
 │       ├── hardware-configuration.nix
 │       ├── system/          # Touchpad, silent boot, Ubuntu dual-boot
-│       └── home/            # host.lua, (laptop packages empty)
+│       └── home/            # host.lua, packages (moonlight-qt)
 ├── secrets/                 # Docs for private nix-secrets flake
 ├── wallpapers/              # 6 Otherland-themed wallpapers
-├── antigravity-fhs.nix      # FHS env for Playwright
+├── recovery-scripts/        # Standalone recovery tools (unlock-session)
 ├── theme.json               # Central colors, fonts, opacity, spacing
 ├── flake.lock
 ├── README.md
@@ -54,7 +53,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 |---|---|---|
 | `nixpkgs` | `nixos/nixpkgs/nixos-unstable` | Main package set |
 | `home-manager` | `nix-community/home-manager` | User config management |
-| `nixpkgs-unstable` | `nixos/nixpkgs/nixpkgs-unstable` | Bleeding-edge pkgs (signal-desktop) |
+| `nixpkgs-unstable` | `nixos/nixpkgs/nixpkgs-unstable` | Bleeding-edge pkgs (signal-desktop, moonlight-qt) |
 | `nix-secrets` (optional/disabled) | Private git repo | Secret values (auth.json for pi agent) |
 
 ### Outputs
@@ -70,7 +69,7 @@ theme.json                   # Central design tokens — shared by ALL modules
   3. Optional private secret modules (toggle by uncommenting the `nix-secrets` input)
 - No package overlays (hyprshell uses stock nixpkgs — the Lua config makes its IPC work natively)
 
-### Build commands (run from ~/nixos-config)
+### Build commands (run from ~/nixOS-config)
 ```bash
 # Rebuild current machine
 sudo nixos-rebuild switch --flake .#$(hostname)
@@ -137,16 +136,18 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Power** | thermald (Intel), fstrim (SSD trim), 8GB swapfile |
 | **Audio** | PipeWire with rtkit, 32-bit ALSA for Proton, low-latency config |
 | **Nix GC** | Daily auto-GC + weekly tiered profile cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d) |
+| **Auto-update** | Weekly `nix-flake-update` timer (Mon ~04:00 ± 2h): `nix flake update` + auto-rebuild of theConstruct |
 | **Docker** | Enabled |
 | **Flatpak** | Enabled |
 | **SSH** | OpenSSH server enabled |
 | **Printing** | CUPS + gutenprint + sane-airscan + Avahi (bonjour discovery) |
 | **Bluetooth** | Enabled, auto-power-on, Blueman tray + overskride |
 | **Security** | PAM hyprlock, gnome-keyring login, polkit |
-| **Users** | `thebeardbe` user with groups: networkmanager, wheel, video, audio, input, docker, lp, scanner. Shell: zsh |
+| **Users** | `thebeardbe` user with groups: networkmanager, wheel, video, audio, input, docker, lp, scanner, dialout (serial flashing). Shell: zsh |
 | **Env vars** | `WLR_NO_HARDWARE_CURSORS=1`, `NIXOS_OZONE_WL=1` |
 | **Graphical** | GVfs enabled (for Yazi SFTP), GPU acceleration, xwayland |
-| **Packages** | vim, wget, git, curl, htop, pulseaudio (pactl CLI), pavucontrol (audio profile GUI) |
+| **Portals** | GNOME portal for `Background` (Packet tray), hyprland portal for ScreenCast/Screenshot/GlobalShortcuts/RemoteDesktop; GNOME portal auto-restarts on crash (drop-in override) |
+| **Packages** | vim, wget, git, curl, htop, pulseaudio (pactl CLI), pavucontrol (audio profile GUI), unlock-session (from recovery-scripts/) |
 
 ### Common Modules (`common/modules/`)
 
@@ -177,19 +178,21 @@ Imports all home modules and sets:
 - Git config (user name/email)
 - Bash aliases (`ll`, `conf`, `rebuild`)
 - Dconf dark mode for GTK4/libadwaita apps
+- udiskie auto-mount of removable media (USB/SD/external drives)
 - Deploys dotfiles: `~/.screenrc`, `~/.config/hyprshell/config.toml`, `~/.config/hypr/hyprland.lua`
 
 ### `home/packages.nix` — Shared User Packages
 
 | Category | Packages |
 |---|---|
-| **Communication** | obsidian, discord, signal-desktop (unstable), firefox, enpass, gemini-cli |
+| **Communication** | obsidian, discord, signal-desktop (unstable), firefox, chromium, enpass |
 | **Fonts** | FiraCode, JetBrains Mono, Meslo LG (Nerd Fonts) |
-| **System Tools** | networkmanagerapplet, pavucontrol, pamixer, fastfetch, nwg-look, tree, btop, eza, bat, brightnessctl |
-| **Hyprland Ecosystem** | hyprlock, hypridle, hyprshot, wofi, kitty, hyprpaper, wlogout, **hyprshell** |
-| **Utilities** | fzf, screen, libnotify, swaynotificationcenter |
+| **System Tools** | networkmanagerapplet, pavucontrol, pamixer, playerctl, fastfetch, nwg-look, tree, btop, eza, bat, brightnessctl |
+| **Hyprland Ecosystem** | hyprlock, hypridle, hyprshot, wofi, fuzzel, kitty, hyprpaper, wlogout, **hyprshell** |
+| **File Sharing** | packet (native Android Quick Share client) |
+| **Utilities** | fzf, screen, libnotify, swaynotificationcenter, wtype (Moonlight key injection) |
 | **Yazi Deps** | ffmpegthumbnailer, jq, poppler, fd, ripgrep |
-| **Playwright** | playwright-driver.browsers, glib, expat, libxshmfence, libGL |
+| **Electron/Chromium support** | glib (gio for SFTP), expat, libxshmfence, libGL |
 | **Other** | sshfs |
 
 ### Home Modules (`home/modules/`)
@@ -198,7 +201,7 @@ Imports all home modules and sets:
 - **GTK**: Adwaita-dark theme, Papirus-Dark icons
 - **Qt**: Forces GTK3 platform theme + adwaita-dark style
 - **Cursor**: Bibata-Modern-Classic (24px)
-- **Kitty**: Cyberpunk-Neon theme, font from `theme.json`, opacity from `theme.json`
+- **Kitty**: Cyberpunk-Neon theme, font from `theme.json`, opacity from `theme.json`, `shell_integration = "disabled"` (fixes broken Enter key in SSH/local shells)
 - **Wofi**: Custom CSS using `theme.json` colors
 
 #### `hyprland.nix` — Window Manager scripts + hyprpaper (NOT home-manager module)
@@ -206,7 +209,11 @@ Imports all home modules and sets:
 **The home-manager hyprland module is NOT used.** Hyprland is enabled system-wide via `programs.hyprland` in `common/configuration.nix`. The entire Hyprland config is in `home/files/hyprland.lua` (Lua format).
 
 This module only handles:
-- Deploying the `goto-workspace` and `pick-wallpaper` scripts
+- Defining the `hyprland-session.target` user target (waybar, hypridle, … bind to it)
+- Deploying helper scripts via `writeShellScriptBin` (available on PATH):
+  - `goto-workspace` / `pick-wallpaper` — per-workspace wallpaper switching
+  - `dpms-off` — display off, but skips while media is playing (MPRIS via `playerctl`)
+  - `fix-jbl` — JBL Quantum 360X recovery: profile toggle → PipeWire restart → USB reset
 - Deploying the `hyprpaper.conf` (legacy; wallpaper is set via Lua autostart now)
 
 #### `home/files/hyprland.lua` — The Main Hyprland Config (Lua)
@@ -239,6 +246,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Super + E` | Open Yazi (in kitty) |
 | `Super + V` | Toggle floating |
 | `Super + Space` | Wofi app launcher |
+| `Super + Shift + Space` | Fuzzel app launcher (alternative) |
 | `Super + P` | Toggle pseudo-tiling |
 | `Super + J` | Toggle split direction |
 | `Super + F` | Fullscreen |
@@ -246,6 +254,8 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Alt + Shift + Tab` | hyprshell switcher (reversed) |
 | `Alt + Grave` | hyprshell switcher (reversed) |
 | `Super + L` | Lock screen (`hyprlock` — hypridle handles idle DPMS) |
+| `Super + Ctrl + Shift + J` | `fix-jbl` — recover JBL Quantum 360X headset |
+| `Menu` | Inject a real Super keypress via `wtype` (Moonlight streaming; synthetic `send_shortcut` events are ignored by games) |
 | `Super + Shift + W` | Pick wallpaper (wofi picker) |
 | `Super + Shift + R` | Reload Lua config via `dofile` (picks up file changes) |
 | `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
@@ -264,7 +274,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 - `Alt_L/R` release → closes switcher, focuses selected window
 - `Shift_L/R` release → closes switcher
 
-**Autostart:** Systemd session activation → nm-applet → blueman-applet → hyprpaper → hyprshell run → goto-workspace 1 → kitty(ws1) → yazi(ws3, 3s delay) → btop(ws10, 4s delay)
+**Autostart:** Systemd session activation → nm-applet → blueman-applet → hyprpaper → packet (2s) → hyprshell run → goto-workspace 1 → kitty (ws1) → yazi (ws3, 3s) → btop (ws10, 4s)
 
 **Host-specific autostart** (in `hypr-host.lua` via `hl.on("hyprland.start")`):
 - theConstruct: Signal + Firefox on workspace 7 with 1/3-2/3 split
@@ -273,6 +283,8 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
+- `dpms-off` — display off with media guard (see hypridle section)
+- `fix-jbl` — JBL headset recovery (all scripts defined in `home/modules/hyprland.nix`)
 - (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
 
 #### `waybar.nix` — Status Bar
@@ -301,9 +313,10 @@ Otherland-themed lock screen:
 #### `hypridle.nix` — Auto-Sleep System
 - `lock_cmd` = `pidof hyprlock || hyprlock` — runs when D-Bus lock event received
 - 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
-- 5.5 min (330s) → DPMS off via dispatch
+- 5.5 min (330s) → `dpms-off` script. The listener has `ignore_inhibit = true`, so DPMS fires even while Steam/others hold an idle inhibitor (wake-from-idle regression fix)
+- `dpms-off` checks `playerctl` first — if media is Playing it exits without touching the display (no black screen during YouTube)
 - user input → `on-resume` re-enables DPMS
-- Manual `Super+L` → `loginctl lock-session` → same path as idle (hyprlock runs, DPMS works)
+- Manual `Super+L` → runs `hyprlock` directly (no logind roundtrip)
 - Before suspend → `loginctl lock-session`, after resume → DPMS on
 
 #### `neovim.nix` — Text Editor
@@ -313,9 +326,14 @@ Otherland-themed lock screen:
 
 #### `yazi.nix` — Terminal File Manager
 - Hidden files shown by default
-- Custom keybinds: `M` to mount SFTP via `gio mount`, `g v` to go to GVfs mounts
+- Custom keybinds: `M` to mount SFTP via `gio mount`, `g v` to go to GVfs mounts, `g d` to jump to udiskie-mounted removable drives (`/run/media/thebeardbe`)
 - `y` shell wrapper alias
 - Preview support for videos (ffmpegthumbnailer), JSON (jq), PDFs (poppler)
+
+#### `udiskie.nix` — Removable Media Auto-Mount
+- Auto-mounts USB sticks / SD cards / external drives on insertion (udisks2 backend, polkit prompts)
+- Notifies on mount/unmount; tray icon only appears while a device is present
+- Browse the mounts in Yazi with `g d`
 
 #### `agent.nix` — Pi Coding Agent (SDK Integration)
 - Node.js + npm
@@ -376,6 +394,7 @@ key = "Super_L"
   - `/mnt/silver-light` (exfat, BAE0-0704)
   - `/mnt/middle-country` (NTFS, F270574F705719A5)
   - `/mnt/the-other` (NTFS, 368035BA80358203)
+- Packet Quick Share firewall ports: 9300/tcp, 27000-27009 tcp+udp, 5353/5355 udp
 
 **`gpu.nix`:** NVIDIA config
 - `nvidia` video driver (proprietary, not open)
@@ -385,10 +404,10 @@ key = "Super_L"
 - Stable driver package
 - `nvidia-vaapi-driver` for hardware video decode in Steam/Chromium
 
-**`steam.nix`:** Steam with remote play + dedicated server firewall ports open
-- **Sunshine** game streaming host enabled (`capSysAdmin` for Wayland/KMS capture, firewall open)
-- Moonlight client on foxyNix connects here
-- **Packet** (Quick Share ports 27000-27009 + mDNS 5353 open) — native Android Quick Share
+**`steam.nix`:** Gaming stack
+- Steam with Remote Play + dedicated-server firewall + protontricks
+- gamescope + gamemode enabled system-wide (used by Steam/Heroic)
+- **Sunshine** game streaming host (`capSysAdmin` for Wayland/KMS capture, firewall open) — Moonlight client on foxyNix connects here
 
 ### Home (`hosts/theConstruct/home/`)
 
@@ -404,7 +423,7 @@ key = "Super_L"
 - Window rules: Signal + Firefox on workspace 7 with 1/3-2/3 split
 - Autostart: Signal at 5s, Firefox at 7s, setsplitratio at 12s
 
-**`packages.nix`:** steam-run, mangohud, prismlauncher, heroic (Heroic Games Launcher), gamescope
+**`packages.nix`:** steam-run, mangohud, prismlauncher, heroic (Heroic Games Launcher), p7zip
 
 ---
 
@@ -421,6 +440,9 @@ key = "Super_L"
 - Bootloader: systemd-boot with Ubuntu dual-boot entry
 - Silent boot: plymouth, quiet splash, reduced log levels
 - Latest Linux kernel (`linuxPackages_latest`)
+- Packet Quick Share firewall ports (9300/tcp, 27000-27009 tcp+udp, 5353/5355 udp)
+
+**`steam.nix`:** Steam enabled with Remote Play firewall open
 
 ### Home (`hosts/foxyNix/home/`)
 
@@ -435,7 +457,7 @@ key = "Super_L"
 
 **NOTE:** Touchpad options use Lua API names (tap_to_click), not hyprlang names (tap).
 
-**`packages.nix`:** `moonlight-qt` — game streaming client (connects to Sunshine on theConstruct)
+**`packages.nix`:** `moonlight-qt` (from **unstable** — main nixpkgs FFmpeg 9 broke the 6.1.0 build; unstable provides it against FFmpeg 8.1.2) — game streaming client (connects to Sunshine on theConstruct)
 
 ---
 
@@ -449,19 +471,25 @@ Pi coding agent skill providing:
 - `references/troubleshooting.md` — Common issues and solutions
 - `scripts/verify-config.sh` — Validates Lua config syntax and common mistakes
 
-### `antigravity-fhs.nix`
-FHS environment for running `antigravity` (a Playwright/Electron app that needs browser libraries). Provides all the `.so` files Chromium/Electron need under a clean FHS chroot.
+### `recovery-scripts/unlock-session`
+Standalone recovery tool for the frozen-lock-screen scenario. Installed system-wide as `unlock-session` (wired into `common/configuration.nix` via `environment.systemPackages`):
+- Finds your seat0 logind session and runs `loginctl unlock-session <ID>` — bare `loginctl unlock-session` silently no-ops on modern logind, an explicit session ID is required
+- Cleans up zombie `hyprlock` processes, prints recovery hints (incl. DPMS re-enable dispatch)
+
+Background: hyprlock 0.9.5 aborts on Wayland protocol errors during DPMS wake (`wl_display#1: error 0: invalid object` → SIGABRT). No upstream fix yet — this script is the workaround: Ctrl+Alt+F2 → login → `unlock-session` → Ctrl+Alt+F1.
 
 ### `home/files/agent/settings.json`
 Pi coding agent default settings:
 ```json
 {
+  "packages": ["npm:pi-web-access"],
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": false
 }
+
 ```
 
 ### `home/files/screenrc`
@@ -503,6 +531,8 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | Change shell prompt | `home/modules/starship.nix` |
 | Enable secrets | Uncomment `nix-secrets` in `flake.nix`, create private flake |
 | Adjust Nix GC strategy | `common/configuration.nix` → `systemd.services.nix-gc-tiered` |
+| Change auto-update schedule | `common/configuration.nix` → `systemd.timers.nix-flake-update` |
+| Recover a stuck locked screen | `unlock-session` (script source: `recovery-scripts/unlock-session`) |
 | Change keyboard layout | `home/files/hyprland.lua` → `hl.config({ input = { kb_layout, kb_variant } })` |
 | Toggle touchpad | `common/modules/touchpad.nix` for X11, or host's `hypr-host.lua` for Hyprland |
 | Add a new wallpaper | Drop in `wallpapers/`, copy to `~/Pictures/Wallpapers/`, pick via `Super+Shift+W` |
@@ -515,11 +545,10 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 ## 10. Rebuild Flow
 
 ```
-1. Edit file(s) in ~/nixos-config/
+1. Edit file(s) in ~/nixOS-config/
 2. (Optional) git add + git commit
 3. sudo nixos-rebuild switch --flake .#$(hostname)
-4. On foxyNix, the Zsh alias is: rebuild
-   (which does: pushd ~/nixos-config && git add . && sudo nixos-rebuild switch --flake .#$(hostname) && popd)
+4. The `rebuild` alias (defined in home-manager) runs `sudo nixos-rebuild switch --flake .#$(hostname)` for the current host
 ```
 
 ---
@@ -574,7 +603,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `sudo nix-collect-garbage -d` | Clean up old store paths |
 | `nix-env --list-generations -p /nix/var/nix/profiles/system` | List boot entries |
 | `sudo nix-env --delete-generations -p /nix/var/nix/profiles/system <N>` | Remove specific generation |
-| `hyprctl reload` | Reload Hyprland config (no reboot needed) |
+| `hyprctl reload` | Reload config (hyprlang only — Lua config needs Super+Shift+R) |
 | `Super + Shift + R` | Re-evaluate the Lua config via `hyprctl eval 'dofile(...)'` (picks up file changes) |
 | `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
 | `Super + Shift + W` | Interactive wallpaper picker |
@@ -593,6 +622,9 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `Super + Shift + P` | Screenshot selected region |
 | `Super + Ctrl + P` | Screenshot active window |
 | `Super + Alt + P` | Screenshot full screen |
+| `Menu` | Inject Super key (Moonlight streaming) |
+| `Super + Ctrl + Shift + J` | `fix-jbl` — JBL Quantum 360X recovery |
+| `unlock-session` | Unlock a logind session stuck after a hyprlock crash (from a free TTY) |
 | `wlogout` | Power menu |
 | `btop` | Resource monitor (click battery in Waybar) |
 | `pavucontrol` | Audio profile GUI (click volume in Waybar) |
@@ -604,8 +636,4 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 
 ## 14. Result Symlink
 
-The `result` symlink at the repo root points to the last built NixOS system derivation:
-```
-result -> /nix/store/...-nixos-system-<hostname>-<version>
-```
-This is created when running `nixos-rebuild` and can be used to inspect the built config.
+A `result` symlink only appears at the repo root when building with `nix build` (not `nixos-rebuild switch`). To inspect the live system use `/run/current-system`, or list generations with `nix-env --list-generations -p /nix/var/nix/profiles/system`.

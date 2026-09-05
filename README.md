@@ -12,7 +12,7 @@ NixOS + home-manager configuration for a multi-machine setup, themed around the 
 ## Structure
 
 ```
-├── flake.nx                # Entry point — defines all machines
+├── flake.nix               # Entry point — defines all machines
 ├── theme.json              # Central colors, fonts, opacity (shared)
 ├── common/                 # Shared system config
 │   ├── configuration.nix
@@ -21,16 +21,13 @@ NixOS + home-manager configuration for a multi-machine setup, themed around the 
 │   ├── home.nix
 │   └── modules/            # appearance, hyprland, waybar, kitty, starship, etc.
 ├── hosts/
-│   ├── foxyNix/            # Laptop
-│   │   ├── default.nix
-│   │   ├── hardware-configuration.nix
-│   │   └── home/
-│   └── theConstruct/       # Desktop
-│       ├── default.nix
-│       ├── hardware-configuration.nix
-│       └── home/
-│           ├── default.nix
-│           └── gaming.nix
+│   ├── foxyNix/            # Laptop (Intel)
+│   │   ├── system/         # touchpad, silent boot, Ubuntu dual-boot, Steam
+│   │   └── home/           # hypr-host.lua, moonlight-qt (unstable)
+│   └── theConstruct/       # Desktop (Ryzen 5600 + RTX 3060 Ti)
+│       ├── system/         # GRUB, NVIDIA, data drives, Steam/Sunshine
+│       └── home/           # hypr-host.lua, gaming packages
+├── recovery-scripts/       # unlock-session (locked-screen recovery)
 ├── wallpapers/
 └── secrets/                # Documentation for private secrets setup
 ```
@@ -42,6 +39,9 @@ NixOS + home-manager configuration for a multi-machine setup, themed around the 
 - **Kitty** — terminal with Cyberpunk-Neon theme
 - **WoFI** — custom wallpaper picker with cleaned-up names
 - **Lock screen** — Hyprlock with Otherland-themed UI
+- **File sharing** — Packet (Android Quick Share) for phone ↔ PC transfers
+- **Auto-update** — weekly `nix-flake-update` timer keeps the flake fresh
+- **Auto-mount** — removable media (USB/SD) mounted automatically via udiskie
 - **Garbage collection** — tiered Nix store cleanup (7d daily, 1/week monthly, 1/month quarterly)
 - **Steam** — enabled on theConstruct with gamescope and remote play
 - **Gaming** — MangoHud, PrismLauncher, steam-run
