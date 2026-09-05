@@ -39,7 +39,7 @@
     enable = true;
     shellAliases = {
       ll = "ls -l";
-      conf = "cd ~/nixos-config && v";      # Open config in neovim
+      conf = "cd ~/nixOS-config && nvim"; # Open config in neovim
       rebuild = "sudo nixos-rebuild switch --flake .#$(hostname)";
     };
   };

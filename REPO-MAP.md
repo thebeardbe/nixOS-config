@@ -548,7 +548,7 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 1. Edit file(s) in ~/nixOS-config/
 2. (Optional) git add + git commit
 3. sudo nixos-rebuild switch --flake .#$(hostname)
-4. The `rebuild` alias (defined in home-manager) runs `sudo nixos-rebuild switch --flake .#$(hostname)` for the current host
+4. Aliases (home-manager): `rebuild` = `sudo nixos-rebuild switch --flake .#$(hostname)` (bash, in `home/home.nix`); the zsh variant in `home/modules/starship.nix` also does `pushd ~/nixOS-config && git add . && … && popd`
 ```
 
 ---

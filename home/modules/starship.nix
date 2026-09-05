@@ -73,9 +73,9 @@
     syntaxHighlighting.enable = true;
 
     shellAliases = {
-      rebuild = "pushd ~/nixos-config && git add . && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
+      rebuild = "pushd ~/nixOS-config && git add . && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
       v = "nvim";
-      conf = "cd ~/nixos-config && v";
+      conf = "cd ~/nixOS-config && v";
       ls = "${pkgs.eza}/bin/eza --icons";
       cat = "${pkgs.bat}/bin/bat";
     };
