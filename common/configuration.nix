@@ -195,19 +195,25 @@
     };
   };
 
-  # Weekly flake update + rebuild (Monday 4am, randomized)
+  # Weekly flake update + rebuild (Monday 4am, randomized).
+  # Updates the shared flake.lock as thebeardbe (keeps git ownership sane),
+  # then rebuilds the CURRENT host (flake attr = hostname). Output lands in
+  # journald automatically — no logger pipes needed.
   systemd.services.nix-flake-update = {
     description = "Update Nix flake inputs and rebuild";
-    environment.HOME = "/home/thebeardbe";
+    path = [ pkgs.git ];  # nix needs git on PATH for git+file flake lock updates
     serviceConfig = {
       Type = "oneshot";
       WorkingDirectory = "/home/thebeardbe/nixOS-config";
-      User = "root";
     };
     script = ''
       cd /home/thebeardbe/nixOS-config
-      ${pkgs.nix}/bin/nix flake update 2>&1 | logger -t nix-flake-update
-      ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake /home/thebeardbe/nixOS-config#theConstruct 2>&1 | logger -t nix-flake-update
+      # flake.lock update as thebeardbe (keeps file ownership sane for git)
+      ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.nix}/bin/nix flake update
+      # rebuild as root with root's HOME (libgit2 repo-ownership check);
+      # SUDO_UID makes nix's git fetcher accept thebeardbe-owned repo (same
+      # mechanism as a real sudo invocation)
+      ${pkgs.coreutils}/bin/env HOME=/root SUDO_UID=1000 ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake /home/thebeardbe/nixOS-config#$(${pkgs.coreutils}/bin/cat /etc/hostname)
     '';
   };
   systemd.timers.nix-flake-update = {
