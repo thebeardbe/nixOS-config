@@ -74,6 +74,7 @@
 
     shellAliases = {
       rebuild = "pushd ~/nixOS-config && git add . && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
+      update = "pushd ~/nixOS-config && nix flake update && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
       v = "nvim";
       conf = "cd ~/nixOS-config && v";
       ls = "${pkgs.eza}/bin/eza --icons";
