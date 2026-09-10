@@ -210,6 +210,13 @@
       cd /home/thebeardbe/nixOS-config
       # flake.lock update as thebeardbe (keeps file ownership sane for git)
       ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.nix}/bin/nix flake update
+      # Commit the new lock as thebeardbe so the tree is never left dirty.
+      # `git diff --quiet` exits non-zero only when flake.lock really changed, and
+      # the pathspec commit records that one path alone, leaving any other staged
+      # work untouched. No push: the change is local, the rebuild picks it up.
+      if ! ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.git}/bin/git diff --quiet -- flake.lock; then
+        ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.git}/bin/git commit -m "chore: weekly flake update" -- flake.lock
+      fi
       # rebuild as root with root's HOME (libgit2 repo-ownership check);
       # SUDO_UID makes nix's git fetcher accept thebeardbe-owned repo (same
       # mechanism as a real sudo invocation)
