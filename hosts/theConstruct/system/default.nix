@@ -20,8 +20,8 @@
     };
   };
 
-  # Filesystem support for storage drives (exfat + NTFS via ntfs-3g)
-  boot.supportedFilesystems = [ "exfat" ];
+  # Filesystem support for storage drives (exfat + NTFS via the kernel ntfs3 driver)
+  boot.supportedFilesystems = [ "exfat" "ntfs3" ];
 
   # Firewall: Packet (Quick Share with Android) — per GitHub issues: 9300/tcp, 5353/udp (mDNS), 5355/udp (LLMNR)
   networking.firewall.allowedTCPPorts = [ 9300 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];

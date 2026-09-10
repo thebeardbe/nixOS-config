@@ -6,7 +6,7 @@
   users.users.thebeardbe = {
     isNormalUser = true;
     description = "TheBeardBE";
-    extraGroups = [ 
+    extraGroups = [
       "networkmanager"   # Network management (nm-applet, nmcli)
       "wheel"            # sudo privileges
       "video"            # Hardware access (brightness, webcam)
@@ -18,7 +18,7 @@
       "dialout"          # Serial port access (USB-UART: Heltec V3, ESP32 flashing)
     ];
     # Shell set to zsh (configured via home-manager in starship.nix)
-    shell = pkgs.zsh; 
+    shell = pkgs.zsh;
   };
 
   # Enable zsh system-wide so it's available as a login shell

@@ -3,7 +3,6 @@
 {
   # NVIDIA RTX 3060 Ti
   services.xserver.videoDrivers = [ "nvidia" ];
-  hardware.graphics.enable = true;
 
   environment.systemPackages = with pkgs; [
     nvidia-vaapi-driver  # Hardware video decode for Steam/Chromium

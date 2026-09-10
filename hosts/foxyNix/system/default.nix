@@ -8,6 +8,13 @@
   networking.hostName = "foxyNix";
   mySystem.touchpad.enable = true;
 
+  # Kernel support for removable-media filesystems: exFAT (SD cards/USB sticks)
+  # and NTFS (Windows drives, via kernel ntfs3 driver)
+  boot.supportedFilesystems = [ "exfat" "ntfs3" ];
+
+  # Prevent overheating on Intel CPU
+  services.thermald.enable = true;
+
   # Bootloader — systemd-boot with Ubuntu dual-boot
   boot.loader.systemd-boot = {
     enable = true;

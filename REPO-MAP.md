@@ -16,7 +16,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 ├── .pi/skills/nixos-hyprland/  # Pi agent skill: Lua API ref, troubleshooting, patterns
 ├── common/                  # Shared system-level config
 │   ├── configuration.nix    # Shared config hub — imports every common/modules/* module
-│   └── modules/             # Reusable system modules (13 modules)
+│   └── modules/             # Reusable system modules (19 modules)
 ├── home/                    # Shared home-manager config (user-level)
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
@@ -133,7 +133,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Window Manager** | Hyprland enabled system-wide (`programs.hyprland`) |
 | **Networking** | NetworkManager, Tailscale (`--accept-routes=false`), `resolved` DNS |
 | **Time/Locale** | `Europe/Brussels`, `en_US.UTF-8`, US keyboard with `altgr-intl` |
-| **Power** | thermald (Intel), fstrim (SSD trim), 8GB swapfile |
+| **Power** | fstrim (SSD trim), 8GB swapfile. thermald (Intel) is host-specific: enabled on foxyNix only. |
 | **Audio** | PipeWire with rtkit, 32-bit ALSA for Proton, low-latency config |
 | **Nix GC** | Daily auto-GC + weekly tiered profile cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d) |
 | **Auto-update** | Weekly `nix-flake-update` timer (Mon ~04:00 ± 2h) on **theConstruct only** (`mySystem.flakeUpdate.enable`): `nix flake update`, commit `flake.lock`, rebuild. foxyNix pulls and rebuilds manually. |
@@ -149,7 +149,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Portals** | GNOME portal for `Background` (Packet tray), hyprland portal for ScreenCast/Screenshot/GlobalShortcuts/RemoteDesktop; GNOME portal auto-restarts on crash (drop-in override) |
 | **Packages** | vim, wget, git, curl, htop, pulseaudio (pactl CLI), pavucontrol (audio profile GUI), unlock-session (from recovery-scripts/) |
 
-### Common Modules (`common/modules/`, 13 files)
+### Common Modules (`common/modules/`, 19 files)
 
 **`touchpad.nix`** — Optional touchpad config (toggle per-host):
 ```nix
@@ -180,6 +180,18 @@ mySystem.touchpad.enable = true;  # Enable in host's system/default.nix
 **`portals.nix`** — GNOME portal for `Background` (Packet tray), hyprland portal for ScreenCast/Screenshot/GlobalShortcuts/RemoteDesktop; GNOME portal auto-restarts on crash.
 
 **`greetd.nix`** — `greetd` + `tuigreet` TTY greeter and its TTY `serviceConfig`.
+
+**`power.nix`** — `powerManagement.enable` + `services.fstrim.enable` (SSD trim). thermald is host-specific (foxyNix, Intel) and lives in that host's `system/default.nix`.
+
+**`removable-media.nix`** — UDisks2 daemon (udiskie talks to it over D-Bus to auto-mount) + gVFS (Yazi SFTP mounts under `/run/user/1000/gvfs`). `boot.supportedFilesystems` (exfat + ntfs3) is host-specific.
+
+**`desktop.nix`** — dbus-broker, logind power key handling (`HandlePowerKey = "ignore"`), system-wide Hyprland (`programs.hyprland`), session env vars (`WLR_NO_HARDWARE_CURSORS`, `NIXOS_OZONE_WL`). Active Hyprland config: `home/files/hyprland.lua`.
+
+**`virtualisation.nix`** — Docker + Flatpak.
+
+**`graphics.nix`** — `hardware.graphics.enable` (OpenGL). NVIDIA-specific config stays host-specific in theConstruct's `gpu.nix`.
+
+**`system-packages.nix`** — Shared system packages (vim, wget, git, curl, htop, pulseaudio, pavucontrol) and the `unlock-session` recovery script.
 
 ---
 
@@ -410,7 +422,7 @@ key = "Super_L"
 **`default.nix`:**
 - Hostname: `theConstruct`
 - Bootloader: GRUB with EFI support + OS prober (Windows dual-boot)
-- exfat filesystem support
+- exfat + ntfs3 filesystem support (`boot.supportedFilesystems`)
 - 6 auto-mounted data drives (all with `nofail` — don't block boot):
   - `/mnt/golden-city` (exfat, B89B-399D)
   - `/mnt/blue-fire` (exfat, 8CB1-7A97)
@@ -461,6 +473,8 @@ key = "Super_L"
 **`default.nix`:**
 - Hostname: `foxyNix`
 - Touchpad enabled (`mySystem.touchpad.enable = true`) — X11 libinput fallback
+- exfat + ntfs3 filesystem support (`boot.supportedFilesystems`)
+- thermald enabled (`services.thermald.enable`) — Intel CPU thermal daemon
 - Bootloader: systemd-boot with Ubuntu dual-boot entry
 - Silent boot: plymouth, quiet splash, reduced log levels
 - Latest Linux kernel (`linuxPackages_latest`)
@@ -496,7 +510,7 @@ Pi coding agent skill providing:
 - `scripts/verify-config.sh` — Validates Lua config syntax and common mistakes
 
 ### `recovery-scripts/unlock-session`
-Standalone recovery tool for the frozen-lock-screen scenario. Installed system-wide as `unlock-session` (wired into `common/configuration.nix` via `environment.systemPackages`):
+Standalone recovery tool for the frozen-lock-screen scenario. Installed system-wide as `unlock-session` (wired into `common/modules/system-packages.nix` via `environment.systemPackages`):
 - Finds your seat0 logind session and runs `loginctl unlock-session <ID>` — bare `loginctl unlock-session` silently no-ops on modern logind, an explicit session ID is required
 - Cleans up zombie `hyprlock` processes, prints recovery hints (incl. DPMS re-enable dispatch)
 
@@ -543,7 +557,7 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | What to Change | File(s) |
 |---|---|
 | Colors / fonts / opacity | `theme.json` |
-| Add a system package | `common/configuration.nix` → `environment.systemPackages` |
+| Add a system package | `common/modules/system-packages.nix` → `environment.systemPackages` |
 | Add a user package | `home/packages.nix` |
 | Add a Hyprland keybind | `home/files/hyprland.lua` → `hl.bind(...)` section |
 | Change Hyprland appearance (gaps, blur, etc.) | `home/files/hyprland.lua` → `hl.config({ general, decoration })` |

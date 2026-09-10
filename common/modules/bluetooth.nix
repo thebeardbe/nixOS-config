@@ -8,7 +8,7 @@
   hardware.bluetooth.powerOnBoot = true;
 
   # Blueman — provides the Bluetooth tray icon and management UI
-  services.blueman.enable = true; 
+  services.blueman.enable = true;
 
   # CLI and GUI tools for debugging and managing Bluetooth
   environment.systemPackages = with pkgs; [
