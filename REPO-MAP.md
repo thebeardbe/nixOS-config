@@ -15,8 +15,8 @@ flake.nix                    # Entry point — exports nixosConfigurations for a
 theme.json                   # Central design tokens — shared by ALL modules
 ├── .pi/skills/nixos-hyprland/  # Pi agent skill: Lua API ref, troubleshooting, patterns
 ├── common/                  # Shared system-level config
-│   ├── configuration.nix    # Everything common (greetd, PipeWire, Tailscale, etc.)
-│   └── modules/             # Reusable system modules
+│   ├── configuration.nix    # Shared config hub — imports every common/modules/* module
+│   └── modules/             # Reusable system modules (13 modules)
 ├── home/                    # Shared home-manager config (user-level)
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
@@ -149,7 +149,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Portals** | GNOME portal for `Background` (Packet tray), hyprland portal for ScreenCast/Screenshot/GlobalShortcuts/RemoteDesktop; GNOME portal auto-restarts on crash (drop-in override) |
 | **Packages** | vim, wget, git, curl, htop, pulseaudio (pactl CLI), pavucontrol (audio profile GUI), unlock-session (from recovery-scripts/) |
 
-### Common Modules (`common/modules/`)
+### Common Modules (`common/modules/`, 13 files)
 
 **`touchpad.nix`** — Optional touchpad config (toggle per-host):
 ```nix
@@ -164,6 +164,22 @@ mySystem.touchpad.enable = true;  # Enable in host's system/default.nix
 **`bluetooth.nix`** — Bluetooth hardware + power-on-boot + Blueman tray + overskride + bluez tools.
 
 **`users.nix`** — Defines the `thebeardbe` user with all group memberships.
+
+**`audio.nix`** — PipeWire (32-bit ALSA for Proton/Wine) + rtkit real-time audio priority.
+
+**`networking.nix`** — NetworkManager, Tailscale (`--accept-routes=false`), `resolved` DNS, OpenSSH server.
+
+**`locale.nix`** — Time zone (`Europe/Brussels`), `en_US.UTF-8`, X11 `us`/`altgr-intl` keymap, console `us-acentos` keymap.
+
+**`nix.nix`** — Unfree packages allowed, flakes + `nix-command`, store auto-optimise.
+
+**`nix-gc.nix`** — Daily `nix.gc` + weekly tiered profile-generation cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d).
+
+**`flake-update.nix`** — Declares `mySystem.flakeUpdate.enable`; weekly `nix-flake-update` service + timer (Mon ~04:00 ± 2h), enabled on exactly one host.
+
+**`portals.nix`** — GNOME portal for `Background` (Packet tray), hyprland portal for ScreenCast/Screenshot/GlobalShortcuts/RemoteDesktop; GNOME portal auto-restarts on crash.
+
+**`greetd.nix`** — `greetd` + `tuigreet` TTY greeter and its TTY `serviceConfig`.
 
 ---
 
@@ -539,8 +555,8 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | Change shell prompt | `home/modules/starship.nix` |
 | Change `rebuild` / `update` aliases | `home/modules/flake-aliases.nix` |
 | Enable secrets | Uncomment `nix-secrets` in `flake.nix`, create private flake |
-| Adjust Nix GC strategy | `common/configuration.nix` → `systemd.services.nix-gc-tiered` |
-| Change auto-update schedule | `common/configuration.nix` → `systemd.timers.nix-flake-update`; enable per host with `mySystem.flakeUpdate.enable` (exactly one updater) |
+| Adjust Nix GC strategy | `common/modules/nix-gc.nix` → `systemd.services.nix-gc-tiered` |
+| Change auto-update schedule | `common/modules/flake-update.nix` → `systemd.timers.nix-flake-update`; enable per host with `mySystem.flakeUpdate.enable` (exactly one updater) |
 | Recover a stuck locked screen | `unlock-session` (script source: `recovery-scripts/unlock-session`) |
 | Change keyboard layout | `home/files/hyprland.lua` → `hl.config({ input = { kb_layout, kb_variant } })` |
 | Toggle touchpad | `common/modules/touchpad.nix` for X11, or host's `hypr-host.lua` for Hyprland |
@@ -576,7 +592,7 @@ The Hyprland config is written in **Lua** (`home/files/hyprland.lua`) using the 
 
 ### How it works
 
-1. `greetd` launches `Hyprland -c ~/.config/hypr/hyprland.lua` (set in `common/configuration.nix`)
+1. `greetd` launches `Hyprland -c ~/.config/hypr/hyprland.lua` (set in `common/modules/greetd.nix`)
 2. The Lua config loads and calls `hl.monitor()`, `hl.config()`, `hl.bind()`, etc.
 3. At the top of the main Lua file, it does `dofile("~/.config/hypr/host.lua")` to load host-specific overrides
 4. hyprshell starts via `hl.on("hyprland.start", ...)` and registers its own keybinds via IPC
