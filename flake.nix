@@ -38,6 +38,12 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
+          # On first activation, home-manager moves any pre-existing real file
+          # or directory aside to <name>.hm-backup before linking. This is what
+          # lets the ~/.pi/agent/* directory symlinks be created, since plain
+          # `force = true` only skips the collision check and cannot replace a
+          # real directory.
+          home-manager.backupFileExtension = "hm-backup";
           home-manager.users.thebeardbe = { ... }: {
             imports = [
               ./home/home.nix

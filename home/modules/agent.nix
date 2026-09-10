@@ -19,6 +19,41 @@ in
     force = true;
   };
 
+  # --- pi agent configuration ---
+  # Everything under ../files/agent is deployed into ~/.pi/agent by home-manager.
+  # force = true replaces the existing regular files/directories with store
+  # symlinks on machines where the agent already created them.
+  home.file = {
+    ".pi/agent/AGENTS.md" = {
+      source = ../files/agent/AGENTS.md;
+      force = true;
+    };
+    ".pi/agent/README.md" = {
+      source = ../files/agent/README.md;
+      force = true;
+    };
+    ".pi/agent/agents" = {
+      source = ../files/agent/agents;
+      force = true;
+    };
+    ".pi/agent/extensions" = {
+      source = ../files/agent/extensions;
+      force = true;
+    };
+    ".pi/agent/prompts" = {
+      source = ../files/agent/prompts;
+      force = true;
+    };
+    ".pi/agent/skills" = {
+      source = ../files/agent/skills;
+      force = true;
+    };
+    ".pi/agent/tests" = {
+      source = ../files/agent/tests;
+      force = true;
+    };
+  };
+
   # auth.json — only deployed on first install (per-machine secrets)
   home.activation.setupPiAuth = pkgs.lib.mkAfter ''
     ${if mySecrets.piAuth != null then ''
