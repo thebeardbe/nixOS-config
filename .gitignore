@@ -1,1 +1,16 @@
 result
+result-*
+.direnv/
+.scratch/
+.DS_Store
+*.swp
+*~
+*.hm-backup
+.env
+.env.*
+*.key
+*.pem
+*.age
+*.token
+secrets/*
+!secrets/README.md

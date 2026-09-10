@@ -21,7 +21,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
 │   ├── files/               # Dotfiles (hyprland.lua, hyprshell-config.toml, screenrc)
-│   └── modules/             # Home-manager modules (12 modules + hyprpaper.conf)
+│   └── modules/             # Home-manager modules (13 modules + hyprpaper.conf)
 ├── hosts/
 │   ├── theConstruct/        # Desktop: AMD Ryzen 5600 + RTX 3060 Ti
 │   │   ├── default.nix      # Host entry
@@ -299,8 +299,16 @@ Uses `theme.json` colors computed to RGB for Waybar CSS transparency.
 #### `starship.nix` — Shell Prompt + Zsh Config
 - Starship prompt with: user@host → directory → git branch → git status → time → character
 - Zsh with completion, autosuggestions, syntax highlighting
-- Aliases: `rebuild` (git add + nixos-rebuild), `v` (nvim), `conf` (open config), `ls` (eza), `cat` (bat)
+- Aliases: `v` (nvim), `conf` (open config), `ls` (eza), `cat` (bat)
 - Ctrl+Left/Right word jump in zsh
+- `rebuild` / `update` are defined in `flake-aliases.nix`, not here
+
+#### `flake-aliases.nix` — Shared `rebuild` / `update` Aliases
+Defines the two flake aliases once and assigns them to **both** bash and zsh, so the
+shells cannot drift:
+- `rebuild` — `pushd ~/nixOS-config && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
+- `update` — `nix flake update`, then commits **only** `flake.lock` (and only if it changed),
+  then rebuilds — the same commit behaviour as `systemd.services.nix-flake-update`
 
 #### `hyprlock.nix` — Lockscreen
 Otherland-themed lock screen:
@@ -529,6 +537,7 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | Change lock screen text | `home/modules/hyprlock.nix` |
 | Add GTK theme | `home/modules/appearance.nix` → `gtk.theme` |
 | Change shell prompt | `home/modules/starship.nix` |
+| Change `rebuild` / `update` aliases | `home/modules/flake-aliases.nix` |
 | Enable secrets | Uncomment `nix-secrets` in `flake.nix`, create private flake |
 | Adjust Nix GC strategy | `common/configuration.nix` → `systemd.services.nix-gc-tiered` |
 | Change auto-update schedule | `common/configuration.nix` → `systemd.timers.nix-flake-update` |
@@ -548,7 +557,9 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 1. Edit file(s) in ~/nixOS-config/
 2. (Optional) git add + git commit
 3. sudo nixos-rebuild switch --flake .#$(hostname)
-4. Aliases (home-manager): `rebuild` = `sudo nixos-rebuild switch --flake .#$(hostname)` (bash, in `home/home.nix`); the zsh variant in `home/modules/starship.nix` also does `pushd ~/nixOS-config && git add . && … && popd`
+4. Aliases (home-manager, defined once in `home/modules/flake-aliases.nix` for both shells):
+   - `rebuild` = `pushd ~/nixOS-config && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
+   - `update` = `nix flake update`, commit `flake.lock` if it changed, then the same rebuild
 ```
 
 ---

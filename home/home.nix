@@ -16,6 +16,7 @@
      ./modules/waybar.nix     # Status bar
      ./modules/agent.nix      # Node.js / npm / pi-coding-agent
      ./modules/secrets.nix   # Secret option declarations
+     ./modules/flake-aliases.nix # Shared rebuild/update aliases for bash + zsh
   ];
 
   home.username = "thebeardbe";
@@ -40,7 +41,6 @@
     shellAliases = {
       ll = "ls -l";
       conf = "cd ~/nixOS-config && nvim"; # Open config in neovim
-      rebuild = "sudo nixos-rebuild switch --flake .#$(hostname)";
     };
   };
 
