@@ -136,7 +136,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Power** | thermald (Intel), fstrim (SSD trim), 8GB swapfile |
 | **Audio** | PipeWire with rtkit, 32-bit ALSA for Proton, low-latency config |
 | **Nix GC** | Daily auto-GC + weekly tiered profile cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d) |
-| **Auto-update** | Weekly `nix-flake-update` timer (Mon ~04:00 ± 2h): `nix flake update` + auto-rebuild of theConstruct |
+| **Auto-update** | Weekly `nix-flake-update` timer (Mon ~04:00 ± 2h) on **theConstruct only** (`mySystem.flakeUpdate.enable`): `nix flake update`, commit `flake.lock`, rebuild. foxyNix pulls and rebuilds manually. |
 | **Docker** | Enabled |
 | **Flatpak** | Enabled |
 | **SSH** | OpenSSH server enabled |
@@ -540,7 +540,7 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | Change `rebuild` / `update` aliases | `home/modules/flake-aliases.nix` |
 | Enable secrets | Uncomment `nix-secrets` in `flake.nix`, create private flake |
 | Adjust Nix GC strategy | `common/configuration.nix` → `systemd.services.nix-gc-tiered` |
-| Change auto-update schedule | `common/configuration.nix` → `systemd.timers.nix-flake-update` |
+| Change auto-update schedule | `common/configuration.nix` → `systemd.timers.nix-flake-update`; enable per host with `mySystem.flakeUpdate.enable` (exactly one updater) |
 | Recover a stuck locked screen | `unlock-session` (script source: `recovery-scripts/unlock-session`) |
 | Change keyboard layout | `home/files/hyprland.lua` → `hl.config({ input = { kb_layout, kb_variant } })` |
 | Toggle touchpad | `common/modules/touchpad.nix` for X11, or host's `hypr-host.lua` for Hyprland |

@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   # Real-time audio priority — essential for gaming / low-latency audio
@@ -23,6 +23,18 @@
      ./modules/users.nix
      ./modules/security.nix
      ./modules/hardware.nix
+
+     # Option declaration must live in its own module: a single file cannot mix a
+     # top-level `options` attribute with plain config attributes (boot, services,
+     # ...). Inlined here so configuration.nix stays the one place that defines
+     # this toggle.
+     {
+       # Weekly flake update runs from exactly ONE host — the machine that owns the
+       # shared flake.lock and is allowed to rebuild itself after updating it.
+       # Leave this false on every other host to avoid concurrent lock updates.
+       options.mySystem.flakeUpdate.enable = lib.mkEnableOption
+         "the weekly flake update timer and rebuild service (enable on exactly one host, the machine that owns the lock update)";
+     }
     ];
 
   # Enable touchpad settings (custom module defined in ./modules/touchpad.nix)
@@ -199,7 +211,7 @@
   # Updates the shared flake.lock as thebeardbe (keeps git ownership sane),
   # then rebuilds the CURRENT host (flake attr = hostname). Output lands in
   # journald automatically — no logger pipes needed.
-  systemd.services.nix-flake-update = {
+  systemd.services.nix-flake-update = lib.mkIf config.mySystem.flakeUpdate.enable {
     description = "Update Nix flake inputs and rebuild";
     path = [ pkgs.git ];  # nix needs git on PATH for git+file flake lock updates
     serviceConfig = {
@@ -224,7 +236,7 @@
       ${pkgs.coreutils}/bin/env HOME=/root SUDO_UID=1000 ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake /home/thebeardbe/nixOS-config#$(${pkgs.coreutils}/bin/cat /etc/hostname)
     '';
   };
-  systemd.timers.nix-flake-update = {
+  systemd.timers.nix-flake-update = lib.mkIf config.mySystem.flakeUpdate.enable {
     description = "Weekly Nix flake update timer";
     wantedBy = [ "timers.target" ];
     timerConfig = {
