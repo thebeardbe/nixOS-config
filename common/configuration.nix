@@ -215,7 +215,8 @@
       # the pathspec commit records that one path alone, leaving any other staged
       # work untouched. No push: the change is local, the rebuild picks it up.
       if ! ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.git}/bin/git diff --quiet -- flake.lock; then
-        ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.git}/bin/git commit -m "chore: weekly flake update" -- flake.lock
+        ${pkgs.util-linux}/bin/runuser -u thebeardbe -- ${pkgs.coreutils}/bin/env HOME=/home/thebeardbe ${pkgs.git}/bin/git commit -m "chore: weekly flake update" -- flake.lock \
+          || echo "warning: flake.lock commit failed; continuing with rebuild" >&2
       fi
       # rebuild as root with root's HOME (libgit2 repo-ownership check);
       # SUDO_UID makes nix's git fetcher accept thebeardbe-owned repo (same
