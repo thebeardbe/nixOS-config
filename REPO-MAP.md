@@ -352,7 +352,7 @@ Otherland-themed lock screen:
 - `lock_cmd` = `pidof hyprlock || hyprlock` — runs when D-Bus lock event received
 - `hypridle.service` sets `KillMode=process`: `lock_cmd` spawns hyprlock inside hypridle's cgroup, so the default control-group kill made `systemctl --user stop/restart hypridle` kill the lock screen and silently unlock the session
 - 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
-- That lock listener sets `ignore_inhibit = true`: hypridle **skips** an inhibited listener, and Steam/browsers hold idle inhibitors, so without it the session could silently never lock. Cost: media longer than 5 minutes gets locked out
+- The lock listener deliberately has **no** `ignore_inhibit`: hypridle skips an inhibited listener, so a game or a video holds the idle lock off instead of being interrupted. `Super+L` and the lock-before-suspend path still lock on demand
 - **The 5.5 min (330s) `dpms-off` listener and its `on-resume = dpms-on` are disabled.** Measured: a SHORT `hl.dsp.dpms()` off/on cycle is harmless, but a LONG off (around 10 minutes, long enough for the monitors to power down for real) leaves both outputs at `0x0` on wake (`failed to commit: Invalid argument`). hyprlock then only receives zero-size configures, so it holds the lock and draws nothing and the screen looks frozen. `hyprctl reload` does NOT restore those modes, so there is no safe automatic repair. Turn the screens off by hand instead
 - `dpms-off` (currently unused, kept for when the listener returns) checks `playerctl` first — if media is Playing it exits without touching the display (no black screen during YouTube)
 - `dpms-on` now only runs after suspend, via `after_sleep_cmd`

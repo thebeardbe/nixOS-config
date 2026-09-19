@@ -31,11 +31,10 @@
       listener = [
         {
           timeout = 300; # 5 minutes → lock screen via logind (triggers lock_cmd)
-          # ignore_inhibit: Steam and browsers hold idle inhibitors, and hypridle
-          # SKIPS an inhibited listener, which would silently mean "never locks".
-          # The lock must always fire, so inhibitors are ignored here. The cost is
-          # that media longer than 5 minutes gets locked out.
-          ignore_inhibit = true;
+          # No ignore_inhibit on purpose: hypridle skips an inhibited listener,
+          # and that is the wanted behaviour. A game or a video holds an idle
+          # inhibitor, so the idle lock stays out of the way. Super+L and the
+          # lock-before-suspend path still lock the session on demand.
           on-timeout = "loginctl lock-session";
         }
       ];
