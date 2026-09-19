@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   imports = [
@@ -10,13 +10,34 @@
   networking.hostName = "theConstruct";
 
   # Bootloader — GRUB for Windows dual-boot
+  #
+  # The ESP is mounted at /boot/efi and /boot is a plain directory on the root
+  # ext4 filesystem. install-grub.pl only copies kernels/initrds into the boot
+  # path when it is on a different filesystem than /nix/store, so with this
+  # layout GRUB reads them straight from /nix/store and the 1G ESP stays free.
+  # Previously /boot was the ESP and the kernels filled it, which silently
+  # broke every rebuild that pulled in a new kernel.
   boot.loader = {
     efi.canTouchEfiVariables = true;
+    efi.efiSysMountPoint = "/boot/efi";
     grub = {
       enable = true;
       efiSupport = true;
       device = "nodev";
       useOSProber = true;
+      # Override the mirroredBoots entry generated from "device" above, so the
+      # existing efiBootloaderId is kept. Firmware entry Boot0000 already points
+      # at \EFI\NixOS-boot\grubx64.efi, so reusing the id leaves BootOrder
+      # unchanged; the default id would become "NixOS-boot-efi" and add a
+      # second firmware entry.
+      mirroredBoots = lib.mkForce [
+        {
+          path = "/boot";
+          devices = [ "nodev" ];
+          efiSysMountPoint = "/boot/efi";
+          efiBootloaderId = "NixOS-boot";
+        }
+      ];
     };
   };
 
