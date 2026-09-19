@@ -36,14 +36,12 @@
           # lock-before-suspend path still lock the session on demand.
           on-timeout = "loginctl lock-session";
         }
-        {
-          # Idle suspend: the desktop stand-in for closing a laptop lid. This
-          # machine has no lid switch, so nothing else can trigger it. No
-          # ignore_inhibit here either, so a game or video holds the suspend off.
-          # 30 minutes of real idleness. before_sleep_cmd locks first.
-          timeout = 1800;
-          on-timeout = "systemctl suspend";
-        }
+        # No idle-suspend listener on purpose. Suspend itself works now (the nvidia
+        # powerManagement services stopped the `NVRM: Xid 13` corruption and the
+        # screens come back), but every resume so far has lost the input devices:
+        # the same libseat/logind seat-toggle bug that a VT switch triggers. Auto
+        # suspend would therefore leave the machine unusable while unattended.
+        # Suspend manually with `systemctl suspend` until that is fixed.
       ];
     };
   };
