@@ -86,22 +86,37 @@ with lib;
       hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'
     '')
 
-    # Wake the display after idle or suspend, then repair the output state.
-    # After a DPMS off/on cycle the nvidia driver + aquamarine can leave both
-    # outputs at 0x0 ("Cannot commit a disconnected output", "failed to commit:
-    # Invalid argument"). A running hyprlock then only receives zero-size
-    # configures, so it holds the session lock, grabs input and draws nothing:
-    # the machine looks frozen and cannot be unlocked. A config reload
-    # re-applies the monitor rules and gives both outputs a valid mode.
+    # Turn the display back on by hand, or after a resume.
+    # Known limitation: a LONG dpms-off (around 10 minutes, long enough for the
+    # monitors to power down for real) can leave both outputs at 0x0 on wake
+    # ("failed to commit: Invalid argument"). hyprctl reload does NOT reliably
+    # restore those modes, so a 0x0 screen needs a compositor restart. Prefer the
+    # monitor's own power button over dpms-off, which avoids the whole path.
     (pkgs.writeShellScriptBin "dpms-on" ''
       hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
       sleep 1
 
       if hyprctl monitors 2>/dev/null | grep -qE '^[[:space:]]+0x0@'; then
-        echo "dpms-on: outputs stuck at 0x0 after DPMS wake, reloading config to restore modes" >&2
+        echo "dpms-on: outputs are 0x0; attempting a config reload (not a reliable repair)" >&2
         hyprctl reload >/dev/null 2>&1
         sleep 1
         hyprctl monitors 2>/dev/null | grep -E '^Monitor|^[[:space:]]+[0-9]+x[0-9]+@' >&2 || true
+      fi
+    '')
+
+    # After a resume, make sure the lock is actually usable.
+    # hypridle locks before every suspend (before_sleep_cmd), so hyprlock should
+    # be running when the machine comes back. It can die while holding the lock:
+    # on 2026-09-19 14:13 the nvidia driver threw Xid 13 graphics exceptions on
+    # resume and hyprlock aborted with SIGABRT (hyprlock.cpp:414). Hyprland then
+    # stays locked with no lock surface, so the session looks frozen and cannot
+    # be unlocked. Starting hyprlock again keeps the session locked and visible.
+    (pkgs.writeShellScriptBin "resume-guard" ''
+      hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
+
+      if ! pidof hyprlock >/dev/null 2>&1; then
+        echo "resume-guard: hyprlock is not running after resume, restarting it" >&2
+        hyprlock >/dev/null 2>&1 &
       fi
     '')
 

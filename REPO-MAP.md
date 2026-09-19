@@ -241,7 +241,8 @@ This module only handles:
 - Deploying helper scripts via `writeShellScriptBin` (available on PATH):
   - `goto-workspace` / `pick-wallpaper` — per-workspace wallpaper switching
   - `dpms-off`: display off, but skips while media is playing (MPRIS via `playerctl`). Currently unused: automatic blanking is disabled (see `hypridle.nix`), turn the screens off by hand
-  - `dpms-on`: display on after suspend. It also runs `hyprctl reload` when the outputs are stuck at `0x0`, but that reload does NOT actually restore the modes (measured), so it is not a repair
+  - `dpms-on`: turn the display back on by hand. It also runs `hyprctl reload` when the outputs are stuck at `0x0`, but that reload does NOT reliably restore the modes (measured), so it is not a repair
+  - `resume-guard`: post-resume, enable DPMS and restart hyprlock if it died while holding the lock (nvidia Xid 13 / SIGABRT on resume), so the session is never left locked with no lock surface
   - `fix-jbl` — JBL Quantum 360X recovery: profile toggle → PipeWire restart → USB reset
 - Deploying the `hyprpaper.conf` (legacy; wallpaper is set via Lua autostart now)
 
@@ -313,7 +314,8 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
 - `dpms-off` — display off with media guard, currently unused (see hypridle section)
-- `dpms-on` — display on after suspend, plus a config reload when the outputs are stuck at `0x0` that is known not to work (see hypridle section)
+- `dpms-on` — turn the display on by hand, plus a config reload when the outputs are stuck at `0x0` that is known not to be reliable (see hypridle section)
+- `resume-guard` — post-resume: enable DPMS, and restart hyprlock if it crashed while holding the lock (see hypridle section)
 - `fix-jbl` — JBL headset recovery (all scripts defined in `home/modules/hyprland.nix`)
 - (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
 
@@ -353,11 +355,11 @@ Otherland-themed lock screen:
 - `hypridle.service` sets `KillMode=process`: `lock_cmd` spawns hyprlock inside hypridle's cgroup, so the default control-group kill made `systemctl --user stop/restart hypridle` kill the lock screen and silently unlock the session
 - 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
 - The lock listener deliberately has **no** `ignore_inhibit`: hypridle skips an inhibited listener, so a game or a video holds the idle lock off instead of being interrupted. `Super+L` and the lock-before-suspend path still lock on demand
-- **The 5.5 min (330s) `dpms-off` listener and its `on-resume = dpms-on` are disabled.** Measured: a SHORT `hl.dsp.dpms()` off/on cycle is harmless, but a LONG off (around 10 minutes, long enough for the monitors to power down for real) leaves both outputs at `0x0` on wake (`failed to commit: Invalid argument`). hyprlock then only receives zero-size configures, so it holds the lock and draws nothing and the screen looks frozen. `hyprctl reload` does NOT restore those modes, so there is no safe automatic repair. Turn the screens off by hand instead
-- `dpms-off` (currently unused, kept for when the listener returns) checks `playerctl` first — if media is Playing it exits without touching the display (no black screen during YouTube)
-- `dpms-on` now only runs after suspend, via `after_sleep_cmd`
+- 30 min (1800s) inactivity → `systemctl suspend`. This is the desktop stand-in for a laptop lid closing, since this machine has **no lid switch** at all. No `ignore_inhibit` here either, so media holds the suspend off
+- **The 5.5 min (330s) `dpms-off` listener is disabled.** Measured: a SHORT `hl.dsp.dpms()` off/on cycle is harmless, but a LONG off (around 10 minutes, long enough for the monitors to power down for real) leaves both outputs at `0x0` on wake (`failed to commit: Invalid argument`). hyprlock then only receives zero-size configures, so it holds the lock and draws nothing and the screen looks frozen. `hyprctl reload` does NOT reliably restore those modes, so there is no safe automatic repair. Prefer the monitor's own power button over `dpms-off`
+- `dpms-off` still checks `playerctl` first — if media is Playing it exits without touching the display
 - Manual `Super+L` → runs `hyprlock` directly (no logind roundtrip)
-- Before suspend → `loginctl lock-session`, after resume → `dpms-on`
+- Before suspend → `loginctl lock-session`; after resume → `resume-guard`, which enables DPMS and restarts hyprlock if it died while holding the lock (nvidia `Xid 13` on resume made hyprlock SIGABRT at `hyprlock.cpp:414` and left Hyprland locked with no lock surface)
 
 #### `neovim.nix` — Text Editor
 - Neovim with vi/vim aliases
@@ -443,6 +445,7 @@ key = "Super_L"
 - 32-bit graphics enabled (for Steam/Proton)
 - Stable driver package
 - `nvidia-vaapi-driver` for hardware video decode in Steam/Chromium
+- `powerManagement.enable = true`: installs `nvidia-suspend` / `nvidia-resume` / `nvidia-hibernate` and sets `NVreg_PreserveVideoMemoryAllocations=1`. Required on this machine, otherwise the driver throws `NVRM: Xid 13` graphics exceptions in clients on resume and hyprlock aborts while holding the lock. `finegrained` stays off; that is for laptop runtime power
 
 **`steam.nix`:** Gaming stack
 - Steam with Remote Play + dedicated-server firewall + protontricks

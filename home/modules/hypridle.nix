@@ -10,10 +10,9 @@
         lock_cmd = "pidof hyprlock || hyprlock";
         # Lock before suspend
         before_sleep_cmd = "loginctl lock-session";
-        # Wake display after resume. dpms-on also runs hyprctl reload when the
-        # outputs are stuck at 0x0, but a reload does NOT restore those modes
-        # (measured), so treat 0x0 after a resume as needing a session restart.
-        after_sleep_cmd = "dpms-on";
+        # After a resume, wake the display and restart hyprlock if it died while
+        # holding the lock (nvidia Xid 13 / SIGABRT on resume). See resume-guard.
+        after_sleep_cmd = "resume-guard";
       };
 
       # No dpms-off listener on purpose. Measured on this machine: a SHORT
@@ -36,6 +35,14 @@
           # inhibitor, so the idle lock stays out of the way. Super+L and the
           # lock-before-suspend path still lock the session on demand.
           on-timeout = "loginctl lock-session";
+        }
+        {
+          # Idle suspend: the desktop stand-in for closing a laptop lid. This
+          # machine has no lid switch, so nothing else can trigger it. No
+          # ignore_inhibit here either, so a game or video holds the suspend off.
+          # 30 minutes of real idleness. before_sleep_cmd locks first.
+          timeout = 1800;
+          on-timeout = "systemctl suspend";
         }
       ];
     };
