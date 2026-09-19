@@ -14,22 +14,18 @@
         after_sleep_cmd = "dpms-on";
       };
 
+      # The 330s dpms-off / dpms-on listener is deliberately NOT configured here.
+      # A hl.dsp.dpms({action="disable"/"enable"}) cycle on this machine leaves
+      # the session with no input devices at all: libseat's logind backend toggles
+      # the seat, aquamarine re-registers the devices, and the session still ends
+      # up holding none (hyprctl -j devices empty, zero /dev/input fds), so the
+      # keyboard and mouse stay dead until the compositor restarts. Switching VT
+      # triggers the same seat toggle. Re-add this only once that is fixed, and
+      # after testing a single DPMS cycle on a fresh session.
       listener = [
         {
           timeout = 300; # 5 minutes → lock screen via logind (triggers lock_cmd)
           on-timeout = "loginctl lock-session";
-        }
-        {
-          timeout = 330; # 5.5 minutes → turn off display (on-resume wakes it)
-          # ignore_inhibit: apps (Steam) hold idle inhibitors which would make
-          # hypridle SKIP on-resume → display never wakes. This listener must
-          # always respond to real input.
-          ignore_inhibit = true;
-          # dpms-off script skips if media is playing (MPRIS via playerctl)
-          on-timeout = "dpms-off";
-          # dpms-on wakes the display, then reloads the config if the DPMS cycle
-          # left the outputs at 0x0 (otherwise the lock screen stays invisible)
-          on-resume = "dpms-on";
         }
       ];
     };
