@@ -240,8 +240,8 @@ This module only handles:
 - Defining the `hyprland-session.target` user target (waybar, hypridle, … bind to it)
 - Deploying helper scripts via `writeShellScriptBin` (available on PATH):
   - `goto-workspace` / `pick-wallpaper` — per-workspace wallpaper switching
-  - `dpms-off`: display off, but skips while media is playing (MPRIS via `playerctl`). Currently unused, because the 330s idle listener that called it is disabled (see `hypridle.nix`)
-  - `dpms-on`: display on after suspend; if the DPMS cycle left the outputs at `0x0` it runs `hyprctl reload` to restore the monitor modes
+  - `dpms-off`: display off, but skips while media is playing (MPRIS via `playerctl`). Currently unused: automatic blanking is disabled (see `hypridle.nix`), turn the screens off by hand
+  - `dpms-on`: display on after suspend. It also runs `hyprctl reload` when the outputs are stuck at `0x0`, but that reload does NOT actually restore the modes (measured), so it is not a repair
   - `fix-jbl` — JBL Quantum 360X recovery: profile toggle → PipeWire restart → USB reset
 - Deploying the `hyprpaper.conf` (legacy; wallpaper is set via Lua autostart now)
 
@@ -312,8 +312,8 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
-- `dpms-off` — display off with media guard (see hypridle section)
-- `dpms-on` — display on after idle/suspend, plus a config reload when the outputs are stuck at `0x0` (see hypridle section)
+- `dpms-off` — display off with media guard, currently unused (see hypridle section)
+- `dpms-on` — display on after suspend, plus a config reload when the outputs are stuck at `0x0` that is known not to work (see hypridle section)
 - `fix-jbl` — JBL headset recovery (all scripts defined in `home/modules/hyprland.nix`)
 - (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
 
@@ -352,7 +352,8 @@ Otherland-themed lock screen:
 - `lock_cmd` = `pidof hyprlock || hyprlock` — runs when D-Bus lock event received
 - `hypridle.service` sets `KillMode=process`: `lock_cmd` spawns hyprlock inside hypridle's cgroup, so the default control-group kill made `systemctl --user stop/restart hypridle` kill the lock screen and silently unlock the session
 - 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
-- **The 5.5 min (330s) `dpms-off` listener and its `on-resume = dpms-on` are disabled.** A `hl.dsp.dpms()` disable/enable cycle leaves this machine's session with no input devices: libseat's logind backend toggles the seat, aquamarine re-registers the devices, and the session still ends up holding none (`hyprctl -j devices` empty, zero `/dev/input` fds), so the keyboard and mouse stay dead until the compositor restarts. A VT switch triggers the same seat toggle. Re-enable only once that is fixed, and after testing a single DPMS cycle on a fresh session.
+- That lock listener sets `ignore_inhibit = true`: hypridle **skips** an inhibited listener, and Steam/browsers hold idle inhibitors, so without it the session could silently never lock. Cost: media longer than 5 minutes gets locked out
+- **The 5.5 min (330s) `dpms-off` listener and its `on-resume = dpms-on` are disabled.** Measured: a SHORT `hl.dsp.dpms()` off/on cycle is harmless, but a LONG off (around 10 minutes, long enough for the monitors to power down for real) leaves both outputs at `0x0` on wake (`failed to commit: Invalid argument`). hyprlock then only receives zero-size configures, so it holds the lock and draws nothing and the screen looks frozen. `hyprctl reload` does NOT restore those modes, so there is no safe automatic repair. Turn the screens off by hand instead
 - `dpms-off` (currently unused, kept for when the listener returns) checks `playerctl` first — if media is Playing it exits without touching the display (no black screen during YouTube)
 - `dpms-on` now only runs after suspend, via `after_sleep_cmd`
 - Manual `Super+L` → runs `hyprlock` directly (no logind roundtrip)
@@ -524,8 +525,8 @@ Standalone recovery tool for a locked session that cannot be unlocked. Installed
 Background, two failure modes end up here:
 
 - hyprlock dies while holding the lock (0.9.5 aborted on Wayland protocol errors during DPMS wake: `wl_display#1: error 0: invalid object`; 0.9.6 no longer aborts but can still be left with unusable surfaces). Hyprland keeps the session locked with no lock surfaces to draw.
-- After a DPMS off/on cycle the nvidia driver + aquamarine mark both outputs disconnected (`Cannot commit a disconnected output`, `atomic drm request: failed to commit: Invalid argument`), the monitors fall back to `0x0`, and a running hyprlock only receives zero-size configures: it holds the lock, grabs input and draws nothing. `hyprctl reload` restores the modes. The idle DPMS listener that triggered this automatically is now disabled (see `hypridle.nix`).
-- The same DPMS/seat-toggle path also leaves the compositor with **no input devices**: `hyprctl -j devices` is empty and the process holds zero `/dev/input` fds, while the kernel still has the devices and the user can open them from a shell. `unlock-session` cannot repair that; only a compositor restart can. Check `hyprctl devices` before declaring a session usable.
+- After a LONG DPMS off (around 10 minutes, monitors actually powered down) the nvidia driver + aquamarine mark both outputs disconnected (`Cannot commit a disconnected output`, `atomic drm request: failed to commit: Invalid argument`), the monitors fall back to `0x0`, and a running hyprlock only receives zero-size configures: it holds the lock, grabs input and draws nothing. `hyprctl reload` does NOT restore these modes (measured), so the automatic DPMS listener is disabled (see `hypridle.nix`) and screens are turned off by hand. A short DPMS off/on cycle does not trigger this.
+- Separately, a **VT switch** toggles the libseat/logind seat and the session can come back with **no input devices**: `hyprctl -j devices` is empty while the kernel still has the devices and the user can open them from a shell. Neither a VT cycle nor a `udevadm trigger` restored them; only a compositor restart does. Check `hyprctl devices` before declaring a session usable.
 
 No upstream fix yet, so these scripts are the workaround.
 
