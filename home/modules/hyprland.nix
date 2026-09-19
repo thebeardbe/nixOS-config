@@ -86,6 +86,25 @@ with lib;
       hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'
     '')
 
+    # Wake the display after idle or suspend, then repair the output state.
+    # After a DPMS off/on cycle the nvidia driver + aquamarine can leave both
+    # outputs at 0x0 ("Cannot commit a disconnected output", "failed to commit:
+    # Invalid argument"). A running hyprlock then only receives zero-size
+    # configures, so it holds the session lock, grabs input and draws nothing:
+    # the machine looks frozen and cannot be unlocked. A config reload
+    # re-applies the monitor rules and gives both outputs a valid mode.
+    (pkgs.writeShellScriptBin "dpms-on" ''
+      hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
+      sleep 1
+
+      if hyprctl monitors 2>/dev/null | grep -qE '^[[:space:]]+0x0@'; then
+        echo "dpms-on: outputs stuck at 0x0 after DPMS wake, reloading config to restore modes" >&2
+        hyprctl reload >/dev/null 2>&1
+        sleep 1
+        hyprctl monitors 2>/dev/null | grep -E '^Monitor|^[[:space:]]+[0-9]+x[0-9]+@' >&2 || true
+      fi
+    '')
+
     # Fix JBL Quantum headset — reinitialize USB audio without reboot
     (pkgs.writeShellScriptBin "fix-jbl" ''
       CARD="alsa_card.usb-JBL_JBL_Quantum_360X_Wireless-00"

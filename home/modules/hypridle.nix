@@ -3,14 +3,15 @@
 {
   services.hypridle = {
     enable = true;
+
     settings = {
       general = {
         # Command to run when receiving a dbus lock event (from loginctl lock-session)
         lock_cmd = "pidof hyprlock || hyprlock";
         # Lock before suspend
         before_sleep_cmd = "loginctl lock-session";
-        # Wake display after resume
-        after_sleep_cmd = "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'";
+        # Wake display after resume (dpms-on also repairs stuck outputs)
+        after_sleep_cmd = "dpms-on";
       };
 
       listener = [
@@ -26,9 +27,17 @@
           ignore_inhibit = true;
           # dpms-off script skips if media is playing (MPRIS via playerctl)
           on-timeout = "dpms-off";
-          on-resume = "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'";
+          # dpms-on wakes the display, then reloads the config if the DPMS cycle
+          # left the outputs at 0x0 (otherwise the lock screen stays invisible)
+          on-resume = "dpms-on";
         }
       ];
     };
   };
+
+  # lock_cmd spawns hyprlock inside hypridle's own cgroup, so the default
+  # KillMode=control-group made "systemctl --user stop/restart hypridle" kill
+  # the lock screen and silently unlock the session. KillMode=process leaves
+  # hyprlock alone when the idle daemon is stopped or restarted.
+  systemd.user.services.hypridle.Service.KillMode = "process";
 }

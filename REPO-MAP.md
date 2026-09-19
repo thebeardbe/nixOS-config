@@ -241,6 +241,7 @@ This module only handles:
 - Deploying helper scripts via `writeShellScriptBin` (available on PATH):
   - `goto-workspace` / `pick-wallpaper` — per-workspace wallpaper switching
   - `dpms-off` — display off, but skips while media is playing (MPRIS via `playerctl`)
+  - `dpms-on` — display on after idle/suspend; if the DPMS cycle left the outputs at `0x0` it runs `hyprctl reload` to restore the monitor modes
   - `fix-jbl` — JBL Quantum 360X recovery: profile toggle → PipeWire restart → USB reset
 - Deploying the `hyprpaper.conf` (legacy; wallpaper is set via Lua autostart now)
 
@@ -312,6 +313,7 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
 - `dpms-off` — display off with media guard (see hypridle section)
+- `dpms-on` — display on after idle/suspend, plus a config reload when the outputs are stuck at `0x0` (see hypridle section)
 - `fix-jbl` — JBL headset recovery (all scripts defined in `home/modules/hyprland.nix`)
 - (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
 
@@ -348,12 +350,13 @@ Otherland-themed lock screen:
 
 #### `hypridle.nix` — Auto-Sleep System
 - `lock_cmd` = `pidof hyprlock || hyprlock` — runs when D-Bus lock event received
+- `hypridle.service` sets `KillMode=process`: `lock_cmd` spawns hyprlock inside hypridle's cgroup, so the default control-group kill made `systemctl --user stop/restart hypridle` kill the lock screen and silently unlock the session
 - 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
 - 5.5 min (330s) → `dpms-off` script. The listener has `ignore_inhibit = true`, so DPMS fires even while Steam/others hold an idle inhibitor (wake-from-idle regression fix)
 - `dpms-off` checks `playerctl` first — if media is Playing it exits without touching the display (no black screen during YouTube)
-- user input → `on-resume` re-enables DPMS
+- user input → `on-resume` runs `dpms-on`: re-enable DPMS, then `hyprctl reload` if the outputs are stuck at `0x0` (see `recovery-scripts/unlock-session`)
 - Manual `Super+L` → runs `hyprlock` directly (no logind roundtrip)
-- Before suspend → `loginctl lock-session`, after resume → DPMS on
+- Before suspend → `loginctl lock-session`, after resume → `dpms-on`
 
 #### `neovim.nix` — Text Editor
 - Neovim with vi/vim aliases
@@ -510,11 +513,20 @@ Pi coding agent skill providing:
 - `scripts/verify-config.sh` — Validates Lua config syntax and common mistakes
 
 ### `recovery-scripts/unlock-session`
-Standalone recovery tool for the frozen-lock-screen scenario. Installed system-wide as `unlock-session` (wired into `common/modules/system-packages.nix` via `environment.systemPackages`):
-- Finds your seat0 logind session and runs `loginctl unlock-session <ID>` — bare `loginctl unlock-session` silently no-ops on modern logind, an explicit session ID is required
-- Cleans up zombie `hyprlock` processes, prints recovery hints (incl. DPMS re-enable dispatch)
+Standalone recovery tool for a locked session that cannot be unlocked. Installed system-wide as `unlock-session` (wired into `common/modules/system-packages.nix` via `environment.systemPackages`). Run it from a free TTY (Ctrl+Alt+F2), then return with Ctrl+Alt+F1. It does five things:
 
-Background: hyprlock 0.9.5 aborts on Wayland protocol errors during DPMS wake (`wl_display#1: error 0: invalid object` → SIGABRT). No upstream fix yet — this script is the workaround: Ctrl+Alt+F2 → login → `unlock-session` → Ctrl+Alt+F1.
+1. Builds `HYPRLAND_INSTANCE_SIGNATURE` from `hyprctl instances`, since a plain TTY does not have it
+2. Runs `loginctl activate` on the tty1 session, because Hyprland only commits DRM changes while its session is the active VT
+3. Kills a hung `hyprlock` (`hypridle`'s `lock_cmd` is `pidof hyprlock || hyprlock`, so a stale process blocks the next lock)
+4. Runs `hyprctl repl 'return hl.clear_crashed_lockscreen()'`. This is what actually releases the lock: `loginctl unlock-session <ID>` only moves logind's `LockedHint`, it does not clear Hyprland's ext-session-lock state
+5. Runs `hyprctl reload` to re-modeset outputs stuck at `0x0`, then prints the monitor state; if they are still `0x0` it points at `loginctl terminate-session <ID>`
+
+Background, two failure modes end up here:
+
+- hyprlock dies while holding the lock (0.9.5 aborted on Wayland protocol errors during DPMS wake: `wl_display#1: error 0: invalid object`; 0.9.6 no longer aborts but can still be left with unusable surfaces). Hyprland keeps the session locked with no lock surfaces to draw.
+- After a DPMS off/on cycle the nvidia driver + aquamarine mark both outputs disconnected (`Cannot commit a disconnected output`, `atomic drm request: failed to commit: Invalid argument`), the monitors fall back to `0x0`, and a running hyprlock only receives zero-size configures: it holds the lock, grabs input and draws nothing. `hyprctl reload` restores the modes; `dpms-on` does the same automatically on idle/suspend resume.
+
+No upstream fix yet, so these scripts are the workaround.
 
 ### `home/files/agent/settings.json`
 Pi coding agent default settings:
