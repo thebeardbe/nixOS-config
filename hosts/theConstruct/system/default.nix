@@ -56,9 +56,9 @@
       options = [ "uid=1000" "gid=100" "fmask=0022" "dmask=0022" "nofail" ];
     };
     "/mnt/blue-fire" = {
-      device = "/dev/disk/by-uuid/8CB1-7A97";
-      fsType = "exfat";
-      options = [ "uid=1000" "gid=100" "fmask=0022" "dmask=0022" "nofail" ];
+      device = "/dev/disk/by-uuid/1947e95c-35d0-4017-b85c-e2bdbf9788f5";
+      fsType = "ext4";
+      options = [ "nofail" ];
     };
     "/mnt/black-glass" = {
       device = "/dev/disk/by-uuid/32CA-F4E4";
