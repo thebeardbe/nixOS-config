@@ -465,6 +465,7 @@ key = "Super_L"
 - Workspaces 1-6 → DP-2, workspaces 7-10 → DP-1 (ws7 moved to ultrawide)
 - Window rules: Signal + Firefox on workspace 7 with 1/3-2/3 split
 - Autostart: Signal at 5s, Firefox at 7s, setsplitratio at 12s
+- **Sets DP-2 as the XWayland XRandR primary at session start**, retrying until XWayland is up. DP-1 sits at negative coordinates, so XWayland places it at X11 `+0+0` and Wine/Proton treats the ultrawide as the primary display: games with no display selector fullscreen there, and on a DP-2 workspace the window and the game disagree about the resolution so clicks land in the wrong place. `xrandr` is provided by this host's `home/packages.nix`. Per-game override for a title that belongs on the ultrawide, as a Steam launch option: `xrandr --output DP-1 --primary ; %command%`
 
 **`packages.nix`:** steam-run, mangohud, prismlauncher, heroic (Heroic Games Launcher), p7zip
 
