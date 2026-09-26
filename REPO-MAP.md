@@ -218,7 +218,7 @@ Imports all home modules and sets:
 | **System Tools** | networkmanagerapplet, pavucontrol, pamixer, playerctl, fastfetch, nwg-look, tree, btop, eza, bat, brightnessctl |
 | **Hyprland Ecosystem** | hyprlock, hypridle, hyprshot, wofi, fuzzel, kitty, hyprpaper, wlogout, **hyprshell** |
 | **File Sharing** | packet (native Android Quick Share client) |
-| **Utilities** | fzf, screen, libnotify, swaynotificationcenter, wtype (Moonlight key injection) |
+| **Utilities** | fzf, screen, libnotify, swaynotificationcenter, wtype (Moonlight key injection), unzip |
 | **Yazi Deps** | ffmpegthumbnailer, jq, poppler, fd, ripgrep |
 | **Electron/Chromium support** | glib (gio for SFTP), expat, libxshmfence, libGL |
 | **Other** | sshfs |
