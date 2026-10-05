@@ -61,9 +61,9 @@
       options = [ "nofail" ];
     };
     "/mnt/black-glass" = {
-      device = "/dev/disk/by-uuid/32CA-F4E4";
-      fsType = "exfat";
-      options = [ "uid=1000" "gid=100" "fmask=0022" "dmask=0022" "nofail" ];
+      device = "/dev/disk/by-uuid/49c5f461-f3ac-4859-ada9-cf8db6dfae0e";
+      fsType = "ext4";
+      options = [ "nofail" ];
     };
     "/mnt/silver-light" = {
       device = "/dev/disk/by-uuid/BAE0-0704";
