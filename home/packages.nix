@@ -30,6 +30,7 @@
     hyprlock               # Lockscreen
     hypridle               # Auto-sleep/idle daemon
     hyprshot               # Screenshot tool
+    wl-clipboard           # Wayland clipboard (wl-copy/wl-paste for kitty/terminal copy)
     hyprshell              # GTK4 window switcher with thumbnails (Alt+Tab)
     wofi                   # Application launcher (Super + Space)
     fuzzel                 # Application launcher (Super + Shift + Space)
