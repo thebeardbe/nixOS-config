@@ -44,6 +44,7 @@
     screen                 # Terminal multiplexer
     libnotify              # Notification daemon (notify-send)
     swaynotificationcenter # Notification center UI
+    unzip                  # Info-ZIP unzip (file managers and scripts call `unzip` by name)
 
     # Yazi dependencies (previews, search)
     ffmpegthumbnailer      # Video thumbnails

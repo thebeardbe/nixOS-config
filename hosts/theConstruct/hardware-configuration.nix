@@ -18,7 +18,10 @@
       fsType = "ext4";
     };
 
-  fileSystems."/boot" =
+  # The ESP is mounted at /boot/efi, which leaves /boot as a plain directory on
+  # the root filesystem. GRUB then references kernels in /nix/store instead of
+  # copying them onto the 1G ESP. See hosts/theConstruct/system/default.nix.
+  fileSystems."/boot/efi" =
     { device = "/dev/disk/by-uuid/4EF4-9E68";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];

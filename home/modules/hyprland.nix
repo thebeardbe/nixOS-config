@@ -86,6 +86,40 @@ with lib;
       hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'
     '')
 
+    # Turn the display back on by hand, or after a resume.
+    # Known limitation: a LONG dpms-off (around 10 minutes, long enough for the
+    # monitors to power down for real) can leave both outputs at 0x0 on wake
+    # ("failed to commit: Invalid argument"). hyprctl reload does NOT reliably
+    # restore those modes, so a 0x0 screen needs a compositor restart. Prefer the
+    # monitor's own power button over dpms-off, which avoids the whole path.
+    (pkgs.writeShellScriptBin "dpms-on" ''
+      hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
+      sleep 1
+
+      if hyprctl monitors 2>/dev/null | grep -qE '^[[:space:]]+0x0@'; then
+        echo "dpms-on: outputs are 0x0; attempting a config reload (not a reliable repair)" >&2
+        hyprctl reload >/dev/null 2>&1
+        sleep 1
+        hyprctl monitors 2>/dev/null | grep -E '^Monitor|^[[:space:]]+[0-9]+x[0-9]+@' >&2 || true
+      fi
+    '')
+
+    # After a resume, make sure the lock is actually usable.
+    # hypridle locks before every suspend (before_sleep_cmd), so hyprlock should
+    # be running when the machine comes back. It can die while holding the lock:
+    # on 2026-09-19 14:13 the nvidia driver threw Xid 13 graphics exceptions on
+    # resume and hyprlock aborted with SIGABRT (hyprlock.cpp:414). Hyprland then
+    # stays locked with no lock surface, so the session looks frozen and cannot
+    # be unlocked. Starting hyprlock again keeps the session locked and visible.
+    (pkgs.writeShellScriptBin "resume-guard" ''
+      hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
+
+      if ! pidof hyprlock >/dev/null 2>&1; then
+        echo "resume-guard: hyprlock is not running after resume, restarting it" >&2
+        hyprlock >/dev/null 2>&1 &
+      fi
+    '')
+
     # Fix JBL Quantum headset — reinitialize USB audio without reboot
     (pkgs.writeShellScriptBin "fix-jbl" ''
       CARD="alsa_card.usb-JBL_JBL_Quantum_360X_Wireless-00"

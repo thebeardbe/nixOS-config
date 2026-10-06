@@ -10,7 +10,11 @@
 
   hardware.nvidia = {
     modesetting.enable = true;
-    powerManagement.enable = false;
+    # Adds the nvidia-suspend / nvidia-resume / nvidia-hibernate services and
+    # NVreg_PreserveVideoMemoryAllocations=1. Without it the driver throws
+    # "NVRM: Xid 13 ... Graphics Exception" in clients on resume, which killed
+    # hyprlock while it held the session lock (2026-09-19 14:13).
+    powerManagement.enable = true;
     powerManagement.finegrained = false;
     open = false;
     nvidiaSettings = true;

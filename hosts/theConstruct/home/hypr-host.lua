@@ -12,6 +12,20 @@ hl.monitor({
     scale    = "1",
 })
 
+-- X11 (XWayland) primary monitor.
+-- DP-1 sits at negative coordinates, so XWayland places it at X11 +0+0 and
+-- Wine/Proton then treats the ultrawide as the primary display. Games without a
+-- display selector fullscreen on the ultrawide, and when launched on a DP-2
+-- workspace the window and the game disagree about the resolution, which makes
+-- clicking offset. Setting DP-2 as the XRandR primary fixes that for every game
+-- at once, with no wrapper in the render path. XWayland may not be up when this
+-- runs, so retry briefly.
+-- Per-game override for a title that should use the ultrawide instead, as a
+-- Steam launch option:   xrandr --output DP-1 --primary ; %command%
+hl.on("hyprland.start", function()
+    hl.exec_cmd("bash -c 'for _ in 1 2 3 4 5; do xrandr --output DP-2 --primary && break; sleep 2; done'")
+end)
+
 -- Workspaces 1-6 on DP-2 (main gaming), 7-10 on DP-1 (ultrawide)
 for i = 1, 6 do
     hl.workspace_rule({ workspace = tostring(i), monitor = "DP-2", persistent = true })

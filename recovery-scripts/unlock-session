@@ -1,44 +1,88 @@
 #!/run/current-system/sw/bin/bash
-# unlock-session — recovery when hyprlock crashes on a locked screen
+# unlock-session — recovery for a locked Hyprland session that cannot be unlocked
 #
-# hyprlock crashes leave the logind session locked. The old advice
-# ("loginctl unlock-session" without args) no longer works on modern
-# logind — it requires an explicit session ID. This script finds the
-# graphical session and unlocks it.
+# Two failure modes end up here:
+#
+#  1. hyprlock died while holding the lock. Hyprland keeps the
+#     ext-session-lock active, so the session stays locked with no lock
+#     surfaces to draw. "loginctl unlock-session <ID>" does NOT clear that
+#     state (it only moves logind's LockedHint); hyprctl
+#     clear_crashed_lockscreen does.
+#
+#  2. After a DPMS off/on cycle (idle display off, monitor sleep, resume) the
+#     nvidia driver + aquamarine can leave both outputs at 0x0 ("Cannot commit
+#     a disconnected output"). hyprlock then only receives zero-size
+#     configures: it holds the lock, grabs input and draws nothing, so the
+#     screen looks frozen and cannot be unlocked.
 #
 # Usage (from a free TTY, e.g. Ctrl+Alt+F2):
 #   unlock-session
-#
 # Then switch back with Ctrl+Alt+F1.
 
-set -e
+set -uo pipefail
+
+if ! command -v hyprctl >/dev/null 2>&1; then
+  echo "❌ hyprctl not found in PATH" >&2
+  exit 1
+fi
+
+# hyprctl needs the compositor instance. This script is normally run from a
+# plain TTY, where HYPRLAND_INSTANCE_SIGNATURE is not set.
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+  HYPRLAND_INSTANCE_SIGNATURE=$(hyprctl instances 2>/dev/null | awk '/^instance /{print $2}' | tr -d ':')
+  export HYPRLAND_INSTANCE_SIGNATURE
+fi
+
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+  echo "❌ No running Hyprland instance found." >&2
+  loginctl list-sessions >&2
+  exit 1
+fi
 
 echo "🔓 unlock-session recovery tool"
-echo "   Finding your graphical session..."
+echo "   Hyprland instance: $HYPRLAND_INSTANCE_SIGNATURE"
 
-# Prefer the seat0 session belonging to the current user
+# Hyprland only commits DRM changes while its session is the active VT, so the
+# VT has to be activated before the reload below can restore the outputs.
 SESSION=$(loginctl list-sessions --no-legend 2>/dev/null |
-    awk -v u="$USER" '$3 == u && $4 == "seat0" {print $1; exit}')
+  awk -v u="$USER" '$3 == u && $7 == "tty1" {print $1; exit}')
 
-# Fallback: any seat0 session
-if [ -z "$SESSION" ]; then
-    SESSION=$(loginctl list-sessions --no-legend 2>/dev/null |
-        awk '$4 == "seat0" {print $1; exit}')
+if [ -n "$SESSION" ]; then
+  echo "   Activating graphical session $SESSION (tty1) ..."
+  loginctl activate "$SESSION" || true
+  sleep 2
+else
+  echo "   ⚠ No tty1 session found for $USER, continuing without VT switch." >&2
 fi
 
-if [ -z "$SESSION" ]; then
-    echo "❌ No graphical (seat0) session found. Sessions:" >&2
-    loginctl list-sessions >&2
-    exit 1
+# A hung hyprlock holds the lock with nothing drawn. Kill it so the next lock
+# (hypridle's lock_cmd: pidof hyprlock || hyprlock) starts from a clean state.
+if pgrep -x hyprlock >/dev/null 2>&1; then
+  echo "   Killing hung hyprlock ..."
+  pkill -x hyprlock || true
+  sleep 1
 fi
 
-echo "   Found session $SESSION — unlocking..."
-loginctl unlock-session "$SESSION"
+# Release the stuck ext-session-lock flag left behind by the dead locker.
+echo "   Clearing crashed lockscreen state ..."
+hyprctl repl 'return hl.clear_crashed_lockscreen()' >/dev/null 2>&1 || true
 
-# If a zombie/hung hyprlock is still around, clean it up so the next
-# lock starts fresh (hypridle's lock_cmd uses 'pidof hyprlock || hyprlock')
-pkill -f "^hyprlock$" 2>/dev/null || true
+# Re-apply the config: this re-modesets outputs left at 0x0 by the DPMS bug.
+echo "   Reloading config to restore monitor modes ..."
+hyprctl reload >/dev/null 2>&1 || true
+sleep 2
 
-echo "✅ Session $SESSION unlocked."
+echo "   Current monitors:"
+hyprctl monitors 2>/dev/null |
+  grep -E '^Monitor|^[[:space:]]+[0-9]+x[0-9]+@' |
+  sed 's/^/     /' || true
+
+if hyprctl monitors 2>/dev/null | grep -qE '^[[:space:]]+0x0@'; then
+  echo "❌ Outputs are still 0x0, the compositor needs a restart:" >&2
+  echo "   loginctl terminate-session ${SESSION:-<id>}   (then log in at tuigreet on tty1)" >&2
+  exit 1
+fi
+
+echo "✅ Session unlocked and displays restored."
 echo "   Switch back to the desktop with Ctrl+Alt+F1."
-echo "   Note: if the screen is black, run: hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"
+echo "   Note: hypridle is not restarted by this script."
