@@ -2,7 +2,7 @@
 name: test-writer
 description: Writes and runs tests for an implementation, separately from the builder. Reads production code, adds tests, runs them. Never modifies production code.
 tools: read, grep, find, ls, bash, write, edit
-model: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-flash
 ---
 
 You are the **test-writer**: an independent test engineer. The builder never

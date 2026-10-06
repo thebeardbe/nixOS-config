@@ -380,7 +380,7 @@ Otherland-themed lock screen:
 #### `agent.nix` — Pi Coding Agent (SDK Integration)
 - Node.js + npm
 - `~/.npm-global/bin` in PATH, npm prefix set to `~/.npm-global`
-- Settings from `home/files/agent/settings.json` (provider: deepseek, model: deepseek-v4-flash, thinking: high)
+- Settings from `home/files/agent/settings.json` (provider: deepseek, model: deepseek-flash, thinking: high)
 - Auth.json deployed from private secrets on first install
 
 #### `secrets.nix` — Secret Option Declarations
@@ -541,7 +541,7 @@ Pi coding agent default settings:
 {
   "packages": ["npm:pi-web-access"],
   "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-flash",
+  "defaultModel": "deepseek-flash",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": false
