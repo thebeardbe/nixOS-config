@@ -4,6 +4,7 @@
   imports = [
     ./gpu.nix
     ./steam.nix
+    ./llama.nix
     # Future: ./audio.nix, ./boot.nix, etc.
   ];
 

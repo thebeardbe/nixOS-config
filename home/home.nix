@@ -31,10 +31,6 @@
     ".config/hypr/hyprland.lua".source = ./files/hyprland.lua;
   };
 
-  home.sessionVariables = {
-    # EDITOR = "vim";  # Set default editor (neovim handles this via defaultEditor)
-  };
-
   # --- Bash config ---
   programs.bash = {
     enable = true;

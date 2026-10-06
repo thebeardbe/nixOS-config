@@ -452,6 +452,11 @@ key = "Super_L"
 - gamescope + gamemode enabled system-wide (used by Steam/Heroic)
 - **Sunshine** game streaming host (`capSysAdmin` for Wayland/KMS capture, firewall open) — Moonlight client on foxyNix connects here
 
+**`llama.nix`:** Runtime prerequisites for the local llama.cpp container stack (compose file and presets live in `home/files/llama/`)
+- `hardware.nvidia-container-toolkit.enable`: generates the CDI spec so dockerd can resolve the container's `nvidia.com/gpu=all` device. The legacy `virtualisation.docker.enableNvidia` runtime wrapper is not used (both Docker and the toolkit are CDI based)
+- Docker data root moved to `/home/docker` (`virtualisation.docker.daemon.settings."data-root"`): `/` has ~19 GB free, which is not enough for the CUDA image, its layers and the model cache
+- `systemd.services.docker.unitConfig.RequiresMountsFor = "/home/docker"` plus a `systemd.tmpfiles` rule, so dockerd creates the data root with root-only permissions after `/home` is mounted instead of writing to `/` first
+
 ### Home (`hosts/theConstruct/home/`)
 
 **`default.nix`:**
@@ -551,6 +556,18 @@ Pi coding agent default settings:
 
 ### `home/files/screenrc`
 GNU Screen config with vim-style tab navigation (Ctrl+A + h/j/k/l) and 4 initial tabs.
+
+### `home/files/llama/`
+Local llama.cpp router on CUDA for theConstruct's RTX 3060 Ti. Both repo files are deployed to `~/.config/llama/` on **theConstruct only** (not on foxyNix, since the GPU device and the model directory are host-local), and they are the whole definition of the container: the lifecycle is manual, nothing starts the container at boot, and it is started and stopped by hand with `docker compose` (no systemd unit, `restart: "no"`).
+
+- `compose.yaml` — the container: `ghcr.io/ggml-org/llama.cpp:server-cuda`, the CDI GPU device, the `mmap+mlock` limits for CPU-resident experts, and the router flags (one resident model, explicit loading only, flash attention, 8-bit KV cache)
+- `models.ini` — per-model presets passed to `--models-preset` (context size, `n-gpu-layers`, `n-cpu-moe`, batch sizes). Numbers are starting points meant to be corrected by measurement; no model is loaded at startup
+
+Port `21434` is published on loopback (`127.0.0.1`) only; binding is what keeps the LAN out, because Docker DNATs published ports before the NixOS INPUT chain, so `networking.firewall` cannot filter them. Models live in `/home/thebeardbe/llama-models` (mounted read-write as `/models`), and the presets are mounted read-only. `LLAMA_BASE_URL=http://127.0.0.1:21434` is exported on theConstruct only (see `hosts/theConstruct/home/default.nix`), for the pi agent's llama.cpp provider.
+
+**API key.** The server requires authentication. `~/.config/llama/api-key` is generated once by the `generateLlamaApiKey` home-manager activation (0600, from the system CSPRNG) and mounted read-only as `/run/secrets/llama-api-key`; the container starts with `--api-key-file`, so the key never appears in the process table or `docker inspect`, and a missing file stops the server instead of leaving it unauthenticated. The key is local-only: never committed and never copied into the Nix store. Rotate it by deleting the file, rebuilding (the activation only ever creates, so it regenerates), then re-running the pi agent's `/login` for the llama.cpp provider.
+
+**Tailnet exposure.** The tailnet reaches the stack through `tailscale serve`, declared as the `tailscale-serve-llama` systemd oneshot in `hosts/theConstruct/system/llama.nix` (`tailscale serve --bg --tcp=21434 tcp://127.0.0.1:21434`), not by publishing the Tailscale address. The plain-TCP form is used because the default HTTPS form needs HTTPS certificates enabled for the tailnet in the admin console, which this tailnet does not have; raw TCP needs no certificate. The serve listener binds port `21434` on the tailnet, so `networking.firewall.interfaces.tailscale0.allowedTCPPorts` opens only that port (trusting the interface would expose ssh and every other listener). The proxy is lazy: a stopped container yields a gateway error from the tailnet while the exposure stays up.
 
 ### `secrets/README.md`
 Documents how to set up the private `nix-secrets` flake:
