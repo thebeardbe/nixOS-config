@@ -40,7 +40,7 @@
     enable = true;
     shellAliases = {
       ll = "ls -l";
-      conf = "cd ~/nixOS-config && nvim"; # Open config in neovim
+      conf = "cd \"$(nixos-config-dir)\" && nvim"; # Open config in neovim
     };
   };
 

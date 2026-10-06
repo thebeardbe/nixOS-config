@@ -1,7 +1,8 @@
 > **Managed by the Nix flake.** This file is deployed from
-> `~/nixOS-config/home/files/agent/AGENTS.md` by home-manager. Make changes in
-> the repository and apply them with a rebuild (`rebuild`). Never edit the live
-> `~/.pi/agent/AGENTS.md` directly; the next rebuild replaces it.
+> `home/files/agent/AGENTS.md` in the nixOS-config repository by home-manager.
+> Make changes in the repository and apply them with a rebuild (`rebuild`).
+> Never edit the live `~/.pi/agent/AGENTS.md` directly; the next rebuild
+> replaces it.
 
 # Global Coding Guidelines & Agent Practices
 

@@ -1,6 +1,6 @@
 # Renaissance Man Unified Config — Full Repository Guide
 
-> **Repo root:** `/home/thebeardbe/nixOS-config` (or `~/nixOS-config`)
+> **Repo root:** the `nixOS-config` checkout in `$HOME` (`~/nixOS-config` on theConstruct, `~/nixos-config` on foxyNix)
 > **Current:** Built for `theConstruct` (desktop), also manages `foxyNix` (laptop)
 > **Theme:** Otherland network (cyberpunk/VR-simulation aesthetic)
 > **Hyprland config format:** Lua (`hl.*` API) — `home/files/hyprland.lua`
@@ -69,7 +69,7 @@ theme.json                   # Central design tokens — shared by ALL modules
   3. Optional private secret modules (toggle by uncommenting the `nix-secrets` input)
 - No package overlays (hyprshell uses stock nixpkgs — the Lua config makes its IPC work natively)
 
-### Build commands (run from ~/nixOS-config)
+### Build commands (run from the repo checkout)
 ```bash
 # Rebuild current machine
 sudo nixos-rebuild switch --flake .#$(hostname)
@@ -334,7 +334,7 @@ Uses `theme.json` colors computed to RGB for Waybar CSS transparency.
 #### `flake-aliases.nix` — Shared `rebuild` / `update` Aliases
 Defines the two flake aliases once and assigns them to **both** bash and zsh, so the
 shells cannot drift:
-- `rebuild` — `pushd ~/nixOS-config && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
+- `rebuild` — `pushd "$(nixos-config-dir)" && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
 - `update` — `nix flake update`, then commits **only** `flake.lock` (and only if it changed),
   then rebuilds — the same commit behaviour as `systemd.services.nix-flake-update`
 
@@ -584,11 +584,11 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 ## 10. Rebuild Flow
 
 ```
-1. Edit file(s) in ~/nixOS-config/
+1. Edit file(s) in the repo checkout
 2. (Optional) git add + git commit
 3. sudo nixos-rebuild switch --flake .#$(hostname)
 4. Aliases (home-manager, defined once in `home/modules/flake-aliases.nix` for both shells):
-   - `rebuild` = `pushd ~/nixOS-config && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
+   - `rebuild` = `pushd "$(nixos-config-dir)" && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
    - `update` = `nix flake update`, commit `flake.lock` if it changed, then the same rebuild
 ```
 

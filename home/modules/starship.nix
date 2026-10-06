@@ -75,7 +75,7 @@
     # rebuild/update live in ./flake-aliases.nix so bash and zsh stay identical
     shellAliases = {
       v = "nvim";
-      conf = "cd ~/nixOS-config && v";
+      conf = "cd \"$(nixos-config-dir)\" && v";
       ls = "${pkgs.eza}/bin/eza --icons";
       cat = "${pkgs.bat}/bin/bat";
     };
