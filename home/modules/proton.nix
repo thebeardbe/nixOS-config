@@ -26,6 +26,11 @@ let
       fi
       src="$1"
       dest="$2"
+      # The upload destination must already exist as a folder; create it (and
+      # any missing parent) when it is not there.
+      if ! proton drive items get "$dest" >/dev/null 2>&1; then
+        proton drive items create "$dest"
+      fi
       if [ -d "$src" ]; then
         exec proton drive items upload --recursive --if-exists replace "$src" "$dest"
       else
