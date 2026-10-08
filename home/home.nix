@@ -15,6 +15,7 @@
      ./modules/hyprland.nix   # Window manager + keybinds + hypr ecosystem
      ./modules/waybar.nix     # Status bar
      ./modules/agent.nix      # Node.js / npm / pi-coding-agent
+     ./modules/proton.nix    # Proton CLI (Mail, Drive, Calendar, Contacts) + share wrappers
      ./modules/secrets.nix   # Secret option declarations
      ./modules/flake-aliases.nix # Shared rebuild/update aliases for bash + zsh
   ];
@@ -36,7 +37,7 @@
     enable = true;
     shellAliases = {
       ll = "ls -l";
-      conf = "cd ~/nixOS-config && nvim"; # Open config in neovim
+      conf = "cd \"$(nixos-config-dir)\" && nvim"; # Open config in neovim
     };
   };
 

@@ -1,6 +1,6 @@
 # Renaissance Man Unified Config — Full Repository Guide
 
-> **Repo root:** `/home/thebeardbe/nixOS-config` (or `~/nixOS-config`)
+> **Repo root:** the `nixOS-config` checkout in `$HOME` (`~/nixOS-config` on theConstruct, `~/nixos-config` on foxyNix)
 > **Current:** Built for `theConstruct` (desktop), also manages `foxyNix` (laptop)
 > **Theme:** Otherland network (cyberpunk/VR-simulation aesthetic)
 > **Hyprland config format:** Lua (`hl.*` API) — `home/files/hyprland.lua`
@@ -21,7 +21,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
 │   ├── files/               # Dotfiles (hyprland.lua, hyprshell-config.toml, screenrc)
-│   └── modules/             # Home-manager modules (13 modules + hyprpaper.conf)
+│   └── modules/             # Home-manager modules (14 modules + hyprpaper.conf)
 ├── hosts/
 │   ├── theConstruct/        # Desktop: AMD Ryzen 5600 + RTX 3060 Ti
 │   │   ├── default.nix      # Host entry
@@ -55,6 +55,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 | `home-manager` | `nix-community/home-manager` | User config management |
 | `nixpkgs-unstable` | `nixos/nixpkgs/nixpkgs-unstable` | Bleeding-edge pkgs (signal-desktop, moonlight-qt) |
 | `nix-secrets` (optional/disabled) | Private git repo | Secret values (auth.json for pi agent) |
+| `proton` | `github:roman-16/proton-cli/v5.0.1` | Proton CLI (Mail/Drive/Calendar/Contacts), pinned to a tag |
 
 ### Outputs
 - `nixosConfigurations.foxyNix` — Laptop config
@@ -63,13 +64,14 @@ theme.json                   # Central design tokens — shared by ALL modules
 ### Key Mechanics
 - Reads `theme.json` and passes it as `specialArgs` to **home-manager** modules (via `extraSpecialArgs`).
 - `unstable` is an imported instance of `nixpkgs-unstable` available to all modules.
+- `protonCli` is the upstream proton-cli package (flake input `proton`), handed to home modules via `extraSpecialArgs`.
 - `mkHost` is a helper that assembles a full NixOS config for each host:
   1. Host's own `default.nix`
   2. Home-manager with shared `home/home.nix` + host-specific `home/default.nix`
   3. Optional private secret modules (toggle by uncommenting the `nix-secrets` input)
 - No package overlays (hyprshell uses stock nixpkgs — the Lua config makes its IPC work natively)
 
-### Build commands (run from ~/nixOS-config)
+### Build commands (run from the repo checkout)
 ```bash
 # Rebuild current machine
 sudo nixos-rebuild switch --flake .#$(hostname)
@@ -338,7 +340,7 @@ Uses `theme.json` colors computed to RGB for Waybar CSS transparency.
 #### `flake-aliases.nix` — Shared `rebuild` / `update` Aliases
 Defines the two flake aliases once and assigns them to **both** bash and zsh, so the
 shells cannot drift:
-- `rebuild` — `pushd ~/nixOS-config && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
+- `rebuild` — `pushd "$(nixos-config-dir)" && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
 - `update` — `nix flake update`, then commits **only** `flake.lock` (and only if it changed),
   then rebuilds — the same commit behaviour as `systemd.services.nix-flake-update`
 
@@ -620,11 +622,11 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 ## 10. Rebuild Flow
 
 ```
-1. Edit file(s) in ~/nixOS-config/
+1. Edit file(s) in the repo checkout
 2. (Optional) git add + git commit
 3. sudo nixos-rebuild switch --flake .#$(hostname)
 4. Aliases (home-manager, defined once in `home/modules/flake-aliases.nix` for both shells):
-   - `rebuild` = `pushd ~/nixOS-config && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
+   - `rebuild` = `pushd "$(nixos-config-dir)" && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd`
    - `update` = `nix flake update`, commit `flake.lock` if it changed, then the same rebuild
 ```
 
@@ -708,9 +710,60 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `pactl list cards` | List audio devices for profile switching |
 | `overskride` | Bluetooth manager (click Bluetooth in Waybar) |
 | `swaync-client -op` | Open notification center (click bell in Waybar) |
+| `proton mail messages list --unread` | List unread Proton mail |
+| `proton calendar events list` | List Proton calendar events |
+| `proton drive items list /Documents` | List a Proton Drive folder |
+| `proton-push <dir> <remote>` | Upload a file/dir to Proton Drive |
+| `proton-pull <remote> <dir>` | Download a file/dir from Proton Drive |
 
 ---
 
 ## 14. Result Symlink
 
 A `result` symlink only appears at the repo root when building with `nix build` (not `nixos-rebuild switch`). To inspect the live system use `/run/current-system`, or list generations with `nix-env --list-generations -p /nix/var/nix/profiles/system`.
+
+---
+
+## 15. Proton Tooling (Mail, Drive, Calendar, Contacts)
+
+**Tool:** [`proton-cli`](https://github.com/roman-16/proton-cli) by roman-16 — an unofficial, community, single-binary CLI covering the whole Proton suite. It uses Proton's own `go-srp`/`gopenpgp` for login and encryption, but it is **not affiliated with Proton AG and is unaudited**.
+
+### Where it comes from
+- Flake input `proton` → `github:roman-16/proton-cli/v5.0.1` (pinned to the tag).
+- nixpkgs lags badly (`2.2.3` vs upstream `5.x`), hence the upstream pin.
+- Built from source via `buildGoModule`; exposed to home modules as `protonCli` (in `extraSpecialArgs`).
+
+### What is installed (`home/modules/proton.nix`)
+| Command | Purpose |
+|---|---|
+| `proton` / `proton-cli` | Mail, Drive, Calendar, Contacts, `account`, raw `api` |
+| `proton-push <local> <remote>` | Upload a file/dir to Drive (`--if-exists replace`, keeps a revision) |
+| `proton-pull <remote> <localdir>` | Download a file/dir from Drive (`--recursive --dest-dir`) |
+
+`proton-push`/`proton-pull` are thin wrappers only — no sync, no conflict detection, no watcher. Re-running a push re-uploads.
+
+### Agent skill
+`home/files/agent/skills/proton-cli/SKILL.md` deploys to `~/.pi/agent/skills/proton-cli/` (handled by `agent.nix`). It instructs the agent to run `proton skill --body-only` first, so it always follows the installed build's own authoritative command reference instead of remembered syntax.
+
+### Sign in (manual, per machine/profile)
+```bash
+proton account login                  # default profile
+proton account login --profile work   # named profile
+proton account sessions list         # see sessions
+proton account sessions revoke       # kill a session
+```
+
+### Account model (important)
+- Proton **Mail/Drive/Calendar** have **no scoped tokens and no delegation** — a session is full-account access.
+- Proton **Pass** has scoped tokens, but this setup uses **Enpass**, so Pass is out of scope entirely.
+- The only real Proton-side boundary is a **separate Proton account** (usable for Calendar/Drive via sharing), because Mail cannot be shared or delegated.
+- `PROTON_CONFIRM` (for example `deletions=deny`) is a **guardrail against accidents**, enforced by the binary itself. It is **not** a security boundary — a hijacked agent could bypass it.
+- Real isolation comes from running the agent in a **container** (VM/LXC/Docker), which this setup assumes for anything touching mail.
+
+### Why not rclone, the official CLI, or a mount
+- **rclone** Proton Drive backend is Tier 4 (Experimental) and broke repeatedly in 2026 (new-SDK name hashes, API version rejections, upload failures). Not safe for backups.
+- The **official Proton Drive CLI** is Drive-only (no Mail/Calendar) and has no mount.
+- **Mounting** requires Proton's Linux desktop client, which is announced but not yet released. There is no reliable mount today.
+
+### Re-authentication on a fresh machine
+Sessions live in `~/.config/proton-cli/sessions/<profile>.json` (mode `0600`) and are per-machine. A new machine needs `proton account login` again; sessions are not copied between hosts.

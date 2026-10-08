@@ -51,7 +51,7 @@ NixOS + home-manager configuration for a multi-machine setup, themed around the 
 ```bash
 # Clone
 git clone https://github.com/thebeardbe/nixOS-config.git
-cd nixos-config
+cd nixOS-config
 
 # Generate hardware config (adjust path for your machine)
 nixos-generate-config --show-hardware-config > hosts/your-host/hardware-configuration.nix

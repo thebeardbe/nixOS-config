@@ -10,10 +10,10 @@ imported by the shared `home/home.nix`.
 ## Making changes
 
 Edit the files in this repository, then apply them with a rebuild. The
-`rebuild` alias must be run from `/home/thebeardbe/nixOS-config`:
+`rebuild` alias finds the checkout itself (the directory is `~/nixOS-config` on
+some hosts and `~/nixos-config` on others), so run it from anywhere:
 
 ```
-cd /home/thebeardbe/nixOS-config
 rebuild
 ```
 
