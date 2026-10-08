@@ -11,6 +11,13 @@
     # Bleeding-edge nixpkgs for specific packages (signal-desktop, etc.)
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
+    # Proton CLI (community, upstream) — Mail, Drive, Calendar, Contacts.
+    # nixpkgs lags badly (2.2.3 vs current 5.x), so pin the upstream flake to a tag.
+    proton = {
+      url = "github:roman-16/proton-cli/v5.0.1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Private secrets — optional flake input.
     # nix-secrets = {
     #   url = "git+ssh://git@your-server/filip/nix-secrets";
@@ -53,6 +60,7 @@
           home-manager.extraSpecialArgs = { 
             inherit unstable;
             theme = themeConfig; 
+            protonCli = inputs.proton.packages.${system}.default;
           };
         }
       ] ++ secretModulesFor host;
