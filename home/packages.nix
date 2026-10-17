@@ -39,6 +39,13 @@
     hyprpaper              # Dynamic wallpaper manager
     wlogout                # Power menu
 
+    # Media
+    mpv                    # Video/audio player (local files + network streams)
+    yt-dlp                 # Lets mpv stream from YouTube and similar sites
+
+    # File management
+    cosmic-files           # GUI file browser (Rust/COSMIC, Wayland-native, mouse-first)
+
     # Utilities
     wtype                  # Virtual keyboard input (Moonlight streaming key injection)
     fzf                    # Fuzzy finder (used by pick-wallpaper)
