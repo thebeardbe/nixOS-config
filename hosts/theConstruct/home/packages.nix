@@ -8,6 +8,10 @@
     # Sets the XWayland primary monitor at session start (see hypr-host.lua)
     xrandr
 
+    # Wine / Proton game management (Battle.net via Steam + Proton)
+    protonup-qt            # Install/manage GE-Proton builds
+    protontricks           # Winetricks wrapper for individual Proton prefixes
+
     # Music production (desk-bound: paired with the Akai MPD218)
     ardour                 # DAW (binary is `ardour9`)
     hydrogen               # Drum machine / sequencer
