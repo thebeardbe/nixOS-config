@@ -8,8 +8,11 @@ in
     nodejs
   ];
 
+  # ~/.pi/agent/bin is where the official installer puts a managed install
+  # (launcher pi + install/releases/<version>). It must come before
+  # ~/.npm-global/bin so a managed install wins over a leftover npm one.
   home.sessionVariables = {
-    PATH = "$HOME/.npm-global/bin:$PATH";
+    PATH = "$HOME/.pi/agent/bin:$HOME/.npm-global/bin:$PATH";
     NPM_CONFIG_PREFIX = "$HOME/.npm-global";
   };
 
