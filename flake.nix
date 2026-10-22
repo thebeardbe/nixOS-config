@@ -41,6 +41,10 @@
       specialArgs = { inherit inputs; unstable = unstable; };
       modules = [
         ./hosts/${host}/default.nix
+        # Waybar from upstream master while nixpkgs is still on 0.15.0, which
+        # cannot dispatch workspace switches under Hyprland's Lua config.
+        # Self-disables at waybar >= 0.16 — see the file header.
+        { nixpkgs.overlays = [ (import ./overlays/waybar-lua.nix) ]; }
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
