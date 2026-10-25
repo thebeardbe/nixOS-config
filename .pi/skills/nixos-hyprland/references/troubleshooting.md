@@ -229,10 +229,10 @@ Tips:
 ```bash
 # Check if running
 pgrep hyprpaper
-# Check wallpapers
-hyprctl hyprpaper listloaded
-# Set wallpaper
-hyprctl hyprpaper wallpaper ",/path/to/wallpaper.png"
+# Check active wallpaper per output (0.8.x: listloaded no longer exists)
+hyprctl hyprpaper listactive
+# Set wallpaper, one output at a time (the empty-monitor form is a silent no-op)
+hyprctl hyprpaper wallpaper "eDP-1,/path/to/wallpaper.png"
 ```
 
 ### hyprshot (screenshots)

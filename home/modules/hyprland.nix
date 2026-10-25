@@ -26,11 +26,11 @@ with lib;
   home.packages = with pkgs; [
     luajit
 
-    # Single place that changes the wallpaper. hyprpaper 0.8.4 caches every image
-    # it has loaded and never frees it, so a long-lived session grows by one
-    # decoded wallpaper per switch: after 3 days hyprpaper held 759 MB (82 MB
-    # RSS + 715 MB swap) with a single 1920x1080 wallpaper configured. Unloading
-    # first keeps exactly one image resident.
+    # Single place that changes the wallpaper. hyprpaper 0.8.x matches wallpapers
+    # per output name and has no "all monitors" form: an empty monitor matches no
+    # output, so it logs "Monitor <name> has no target: no wp will be created" and
+    # silently does nothing. `preload`, `unload` and `listloaded` no longer exist
+    # either, so apply once per output and fail loudly if nobody takes it.
     (pkgs.writeShellScriptBin "set-wallpaper" ''
       set -euo pipefail
       WALL="$1"
@@ -38,11 +38,19 @@ with lib;
         echo "set-wallpaper: no such file: $WALL" >&2
         exit 1
       fi
-      # Nothing to unload is the normal case on a fresh session; the error is
-      # expected and intentionally ignored.
-      hyprctl hyprpaper unload all >/dev/null 2>&1 || true
-      hyprctl hyprpaper preload "$WALL" >/dev/null 2>&1 || true
-      hyprctl hyprpaper wallpaper ",$WALL"
+      applied=0
+      while IFS= read -r mon; do
+        [[ -n "$mon" ]] || continue
+        if hyprctl hyprpaper wallpaper "$mon,$WALL" >/dev/null 2>&1; then
+          applied=$((applied + 1))
+        else
+          echo "set-wallpaper: $mon rejected $WALL" >&2
+        fi
+      done < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
+      if (( applied == 0 )); then
+        echo "set-wallpaper: no output accepted $WALL (is hyprpaper running?)" >&2
+        exit 1
+      fi
     '')
 
     (pkgs.writeShellScriptBin "goto-workspace" ''

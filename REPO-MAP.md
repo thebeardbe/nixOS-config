@@ -246,7 +246,7 @@ This module only handles:
   - `dpms-on`: turn the display back on by hand. It also runs `hyprctl reload` when the outputs are stuck at `0x0`, but that reload does NOT reliably restore the modes (measured), so it is not a repair
   - `resume-guard`: post-resume, enable DPMS and restart hyprlock if it died while holding the lock (nvidia Xid 13 / SIGABRT on resume), so the session is never left locked with no lock surface
   - `fix-jbl` — JBL Quantum 360X recovery: profile toggle → PipeWire restart → USB reset
-- Deploying the `hyprpaper.conf` (legacy; wallpaper is set via Lua autostart now)
+- Deploying the `hyprpaper.conf` (splash only; wallpapers are applied per output by `set-wallpaper` from the Lua autostart and from `goto-workspace`)
 
 #### `home/files/hyprland.lua` — The Main Hyprland Config (Lua)
 
@@ -600,7 +600,7 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | Add a Hyprland keybind | `home/files/hyprland.lua` → `hl.bind(...)` section |
 | Change Hyprland appearance (gaps, blur, etc.) | `home/files/hyprland.lua` → `hl.config({ general, decoration })` |
 | Change Waybar layout | `home/modules/waybar.nix` → `settings.mainBar` |
-| Change wallpaper | `home/files/hyprland.lua` → `hl.on("hyprland.start")` + `hyprpaper.conf` |
+| Change wallpaper | `set-wallpaper <path>` (per output, called by `home/files/hyprland.lua` autostart and `goto-workspace`) |
 | Add a new machine | Create `hosts/<name>/`, add to `flake.nix` `nixosConfigurations` |
 | Change lock screen text | `home/modules/hyprlock.nix` |
 | Add GTK theme | `home/modules/appearance.nix` → `gtk.theme` |
@@ -684,7 +684,7 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 | `sudo nix-env --delete-generations -p /nix/var/nix/profiles/system <N>` | Remove specific generation |
 | `hyprctl reload` | Reload config (hyprlang only — Lua config needs Super+Shift+R) |
 | `Super + Shift + R` | Re-evaluate the Lua config via `hyprctl eval 'dofile(...)'` (picks up file changes) |
-| `hyprctl hyprpaper wallpaper ,<path>` | Change wallpaper on the fly |
+| `set-wallpaper <path>` | Change wallpaper on every output (hyprpaper 0.8 requires a monitor name; the empty-monitor form is a no-op) |
 | `Super + Shift + W` | Interactive wallpaper picker |
 | `Super + Space` | Wofi app launcher |
 | `Super + Shift + Space` | Fuzzel app launcher |

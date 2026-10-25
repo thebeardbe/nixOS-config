@@ -24,26 +24,27 @@ Then click a workspace in the bar. If it switches:
 2. delete the `nixpkgs.overlays` entry in `flake.nix`
 3. delete this section
 
-## hyprpaper memory growth: drop the workaround when upstream fixes it
+## hyprpaper 0.8.x: per-output wallpapers, and a stale daemon hides upgrades
 
-hyprpaper 0.8.4 (the current upstream release) caches every wallpaper image it
-has loaded and never frees it. Because `goto-workspace` sets a wallpaper per
-workspace, a session accumulates one decoded image per switch. After 3 days of
-uptime hyprpaper held 759 MB (82 MB RSS + 715 MB swap) with a single 1920x1080
-wallpaper configured.
+hyprpaper 0.8 dropped the old config keys and IPC. There is no `preload` key, and
+`wallpaper = ,<path>` with an empty monitor matches no output, so it logs `Monitor
+<name> has no target: no wp will be created` and applies nothing. `hyprctl
+hyprpaper` now accepts only `wallpaper <monitor>,<path>` and `listactive`;
+`preload`, `unload` and `listloaded` return "invalid hyprpaper request".
 
-`set-wallpaper` in `home/modules/hyprland.nix` works around this by running
-`hyprctl hyprpaper unload all` before each load, so exactly one image stays
-resident. `goto-workspace` and `pick-wallpaper` both go through it, so do not
-call `hyprctl hyprpaper wallpaper` directly.
+`set-wallpaper` in `home/modules/hyprland.nix` therefore applies the image once
+per output, enumerated from `hyprctl monitors -j`, and the Lua autostart,
+`goto-workspace` and `pick-wallpaper` all go through it. `hyprpaper.conf` is down
+to `splash` only.
 
-To confirm and clean up:
+Related trap worth remembering: a daemon started before a flake update keeps
+running the OLD binary, so its own config keys and IPC still work and the upgrade
+stays invisible until the process is restarted. A 0.7-era hyprpaper had been up
+for 3 days and 759 MB (82 MB RSS + 715 MB swap) before a restart exposed all of
+the above as a regression.
+
+To verify per-workspace switching:
 
 ```bash
-grep -E "VmRSS|VmSwap" /proc/$(pgrep -x hyprpaper)/status   # expect tens of MB, VmSwap 0
+hyprctl hyprpaper listactive   # must name the path expected for that workspace
 ```
-
-Switch wallpapers a few times on several workspaces. If RSS stays flat:
-
-1. cut the body of `set-wallpaper` back to a plain `hyprctl hyprpaper wallpaper ",$WALL"`
-2. delete this section

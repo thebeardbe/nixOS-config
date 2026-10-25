@@ -402,7 +402,8 @@ hyprctl activeworkspace          # Get current workspace
 hyprctl binds                    # List all keybinds
 hyprctl configerrors             # Show config parse errors
 hyprctl dispatch <dispatcher>    # Execute a dispatcher
-hyprctl hyprpaper wallpaper ,<path>  # Set wallpaper
+hyprctl hyprpaper wallpaper <monitor>,<path>  # Set wallpaper (0.8.x: monitor required)
+hyprctl hyprpaper listactive             # Active wallpaper per output
 hyprctl keyword <option> <value> # Change config option
 hyprctl notify <icon> <time> <color> <message>
 
