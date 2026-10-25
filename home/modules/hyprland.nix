@@ -26,6 +26,25 @@ with lib;
   home.packages = with pkgs; [
     luajit
 
+    # Single place that changes the wallpaper. hyprpaper 0.8.4 caches every image
+    # it has loaded and never frees it, so a long-lived session grows by one
+    # decoded wallpaper per switch: after 3 days hyprpaper held 759 MB (82 MB
+    # RSS + 715 MB swap) with a single 1920x1080 wallpaper configured. Unloading
+    # first keeps exactly one image resident.
+    (pkgs.writeShellScriptBin "set-wallpaper" ''
+      set -euo pipefail
+      WALL="$1"
+      if [[ ! -f "$WALL" ]]; then
+        echo "set-wallpaper: no such file: $WALL" >&2
+        exit 1
+      fi
+      # Nothing to unload is the normal case on a fresh session; the error is
+      # expected and intentionally ignored.
+      hyprctl hyprpaper unload all >/dev/null 2>&1 || true
+      hyprctl hyprpaper preload "$WALL" >/dev/null 2>&1 || true
+      hyprctl hyprpaper wallpaper ",$WALL"
+    '')
+
     (pkgs.writeShellScriptBin "goto-workspace" ''
       WS="$1"
       WALLDIR="$HOME/Pictures/Wallpapers"
@@ -44,7 +63,7 @@ with lib;
       fi
 
       # Set wallpaper synchronously (fast socket write, no delay)
-      [[ -n "$WP" ]] && hyprctl hyprpaper "wallpaper ,$WP" &>/dev/null
+      [[ -n "$WP" ]] && set-wallpaper "$WP"
 
       # Dispatch workspace in Lua-compatible format (double quotes for bash var expansion)
       hyprctl dispatch "hl.dsp.focus({ workspace = ''${WS} })"
@@ -65,7 +84,7 @@ with lib;
       for ext in jpg jpeg png; do
         W="$WALL/$FILE.$ext"
         if [[ -f "$W" ]]; then
-          hyprctl hyprpaper "wallpaper ,$W"
+          set-wallpaper "$W"
           WS=$(hyprctl activeworkspace | grep -oP 'workspace ID \K\d+')
           tmp=$(mktemp)
           jq --arg w "$WS" --arg p "$W" '. + {($w): $p}' < "$STATE" > "$tmp"
