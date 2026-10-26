@@ -20,10 +20,12 @@
     enable = true;
     nssmdns4 = true;
     openFirewall = true;
-    publish = {
-      enable = true;
-      addresses = true;
-      userServices = true;
+    # Renamed upstream: publish.* moved under settings.publish with
+    # negated names (NixOS 26.11).
+    settings.publish = {
+      publish-addresses = true;
+      disable-publishing = false;
+      disable-user-service-publishing = false;
     };
   };
 

@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   # NVIDIA Container Toolkit (CDI)
@@ -50,7 +50,24 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      # `requires`/`after` only guarantee the *process* exists. A switch that
+      # restarts tailscaled leaves the backend in NoState for a moment, and
+      # `tailscale serve` then fails with "unexpected state: NoState" and takes
+      # the whole rebuild down with it. Wait (bounded) for a usable backend, and
+      # retry as a backstop if it still is not ready.
+      ExecStartPre = pkgs.writeShellScript "wait-for-tailscale" ''
+        for _ in $(seq 1 60); do
+          if ${lib.getExe config.services.tailscale.package} status >/dev/null 2>&1; then
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "tailscaled backend not ready after 120s" >&2
+        exit 1
+      '';
       ExecStart = "${lib.getExe config.services.tailscale.package} serve --bg --tcp=21434 tcp://127.0.0.1:21434";
+      Restart = "on-failure";
+      RestartSec = 10;
     };
   };
 
