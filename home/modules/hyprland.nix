@@ -26,6 +26,33 @@ with lib;
   home.packages = with pkgs; [
     luajit
 
+    # Single place that changes the wallpaper. hyprpaper 0.8.x matches wallpapers
+    # per output name and has no "all monitors" form: an empty monitor matches no
+    # output, so it logs "Monitor <name> has no target: no wp will be created" and
+    # silently does nothing. `preload`, `unload` and `listloaded` no longer exist
+    # either, so apply once per output and fail loudly if nobody takes it.
+    (pkgs.writeShellScriptBin "set-wallpaper" ''
+      set -euo pipefail
+      WALL="$1"
+      if [[ ! -f "$WALL" ]]; then
+        echo "set-wallpaper: no such file: $WALL" >&2
+        exit 1
+      fi
+      applied=0
+      while IFS= read -r mon; do
+        [[ -n "$mon" ]] || continue
+        if hyprctl hyprpaper wallpaper "$mon,$WALL" >/dev/null 2>&1; then
+          applied=$((applied + 1))
+        else
+          echo "set-wallpaper: $mon rejected $WALL" >&2
+        fi
+      done < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
+      if (( applied == 0 )); then
+        echo "set-wallpaper: no output accepted $WALL (is hyprpaper running?)" >&2
+        exit 1
+      fi
+    '')
+
     (pkgs.writeShellScriptBin "goto-workspace" ''
       WS="$1"
       WALLDIR="$HOME/Pictures/Wallpapers"
@@ -44,7 +71,7 @@ with lib;
       fi
 
       # Set wallpaper synchronously (fast socket write, no delay)
-      [[ -n "$WP" ]] && hyprctl hyprpaper "wallpaper ,$WP" &>/dev/null
+      [[ -n "$WP" ]] && set-wallpaper "$WP"
 
       # Dispatch workspace in Lua-compatible format (double quotes for bash var expansion)
       hyprctl dispatch "hl.dsp.focus({ workspace = ''${WS} })"
@@ -65,7 +92,7 @@ with lib;
       for ext in jpg jpeg png; do
         W="$WALL/$FILE.$ext"
         if [[ -f "$W" ]]; then
-          hyprctl hyprpaper "wallpaper ,$W"
+          set-wallpaper "$W"
           WS=$(hyprctl activeworkspace | grep -oP 'workspace ID \K\d+')
           tmp=$(mktemp)
           jq --arg w "$WS" --arg p "$W" '. + {($w): $p}' < "$STATE" > "$tmp"

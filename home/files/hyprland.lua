@@ -34,7 +34,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("bash -c 'sleep 2 && packet'")
     hl.exec_cmd("hyprshell run -c ~/.config/hyprshell/config.toml")
-    hl.exec_cmd("bash -c 'hyprctl hyprpaper \"wallpaper ,/home/thebeardbe/Pictures/Wallpapers/solid-bg.png\" 2>/dev/null; sleep 1 && goto-workspace 1'")
+    hl.exec_cmd("bash -c 'sleep 1; set-wallpaper /home/thebeardbe/Pictures/Wallpapers/solid-bg.png; goto-workspace 1'")
 
     -- Autostart programs on all machines (after workspace 1 is ready)
     hl.exec_cmd("kitty")                                           -- workspace 1

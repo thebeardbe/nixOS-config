@@ -43,6 +43,9 @@
     mpv                    # Video/audio player (local files + network streams)
     yt-dlp                 # Lets mpv stream from YouTube and similar sites
 
+    # 3D printing
+    orca-slicer            # Slicer for Bambu/Prusa/others (2.4.2, matches upstream)
+
     # File management
     cosmic-files           # GUI file browser (Rust/COSMIC, Wayland-native, mouse-first)
 
