@@ -214,8 +214,14 @@ hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 -- Pick wallpaper (Super + Shift + W)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
 
--- Reload Lua config (Super + Shift + R) — re-evaluates the entire Lua file at runtime
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl eval 'dofile(os.getenv(\"HOME\") .. \"/.config/hypr/hyprland.lua\")'"))
+-- Reload Hyprland config (Super + Shift + R)
+-- Use `hyprctl reload`, not `eval dofile(...)`. dofile re-executes the file but
+-- hyprland does not replace an existing bind, so every reload stacked another
+-- copy of every binding on top of the old one. Since the first match wins, a
+-- reload could never apply a fixed bind and duplicates accumulated forever.
+-- `hyprctl reload` re-reads the config file and re-registers the binds cleanly
+-- (measured: 195 accumulated binds resolve back to the 71 real ones).
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
 
 -- Fix JBL Quantum headset audio (Super + Ctrl + Shift + J)
 hl.bind(mainMod .. " + CTRL + SHIFT + J", hl.dsp.exec_cmd("fix-jbl"))
