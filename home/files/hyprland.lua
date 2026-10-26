@@ -79,6 +79,15 @@ hl.config({
         layout        = "dwindle",
     },
 
+    -- Dwindle splits are NOT permanent by default: the direction is recomputed
+    -- from the parent node's W/H ratio (W > H -> side-by-side), which means an
+    -- ultrawide always splits side-by-side, and `togglesplit` (Super+J) refuses
+    -- to work at all. preserve_split makes a split stick until it is changed
+    -- explicitly, which is what gives Super+J real effect.
+    dwindle = {
+        preserve_split = true,
+    },
+
     decoration = {
         rounding          = 10,
         active_opacity    = 1.0,
@@ -144,7 +153,11 @@ hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + SHIFT + space", hl.dsp.exec_cmd("fuzzel"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
+-- togglesplit via hyprctl, not hl.dsp.layout(...): binding the Lua layout
+-- dispatcher registers a __lua dispatcher that never reaches the dwindle
+-- layout (silent no-op, no error in the journal), while the identical message
+-- sent through `hyprctl dispatch` works. Requires dwindle.preserve_split.
+hl.bind(mainMod .. " + J", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.layout("togglesplit")']]))
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 
 -- Window switching: hyprshell registers its own Alt+Tab binds natively via IPC

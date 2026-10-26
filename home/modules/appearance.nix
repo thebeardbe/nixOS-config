@@ -56,6 +56,11 @@
       # Disable shell integration over SSH to fix Enter key issues
       # (screen handles its own shell integration locally)
       shell_integration = "disabled";
+      # Do not persist window size/state between launches. With this left at
+      # kitty's default (yes), one maximized window is remembered in
+      # ~/.cache/kitty/main.json and every later kitty opens maximized, hiding
+      # the tiled windows underneath. Tiling is Hyprland's job, not kitty's.
+      remember_window_size = "no";
     };
   };
 
