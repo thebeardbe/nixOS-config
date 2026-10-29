@@ -17,21 +17,41 @@ services:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     restart: "no"
 
-    # Loopback only. Published ports are DNATed by dockerd before the packet
-    # reaches the NixOS INPUT chain, so a firewall rule would not keep the LAN
-    # out; the loopback binding is what does. The tailnet reaches this stack
-    # through `tailscale serve`, declared system-side in
-    # hosts/theConstruct/system/llama.nix, not through a published Tailscale
-    # address: binding that address made the whole container fail to start
-    # whenever it was not assigned yet, which took this loopback publish down
-    # with it and broke the local agent.
+    # Three access paths, each declared where it can actually be relied on.
+    #
+    # Loopback is for the local agent on this machine; that traffic never
+    # leaves the host.
+    #
+    # The LAN address is for other devices on the home network. It is a DHCP
+    # lease, but the router carries a reservation for this machine, so the
+    # address is always 192.168.100.12. Binding it is safe only because this
+    # container is started by hand and has no boot-time unit: by then the
+    # address is always assigned, whereas Docker refuses to start a container
+    # whose published address is missing and would take the loopback publish
+    # down with it. Not 0.0.0.0, which would also publish on the tailnet and on
+    # every other interface that ever appears here.
+    #
+    # Docker DNATs published ports before the packet reaches the NixOS INPUT
+    # chain, so `networking.firewall` cannot filter either binding. The API key
+    # is the access control for both.
+    #
+    # The tailnet gets no published address. It is reached through
+    # `tailscale serve`, declared system-side in
+    # hosts/theConstruct/system/llama.nix: that address can legitimately be
+    # absent, and publishing it made the whole container fail to start whenever
+    # it was not yet assigned, which took this loopback publish down with it and
+    # broke the local agent.
     ports:
       - "127.0.0.1:21434:21434"
+      - "192.168.100.12:21434:21434"
 
     volumes:
       # Read-write: the router scans this directory for GGUFs, and the operator
-      # drops new files in here without touching the container.
-      - /home/thebeardbe/llama-models:/models
+      # drops new files in here without touching the container. It sits on a
+      # dedicated ext4 data partition on the NVMe, not under /home, so the
+      # models do not consume the partition that also holds the home directory
+      # and the Docker data root.
+      - /mnt/the-grail/llama-models:/models
       # Deployed by home-manager from the repo. Read-only: the server only
       # reads presets.
       - /home/thebeardbe/.config/llama/models.ini:/presets/models.ini:ro
