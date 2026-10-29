@@ -81,5 +81,16 @@
       fsType = "ntfs-3g";
       options = [ "uid=1000" "gid=100" "fmask=0022" "dmask=0022" "nofail" ];
     };
+    # Dedicated ext4 partition for the local llama.cpp model storage (see
+    # home/files/llama/), plus general data. Models are large enough that they
+    # must not share the /home partition with the home directory and the Docker
+    # data root. Addressed by filesystem UUID rather than device path because
+    # the NVMe device names on this machine have swapped between boots more
+    # than once.
+    "/mnt/the-grail" = {
+      device = "/dev/disk/by-uuid/b4875096-b8f3-4d96-9ff0-ef04476420cb";
+      fsType = "ext4";
+      options = [ "nofail" ];
+    };
   };
 }

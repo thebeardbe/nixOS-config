@@ -431,13 +431,14 @@ key = "Super_L"
 - Hostname: `theConstruct`
 - Bootloader: GRUB with EFI support + OS prober (Windows dual-boot)
 - exfat + ntfs3 filesystem support (`boot.supportedFilesystems`)
-- 6 auto-mounted data drives (all with `nofail` — don't block boot):
+- 7 auto-mounted data drives (all with `nofail` — don't block boot):
   - `/mnt/golden-city` (exfat, B89B-399D)
   - `/mnt/blue-fire` (exfat, 8CB1-7A97)
   - `/mnt/black-glass` (exfat, 32CA-F4E4)
   - `/mnt/silver-light` (exfat, BAE0-0704)
   - `/mnt/middle-country` (NTFS, F270574F705719A5)
-  - `/mnt/the-other` (NTFS, 368035BA80358203)
+  - `/mnt/the-other` (NTFS, 368035BA80358203). The Windows volume, now shrunk to 350 GiB; shrinking leaves the filesystem UUID alone, so this entry is unchanged
+  - `/mnt/the-grail` (ext4, b4875096-b8f3-4d96-9ff0-ef04476420cb, 580.9 GiB, mounted with `nofail`). Model storage for the llama.cpp stack plus general data; addressed by UUID in the config, not by device path, because the NVMe device names on this machine have swapped between boots
 - Packet Quick Share firewall ports: 9300/tcp, 27000-27009 tcp+udp, 5353/5355 udp
 
 **`gpu.nix`:** NVIDIA config
