@@ -61,10 +61,10 @@ then **reviewer**. The builder runs before tests exist, and a role guard blocks
 it from reading test paths afterwards. Never paste test source, test names or
 failure output into a builder task; if a test fails, describe the required
 behaviour and let the builder fix the code. A **firewall hard-blocks** any
-builder task containing test source, a test path, or test-runner output, and any
+builder task containing test source, a case identifier, or runner output, and any
 chain step that feeds `{previous}` into the builder, so phrase every builder task
-as behaviour only. Do not fix the builder's or the reviewer's work yourself
-unless the user asks.
+as behaviour only. Naming a location or the runner command is allowed. Do not
+fix the builder's or the reviewer's work yourself unless the user asks.
 
 Quick commands: `/feature <task>` (full pipeline), `/build`, `/test`, `/review`.
 Prefer delegating anything larger than a typo over editing directly.
