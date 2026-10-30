@@ -60,27 +60,65 @@ const TEST_CODE =
 const TEST_OUTPUT =
   /(^|\n)\s*[✔✓✗✘]|\bAssertionError\b|\bExpected:\s|\bReceived:\s|\bnot ok\b|(^|\n)\s*ok\s+\d+|\b\d+\s+(?:passed|failed|failing|passing|[Ff]ailures?|[Ee]rrors?|broken)\b|\b\d+\s+tests?\s+(?:failed|failing)\b|Test Suites?:\s|\bTests?:\s+\d|\bPASSED\b|\bFAILED\b|\bTests?\s+run:\s*\d|[Ff]ailures?:\s*\d|[Ee]rrors?:\s*\d|\btest result:\s*(?:ok|FAILED)\b|\b(?:Passed|Failed)!\s*[-–]|\bTest Files\b|(^|\n)\s*---?\s*FAIL\b|\bRan\s+\d+\s+tests?\b|\b\d+\s+tests?\s+(?:complete|completed)\b/;
 
-// An instruction to go read test code.
-const TEST_READ_INSTRUCTION =
-  /\b(read|open|cat|show|paste|look at|check|inspect|review)\b[^\n]{0,60}?\b(test file|test suite|test case|test source|test code|tests\/|\.test\.|\.spec\.)/i;
+// An instruction to go read test code: a read verb followed by a pointer to the
+// verification area on the same line.
+const READ_VERB = /\b(read|open|cat|show|paste|look at|check|inspect|review)\b/gi;
+const TEST_REFERENCE = /\b(test file|test suite|test case|test source|test code|tests\/|\.test\.|\.spec\.)/i;
+
+/** How far after a verb a pointer to the verification area still counts. */
+const REFERENCE_WINDOW = 60;
+
+/** Characters inspected before a read verb when looking for a prohibition. */
+const PROHIBITION_LOOKBEHIND = 40;
+
+/** A prohibition that reaches the verb inside the same clause, with no sentence break. */
+const PROHIBITION = /\b(?:do not|don't|dont|never|must not|should not|avoid|without|not)\b[^.;:\n]*$/i;
 
 /**
- * Heuristic: does this text hand test code, a test path, or test output to an
+ * True when the text tells an agent to go and read test code.
+ *
+ * A prohibition is not an instruction: "do not read the suite here" names a
+ * location in order to forbid it, and refusing that wording would push the
+ * author towards a vaguer constraint. Only the verb's own clause is consulted,
+ * so a later sentence that really does instruct is still caught.
+ */
+function asksToReadTests(s: string): boolean {
+  for (const verb of s.matchAll(READ_VERB)) {
+    const at = verb.index ?? 0;
+    const verbEnd = at + verb[0].length;
+    const lineEnd = s.indexOf("\n", verbEnd);
+    const stop = Math.min(lineEnd === -1 ? s.length : lineEnd, verbEnd + REFERENCE_WINDOW);
+    if (!TEST_REFERENCE.test(s.slice(verbEnd, stop))) continue;
+
+    const before = s.slice(Math.max(0, at - PROHIBITION_LOOKBEHIND), at);
+    if (!PROHIBITION.test(before)) return true;
+  }
+  return false;
+}
+
+/**
+ * Heuristic: does this text hand test source, a test name, or test output to an
  * agent that must not see tests? Returns a short reason, or null when clean.
+ *
+ * Two dimensions are kept apart on purpose, because they are different risks:
+ *
+ *   - content (this function): test source, a case identifier, runner output.
+ *     Text that carries any of them is a leak and must be refused.
+ *   - location (`isTestPath`): whether a path names test code. Only tool access
+ *     to that path is a problem, which is what the role guard blocks. Naming a
+ *     location in prose leaks nothing, and a prohibition that names it is
+ *     stricter rather than looser, so it must not be refused for saying so.
+ *
+ * So this function does not consult `isTestPath`. Do not re-add a bare path
+ * scan here: it pushes callers towards vaguer instructions.
  */
 export function looksLikeTestContent(text: string): string | null {
   const s = String(text ?? "");
   if (!s.trim()) return null;
 
   if (TEST_CODE.test(s)) return "it contains test source code";
-
-  // Only path-shaped tokens: a bare word like "tests" in prose must not trip it.
-  const tokens = s.match(/[^\s;|&()<>'"`]+/g) ?? [];
-  const pathHit = tokens.find((t) => isPathShaped(t) && isTestPath(t));
-  if (pathHit) return `it references a test path ("${pathHit}")`;
-
   if (TEST_OUTPUT.test(s)) return "it contains test-runner output";
-  if (TEST_READ_INSTRUCTION.test(s)) return "it asks the agent to read test code";
+  if (asksToReadTests(s)) return "it asks the agent to read test code";
 
   return null;
 }

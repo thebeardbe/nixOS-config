@@ -4,12 +4,17 @@ import { looksLikeTestContent } from "./lib/test-content.ts";
 /**
  * subagent-firewall: hard-enforce the builder/test boundary.
  *
- * The builder must never receive test code, test paths, test names, or test
- * output. This blocks a `subagent` call before it spawns anything when a
- * builder task:
- *   - contains test source, a test path, or test-runner output, or
+ * The builder must never receive test source, test names (case identifiers), or
+ * test-runner output. This blocks a `subagent` call before it spawns anything
+ * when a builder task:
+ *   - contains test source, a test name, or test-runner output, or
  *   - uses the {previous} placeholder, which would forward a prior agent's
  *     output (a test-writer's or reviewer's) straight into the builder.
+ *
+ * A location is not content. Naming a path in the verification area is allowed,
+ * including inside a prohibition ("stay out of the tests directory"), and so is
+ * naming the command that runs the verification. Only tool access to that path
+ * is blocked, by the role guard.
  *
  * Describe the required behaviour in your own words instead, or let the
  * test-writer own the tests.
@@ -73,7 +78,9 @@ export default function (pi: ExtensionAPI) {
           block: true,
           reason:
             `Subagent firewall: the builder task looks unsafe because ${reason}.\n` +
-            `The builder must never receive test code, test paths, test names, or test output. ` +
+            `The builder must never receive test source, test names, or test-runner output. ` +
+            `Naming a location or the runner command is fine; add the test body, a case name ` +
+            `or runner output and the task is refused. ` +
             `Describe the required behaviour in your own words instead; the test-writer owns the tests.`,
         };
       }
