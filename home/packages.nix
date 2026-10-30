@@ -53,6 +53,7 @@
     # Bare nixpkgs python3 ships no pip, so the interpreter is wrapped with pip,
     # setuptools and wheel. Packages install into a venv, never into the store.
     (python3.withPackages (ps: [ ps.pip ps.setuptools ps.wheel ]))
+    uv                     # Provides uvx, which runs the jcodemunch-mcp MCP server (fetched from PyPI at call time)
 
     # Utilities
     wtype                  # Virtual keyboard input (Moonlight streaming key injection)

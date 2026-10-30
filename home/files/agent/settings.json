@@ -1,6 +1,7 @@
 {
   "packages": [
-    "npm:pi-web-access"
+    "npm:pi-web-access",
+    "npm:@upstash/context7-pi"
   ],
   "lastChangelogVersion": "0.79.8",
   "defaultProvider": "deepseek",
