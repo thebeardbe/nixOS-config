@@ -172,14 +172,47 @@ describe("looksLikeTestContent", () => {
     }
   });
 
-  it("returns a reason naming the path when it references a test path", () => {
-    const reason = looksLikeTestContent("Read src/calc.test.ts and make it pass");
-    assert.ok(reason);
-    assert.match(reason, /test path/i);
-    assert.match(reason, /src\/calc\.test\.ts/);
+  it("treats a bare test location as clean but refuses an instruction to read it", () => {
+    // A location is not content: naming a path in the verification area in
+    // prose leaks nothing, so the detector must not consult isTestPath.
+    assert.equal(looksLikeTestContent("delete __tests__/legacy.js"), null);
+    assert.equal(
+      looksLikeTestContent("The risky area is tests/unit/calc.ts; keep the helper small."),
+      null,
+    );
 
-    assert.ok(looksLikeTestContent("check tests/unit/calc.ts"));
-    assert.ok(looksLikeTestContent("delete __tests__/legacy.js"));
+    // An instruction to go and read that same area is content: it hands the
+    // agent the verification code through the path, so it is still refused.
+    for (const s of ["Read src/calc.test.ts and make it pass", "check tests/unit/calc.ts"]) {
+      const reason = looksLikeTestContent(s);
+      assert.ok(reason, `expected a reason for: ${s}`);
+      assert.match(reason, /read test code/i);
+    }
+  });
+
+  it("refuses a prohibition followed later by a genuine instruction to read tests", () => {
+    // Only the verb's own clause is exempt. A later sentence that really does
+    // instruct must still be caught, otherwise a prohibition is a way in.
+    for (const s of [
+      "Do not read tests/unit/calc.ts. Later, read tests/unit/other.ts and make it pass.",
+      "Do not read tests/legacy.ts; read tests/current.ts instead.",
+    ]) {
+      const reason = looksLikeTestContent(s);
+      assert.ok(reason, `expected a reason for: ${s}`);
+      assert.match(reason, /read test code/i);
+    }
+  });
+
+  it("does not mistake a prohibition with an aside or comma for an instruction", () => {
+    // The negation reaches the verb across commas and asides, so these are
+    // prohibitions, not requests, and must stay clean.
+    for (const s of [
+      "Do not, under any circumstances, read tests/unit/calc.ts.",
+      "Never, ever open tests/unit/calc.ts.",
+      "Avoid, if you can, inspecting tests/unit/calc.ts.",
+    ]) {
+      assert.equal(looksLikeTestContent(s), null, `expected null for: ${s}`);
+    }
   });
 
   it("returns a reason for a numeric count of failing items", () => {
