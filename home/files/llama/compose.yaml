@@ -127,9 +127,13 @@ services:
       # keeps the 8 GB card from being oversubscribed.
       - --models-max
       - "1"
-      # Explicit loading only: a request naming an unloaded model fails instead
-      # of silently pulling 12+ GB from disk.
-      - --no-models-autoload
+      # Autoload on. A sub-agent pinned to a model asks for it by name, and with
+      # loading disabled that request fails with "model is not loaded" before
+      # the agent can do anything. Autoload costs one cold load (6-12 s) on a
+      # model's first use, which is paid once per run rather than per request.
+      # --models-max 1 still bounds VRAM to a single resident model, so nothing
+      # can accumulate. Stopping the container remains the way to free the GPU.
+      - --models-autoload
       # Jinja chat templates. Required for tool calling.
       - --jinja
       # Flash attention: smaller KV cache and the faster kernel here.
