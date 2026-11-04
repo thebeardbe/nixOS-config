@@ -122,14 +122,21 @@
         echo "This update changes the $why."
         echo "It only takes effect after a reboot; until then nvidia-smi, the"
         echo "CDI generator and GPU containers fail with a driver/library"
-        echo "mismatch. Apply when you can reboot: run  rebuild  then reboot."
+        echo "mismatch."
+        echo ""
+        echo "Apply it WITHOUT breaking the running GPU:"
+        echo "    rebuild-boot     (builds the generation, sets it as boot default)"
+        echo "    reboot"
+        echo ""
+        echo "Using plain 'rebuild' also works, but activates the new userspace"
+        echo "immediately, so the GPU stays broken until you reboot."
       } > /tmp/nixos-update-marker
 
       runbe ${pkgs.coreutils}/bin/sh -c \
         "mkdir -p '$(${pkgs.coreutils}/bin/dirname "$MARKER")' && cat /tmp/nixos-update-marker > '$MARKER'"
 
       notify -u normal "NixOS update ready (needs reboot)" \
-        "Includes a $why change, so it was not applied. Run 'rebuild', then reboot. See 'os-update-status'."
+        "Includes a $why change, so it was not applied. Run 'rebuild-boot', then reboot. See 'os-update-status'."
       exit 0
     '';
   };

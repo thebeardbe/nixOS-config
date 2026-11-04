@@ -24,6 +24,13 @@ let
   # `git add -A` puts new files in the index so the flake can see them; this is
   # safe because .gitignore keeps secrets and scratch files out of git.
   rebuild = "pushd ${repo} && git add -A && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
+  # For updates that change the kernel or the NVIDIA driver. `switch` would
+  # activate them immediately, leaving the running system with a loaded module
+  # that no longer matches the installed userspace (nvidia-smi, CUDA and GPU
+  # containers break) until the next reboot. `boot` only creates the generation
+  # and makes it the boot default, so the running system stays consistent and a
+  # reboot applies everything at once.
+  rebuild-boot = "pushd ${repo} && git add -A && sudo nixos-rebuild boot --flake .#$(hostname) && popd";
   # Same commit behaviour as systemd.services.nix-flake-update: commit only
   # flake.lock, and only when it actually changed.
   update = "pushd ${repo} && nix flake update && { git diff --quiet -- flake.lock || git commit -m 'chore: flake update' -- flake.lock; } && sudo nixos-rebuild switch --flake .#$(hostname) && popd";
@@ -31,6 +38,6 @@ in
 {
   programs.bash.initExtra = repoResolver;
   programs.zsh.initContent = repoResolver;
-  programs.bash.shellAliases = { inherit rebuild update; };
-  programs.zsh.shellAliases = { inherit rebuild update; };
+  programs.bash.shellAliases = { inherit rebuild rebuild-boot update; };
+  programs.zsh.shellAliases = { inherit rebuild rebuild-boot update; };
 }
