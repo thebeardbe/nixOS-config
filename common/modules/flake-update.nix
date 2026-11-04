@@ -18,8 +18,10 @@
   #
   # So the rule is: if the newly built system uses the same kernel and the same
   # libnvidia-ml as the BOOTED system (the only copy actually loaded), switch
-  # now. Otherwise build it, leave it staged, and tell the user - they run
-  # `rebuild` when they can reboot.
+  # now. Otherwise never switch: make the new generation the BOOT DEFAULT with
+  # `nixos-rebuild boot`, so the running system stays perfectly consistent and a
+  # plain reboot applies the kernel and the driver at once. The user reboots
+  # when it suits them.
   config.systemd.services.nix-flake-update = lib.mkIf config.mySystem.flakeUpdate.enable {
     description = "Update Nix flake inputs and apply or stage the build";
     path = [ pkgs.git ];  # nix needs git on PATH for git+file flake lock updates
@@ -112,31 +114,35 @@
         exit 1
       fi
 
-      # Kernel or driver change: stage it and hand the decision to the user.
+      # Kernel or driver change: never switch. Activating the new userspace while
+      # the old module is still loaded leaves the GPU broken until the reboot, so
+      # make the new generation the boot default instead and let the reboot apply
+      # both halves at once.
+      if ! rebuild boot >/dev/null 2>&1; then
+        notify -u critical "NixOS update" "staging the update failed, see journalctl -u nix-flake-update"
+        exit 1
+      fi
+
       {
-        echo "An updated system is built and staged, but NOT activated."
+        echo "An updated system is staged as the BOOT DEFAULT. Nothing was activated."
         echo ""
-        echo "Built:   $NEW"
+        echo "Staged:  $NEW"
         echo "Running: $CUR"
         echo ""
         echo "This update changes the $why."
-        echo "It only takes effect after a reboot; until then nvidia-smi, the"
-        echo "CDI generator and GPU containers fail with a driver/library"
-        echo "mismatch."
         echo ""
-        echo "Apply it WITHOUT breaking the running GPU:"
-        echo "    rebuild-boot     (builds the generation, sets it as boot default)"
-        echo "    reboot"
+        echo "Reboot when convenient. Nothing broken runs in the meantime: the"
+        echo "running system keeps its matching kernel and userspace, and the"
+        echo "reboot applies both at once."
         echo ""
-        echo "Using plain 'rebuild' also works, but activates the new userspace"
-        echo "immediately, so the GPU stays broken until you reboot."
+        echo "After the reboot, check with:  nvidia-smi -L"
       } > /tmp/nixos-update-marker
 
       runbe ${pkgs.coreutils}/bin/sh -c \
         "mkdir -p '$(${pkgs.coreutils}/bin/dirname "$MARKER")' && cat /tmp/nixos-update-marker > '$MARKER'"
 
-      notify -u normal "NixOS update ready (needs reboot)" \
-        "Includes a $why change, so it was not applied. Run 'rebuild-boot', then reboot. See 'os-update-status'."
+      notify -u normal "NixOS update staged (reboot when convenient)" \
+        "Includes a $why change. Set as the boot default; reboot when you like. See 'os-update-status'."
       exit 0
     '';
   };

@@ -84,9 +84,7 @@
       if [ -s "$marker" ]; then
         cat "$marker"
         echo ""
-        echo "Apply with:  rebuild-boot   (then reboot)"
-        echo "  'rebuild' also applies it, but activates the new userspace now and"
-        echo "  leaves the GPU broken until you reboot."
+        echo "It is already the boot default, so just:  reboot   (when convenient)"
       else
         echo "No staged update."
         echo "The check runs weekly (Monday ~04:00, nix-flake-update.timer)."
