@@ -76,6 +76,22 @@
     libxshmfence           # Shared memory fence (needed by Chromium/Electron)
     libGL                  # OpenGL library
 
+    # Report a system update that the weekly check has built but not activated.
+    # The weekly timer no longer switches (a kernel/NVIDIA bump breaks the GPU
+    # until reboot), so this is how you see what is waiting.
+    (writeShellScriptBin "os-update-status" ''
+      marker="$HOME/.cache/nixos-update-available"
+      if [ -s "$marker" ]; then
+        cat "$marker"
+        echo ""
+        echo "Apply with:  rebuild"
+      else
+        echo "No staged update."
+        echo "The check runs weekly (Monday ~04:00, nix-flake-update.timer)."
+        echo "Run it now with:  sudo systemctl start nix-flake-update"
+      fi
+    '')
+
     # SFTP mounting in Yazi
     sshfs
   ];
