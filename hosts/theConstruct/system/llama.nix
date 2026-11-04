@@ -71,6 +71,45 @@
     };
   };
 
+  # Start the llama.cpp compose stack on boot.
+  #
+  # The container publishes 192.168.100.12 and needs the NVIDIA CDI spec, so it
+  # cannot be created until that address and that spec exist; Docker refuses a
+  # container whose published address is missing, which would take the loopback
+  # publish down with it. Ordering after the network, Docker and the CDI
+  # generator, plus a bounded retry, makes boot deterministic instead of relying
+  # on the restart policy's backoff.
+  #
+  # `llama stop` / `llama down` drop a flag this unit checks, so an explicit stop
+  # is respected across reboots; `llama up` clears it again.
+  systemd.services.llama-stack = {
+    description = "Local llama.cpp server (docker compose)";
+    wantedBy = [ "multi-user.target" ];
+    unitConfig = {
+      ConditionPathExists = "!/home/thebeardbe/.cache/llama-stack-stopped";
+      RequiresMountsFor = "/mnt/the-grail/llama-models";
+    };
+    requires = [ "docker.service" ];
+    wants = [ "network-online.target" "nvidia-container-toolkit-cdi-generator.service" ];
+    after = [ "docker.service" "network-online.target" "nvidia-container-toolkit-cdi-generator.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      TimeoutStartSec = "10min";
+    };
+    script = ''
+      for attempt in $(seq 1 60); do
+        if ${pkgs.docker}/bin/docker compose -f /home/thebeardbe/.config/llama/compose.yaml up --detach; then
+          exit 0
+        fi
+        echo "llama stack: attempt $attempt failed, retrying in 10s" >&2
+        sleep 10
+      done
+      echo "llama stack: did not start after 60 attempts" >&2
+      exit 1
+    '';
+  };
+
   # Inbound TCP on tailscale0 is dropped by nixos-fw, so the port the serve
   # forward listens on, 21434 (the tailnet side of the forward above), is
   # allowed on that interface. `tailscale serve` normally handles peer

@@ -32,15 +32,24 @@
       cmd="''${1:-status}"
       [ $# -gt 0 ] && shift
 
+      # Records "the user wants this off", which the llama-stack boot unit checks,
+      # so an explicit stop survives a reboot instead of being undone by boot.
+      stopflag="$HOME/.cache/llama-stack-stopped"
+
       case "$cmd" in
         up|start)
+          ${coreutils}/bin/rm -f "$stopflag"
           exec ${docker}/bin/docker compose -f "$compose" up --detach
           ;;
         stop)
+          ${coreutils}/bin/mkdir -p "$(${coreutils}/bin/dirname "$stopflag")"
+          ${coreutils}/bin/touch "$stopflag"
           exec ${docker}/bin/docker compose -f "$compose" stop
           ;;
         down)
           # Removes the container as well; `stop` keeps it for a fast restart.
+          ${coreutils}/bin/mkdir -p "$(${coreutils}/bin/dirname "$stopflag")"
+          ${coreutils}/bin/touch "$stopflag"
           exec ${docker}/bin/docker compose -f "$compose" down
           ;;
         restart)
@@ -59,13 +68,23 @@ llama - manage the local llama.cpp stack on this host
 Usage: llama <command>
 
 Commands:
-  up        Start the stack. Creates the container the first time, starts it after.
-  stop      Stop it, keeping the container so the next start is instant.
-  down      Stop and remove the container entirely.
+  up        Start the stack now, and re-enable starting it at boot.
+  stop      Stop it now, keep the container, and stay stopped across reboots
+            (until `llama up`).
+  down      Stop and remove the container entirely (same stay-stopped flag).
   restart   Restart the running container.
   status    Show container state and health (default when no command is given).
   logs      Follow the server log. Ctrl-C stops following, not the server.
   help      Show this help.
+
+Notes:
+  - The stack starts on boot by itself: the llama-stack systemd unit waits for
+    the network, Docker and the NVIDIA CDI spec, then brings it up. Nothing has
+    to be run after a reboot.
+  - `stop` and `down` record that you want it off, so it stays off across
+    reboots; `up` clears that again.
+  - It also survives a rebuild: every rebuild that touches Docker restarts the
+    daemon, and the container comes back on its own.
 
 Notes:
   - There is no systemd unit and the restart policy is "no", so nothing starts

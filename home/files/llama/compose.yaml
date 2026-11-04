@@ -1,10 +1,19 @@
 # Local llama.cpp router server for the RTX 3060 Ti.
 #
-# Lifecycle is manual and this file is the only definition of it: there is no
-# systemd unit, the restart policy is "no", and nothing here is pulled in by
-# any other service, so nothing starts at boot. Start it with
-# `docker compose start` (after the first `docker compose up --detach`, which
-# creates the container) and stop it with `docker compose stop`.
+# Lifecycle: the stack starts on boot and survives a Docker daemon restart
+# (`restart: unless-stopped`), driven by the llama-stack.service unit in
+# hosts/theConstruct/system/llama.nix, which waits for the network, Docker and
+# the NVIDIA CDI spec so the published LAN address and the GPU are both there
+# before the container is created. Nothing has to be run by hand after a boot.
+#
+# Control it with the `llama` command:
+#   llama up     start now (and re-enable boot start)
+#   llama stop   stop now, and stay stopped across reboots until `llama up`
+#                (it records the intent in ~/.cache/llama-stack-stopped, which
+#                the boot unit checks)
+#   llama down   stop and remove the container (same intent, frees the image's
+#                container state)
+#   llama status / llama logs / llama help
 #
 # Server is in router mode: no single model is configured, GGUFs are discovered
 # from /models, and each request picks one through its "model" field. At most
@@ -15,7 +24,10 @@
 services:
   llama:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
-    restart: "no"
+    # Survive a Docker daemon restart (every nixos-rebuild that touches docker
+    # restarts it) and come back on boot. An explicit `docker stop` still wins
+    # over this policy, which is what `llama stop` relies on.
+    restart: unless-stopped
 
     # Three access paths, each declared where it can actually be relied on.
     #
