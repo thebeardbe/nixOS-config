@@ -52,8 +52,36 @@
         logs)
           exec ${docker}/bin/docker compose -f "$compose" logs --follow "$@"
           ;;
+        help|-h|--help)
+          cat <<'EOF'
+llama - manage the local llama.cpp stack on this host
+
+Usage: llama <command>
+
+Commands:
+  up        Start the stack. Creates the container the first time, starts it after.
+  stop      Stop it, keeping the container so the next start is instant.
+  down      Stop and remove the container entirely.
+  restart   Restart the running container.
+  status    Show container state and health (default when no command is given).
+  logs      Follow the server log. Ctrl-C stops following, not the server.
+  help      Show this help.
+
+Notes:
+  - There is no systemd unit and the restart policy is "no", so nothing starts
+    it at boot, and it stays stopped once stopped.
+  - Any nixos-rebuild that restarts docker.service stops it. Run `llama up` after
+    a rebuild (or after a reboot) to bring it back.
+  - The tailnet exposure is a separate unit, not part of the stack:
+      systemctl status tailscale-serve-llama
+  - Compose file: ~/.config/llama/compose.yaml (deployed from the nix repo)
+  - Models live in /mnt/the-grail/llama-models (mounted at /models)
+EOF
+          exit 0
+          ;;
         *)
-          echo "usage: llama up | stop | down | restart | status | logs" >&2
+          echo "usage: llama up | stop | down | restart | status | logs | help" >&2
+          echo "       run 'llama help' for details" >&2
           exit 1
           ;;
       esac
