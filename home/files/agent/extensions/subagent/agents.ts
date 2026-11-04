@@ -5,6 +5,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { CONFIG_DIR_NAME, getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
+import { loadModelProfile } from "./workflow-profile.ts";
 
 export type AgentScope = "user" | "project" | "both";
 
@@ -13,6 +14,13 @@ export interface AgentConfig {
 	description: string;
 	tools?: string[];
 	model?: string;
+	/**
+	 * Model pinned by the machine-level profile (`<agent-dir>/workflow.json`).
+	 * It outranks the agent file's own `model`, so the operator can switch the
+	 * whole roster without touching read-only agent files. `undefined` when the
+	 * active profile does not name this agent.
+	 */
+	profileModel?: string;
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
@@ -59,7 +67,7 @@ function parseToolList(value: unknown): string[] | undefined {
 	return tools.length > 0 ? tools : undefined;
 }
 
-function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig[] {
+function loadAgentsFromDir(dir: string, source: "user" | "project", profileModels: Map<string, string>): AgentConfig[] {
 	const agents: AgentConfig[] = [];
 
 	if (!fs.existsSync(dir)) {
@@ -96,6 +104,7 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			description: frontmatter.description,
 			tools: parseToolList(frontmatter.tools),
 			model: typeof frontmatter.model === "string" ? frontmatter.model : undefined,
+			profileModel: profileModels.get(frontmatter.name),
 			systemPrompt: body,
 			source,
 			filePath,
@@ -125,12 +134,22 @@ function findNearestProjectAgentsDir(cwd: string): string | null {
 	}
 }
 
-export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryResult {
+export function discoverAgents(
+	cwd: string,
+	scope: AgentScope,
+	onWarning?: (message: string) => void,
+): AgentDiscoveryResult {
+	// Read once per dispatch: the operator's profile edits then apply to the next
+	// dispatch without restarting pi. A broken file is reported once per process.
+	const profile = loadModelProfile();
+	if (profile.warning) onWarning?.(profile.warning);
+
 	const userDir = path.join(getAgentDir(), "agents");
 	const projectAgentsDir = findNearestProjectAgentsDir(cwd);
 
-	const userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user");
-	const projectAgents = scope === "user" || !projectAgentsDir ? [] : loadAgentsFromDir(projectAgentsDir, "project");
+	const userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user", profile.models);
+	const projectAgents =
+		scope === "user" || !projectAgentsDir ? [] : loadAgentsFromDir(projectAgentsDir, "project", profile.models);
 
 	const agentMap = new Map<string, AgentConfig>();
 

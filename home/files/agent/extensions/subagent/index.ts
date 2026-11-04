@@ -299,7 +299,7 @@ async function runSingleAgent(
 
 	const args: string[] = ["--mode", "json", "-p", "--no-session"];
 	const inheritsDispatchConfig = !agent.model;
-	const model = agent.model ?? dispatchDefaults.model;
+	const model = agent.profileModel ?? agent.model ?? dispatchDefaults.model;
 	if (model) args.push("--model", model);
 	if (inheritsDispatchConfig && dispatchDefaults.thinkingLevel) {
 		args.push("--thinking", dispatchDefaults.thinkingLevel);
@@ -487,7 +487,7 @@ export default function (pi: ExtensionAPI) {
 				model: ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined,
 				thinkingLevel: ctx.thinkingLevel,
 			};
-			const discovery = discoverAgents(ctx.cwd, agentScope);
+			const discovery = discoverAgents(ctx.cwd, agentScope, (warning) => ctx.ui.notify(warning, "warning"));
 			const agents = discovery.agents;
 			const confirmProjectAgents = params.confirmProjectAgents ?? true;
 
