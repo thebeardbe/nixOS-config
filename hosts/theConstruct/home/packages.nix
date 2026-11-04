@@ -16,6 +16,49 @@
     ardour                 # DAW (binary is `ardour9`)
     hydrogen               # Drum machine / sequencer
 
+    # Manage the local llama.cpp compose stack (~/.config/llama/compose.yaml).
+    # Host-scoped: the GPU, the models and the compose file only exist here.
+    # The stack has no systemd unit and restart: "no", so this is the only way
+    # it changes state. `up` is idempotent: it creates the container the first
+    # time and starts it afterwards.
+    (writeShellScriptBin "llama" ''
+      set -euo pipefail
+      compose="$HOME/.config/llama/compose.yaml"
+      if [ ! -f "$compose" ]; then
+        echo "llama: missing $compose (rebuild the config first)" >&2
+        exit 1
+      fi
+
+      cmd="''${1:-status}"
+      [ $# -gt 0 ] && shift
+
+      case "$cmd" in
+        up|start)
+          exec ${docker}/bin/docker compose -f "$compose" up --detach
+          ;;
+        stop)
+          exec ${docker}/bin/docker compose -f "$compose" stop
+          ;;
+        down)
+          # Removes the container as well; `stop` keeps it for a fast restart.
+          exec ${docker}/bin/docker compose -f "$compose" down
+          ;;
+        restart)
+          exec ${docker}/bin/docker compose -f "$compose" restart
+          ;;
+        status|ps)
+          exec ${docker}/bin/docker compose -f "$compose" ps
+          ;;
+        logs)
+          exec ${docker}/bin/docker compose -f "$compose" logs --follow "$@"
+          ;;
+        *)
+          echo "usage: llama up | stop | down | restart | status | logs" >&2
+          exit 1
+          ;;
+      esac
+    '')
+
     # Streaming / recording (Wayland capture via xdg-desktop-portal-hyprland)
     (wrapOBS {
       plugins = with obs-studio-plugins; [
