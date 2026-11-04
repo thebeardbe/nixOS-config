@@ -7,20 +7,21 @@
   options.mySystem.flakeUpdate.enable = lib.mkEnableOption
     "the weekly flake update check (enable on exactly one host, the machine that owns the lock update)";
 
-  # Weekly flake update CHECK (Monday 4am, randomized).
+  # Weekly flake update (Monday 4am, randomized).
   #
-  # This deliberately does NOT run `nixos-rebuild switch`. An input bump can
-  # change the kernel and the NVIDIA driver, and a kernel/driver change only
-  # takes effect after a reboot: until then the loaded module and the installed
+  # Normal package updates are applied automatically, as before. The exception
+  # is any update that changes the KERNEL or the NVIDIA DRIVER: those only take
+  # effect after a reboot, and until then the loaded module and the installed
   # userspace disagree, which breaks NVML (`nvidia-smi`), the CDI generator and
   # therefore every GPU container, plus newly started GPU apps. Applying that
-  # unattended at 4am meant a broken GPU until the next reboot.
+  # unattended at 4am meant a silently broken GPU until the next reboot.
   #
-  # So: update the lock, build the system, and tell the user it is ready. The
-  # switch happens when they run `rebuild`. The notification and the marker file
-  # both say whether the pending update needs a reboot.
+  # So the rule is: if the newly built system uses the same kernel and the same
+  # libnvidia-ml as the BOOTED system (the only copy actually loaded), switch
+  # now. Otherwise build it, leave it staged, and tell the user - they run
+  # `rebuild` when they can reboot.
   config.systemd.services.nix-flake-update = lib.mkIf config.mySystem.flakeUpdate.enable {
-    description = "Check for Nix flake updates and stage a build";
+    description = "Update Nix flake inputs and apply or stage the build";
     path = [ pkgs.git ];  # nix needs git on PATH for git+file flake lock updates
     serviceConfig = {
       Type = "oneshot";
@@ -42,88 +43,98 @@
         runbe ${pkgs.libnotify}/bin/notify-send "$@" 2>/dev/null \
           || echo "notify-send failed (no session?)" >&2
       }
+      # nix/repos are root-owned from a service; HOME=/root and SUDO_UID make
+      # nix's git fetcher accept the thebeardbe-owned repo (the mechanism a real
+      # sudo invocation uses).
+      rebuild() {
+        ${pkgs.coreutils}/bin/env HOME=/root SUDO_UID=1000 \
+          ${pkgs.nixos-rebuild}/bin/nixos-rebuild "$@" --flake "$REPO#$HOST"
+      }
 
       cd "$REPO" || exit 1
 
       if ! runbe ${pkgs.nix}/bin/nix flake update; then
-        notify -u critical "NixOS update check" "flake update failed, see journalctl -u nix-flake-update"
+        notify -u critical "NixOS update" "flake update failed, see journalctl -u nix-flake-update"
         exit 1
       fi
 
       # Commit the new lock as thebeardbe so the tree is never left dirty.
       # `git diff --quiet` exits non-zero only when flake.lock really changed,
       # and the pathspec commit records that one path alone. No push: the change
-      # is local, and `rebuild` picks it up whenever the user runs it.
+      # is local and `rebuild` / this service picks it up.
       if ! runbe ${pkgs.git}/bin/git diff --quiet -- flake.lock; then
         runbe ${pkgs.git}/bin/git commit -m "chore: weekly flake update" -- flake.lock \
           || echo "warning: flake.lock commit failed; continuing" >&2
       fi
 
-      # Build only. Never switch: the user decides when the system changes.
-      # HOME=/root + SUDO_UID make nix's git fetcher accept the
-      # thebeardbe-owned repo (same mechanism as a real sudo invocation).
-      if ! ${pkgs.coreutils}/bin/env HOME=/root SUDO_UID=1000 \
-             ${pkgs.nixos-rebuild}/bin/nixos-rebuild build --flake "$REPO#$HOST" >/dev/null 2>&1; then
-        notify -u critical "NixOS update check" "build failed, see journalctl -u nix-flake-update"
+      if ! rebuild build >/dev/null 2>&1; then
+        notify -u critical "NixOS update" "build failed, see journalctl -u nix-flake-update"
         exit 1
       fi
 
       NEW=$(${pkgs.coreutils}/bin/readlink -f "$REPO/result")
       CUR=$(${pkgs.coreutils}/bin/readlink -f /run/current-system)
+      BOOTED=$(${pkgs.coreutils}/bin/readlink -f /run/booted-system)
 
-      if [ -z "$NEW" ] || [ "$NEW" = "$CUR" ]; then
+      if [ -z "$NEW" ] || { [ "$NEW" = "$CUR" ] && [ "$CUR" = "$BOOTED" ]; }; then
         # Nothing to do: clear any stale marker from a previous week.
         runbe ${pkgs.coreutils}/bin/sh -c "rm -f '$MARKER'"
         exit 0
       fi
 
-      # Compare against the BOOTED system, not the current one: only the booted
-      # kernel and driver are actually loaded, so that is what a reboot changes.
-      BOOTED=$(${pkgs.coreutils}/bin/readlink -f /run/booted-system)
-      kcur=$(${pkgs.coreutils}/bin/readlink -f "$BOOTED/kernel" 2>/dev/null || true)
+      # Compare against the BOOTED system: only its kernel and driver are
+      # actually loaded, so only a difference there needs a reboot.
+      kboot=$(${pkgs.coreutils}/bin/readlink -f "$BOOTED/kernel" 2>/dev/null || true)
       knew=$(${pkgs.coreutils}/bin/readlink -f "$NEW/kernel" 2>/dev/null || true)
-      ncur=$(${pkgs.coreutils}/bin/readlink -f "$BOOTED/sw/lib/libnvidia-ml.so.1" 2>/dev/null || true)
+      nboot=$(${pkgs.coreutils}/bin/readlink -f "$BOOTED/sw/lib/libnvidia-ml.so.1" 2>/dev/null || true)
       nnew=$(${pkgs.coreutils}/bin/readlink -f "$NEW/sw/lib/libnvidia-ml.so.1" 2>/dev/null || true)
 
       reboot=no
       why=""
-      [ -n "$knew" ] && [ "$kcur" != "$knew" ] && { reboot=yes; why="kernel"; }
-      [ -n "$nnew" ] && [ "$ncur" != "$nnew" ] && {
+      if [ -n "$knew" ] && [ "$kboot" != "$knew" ]; then
+        reboot=yes
+        why="kernel"
+      fi
+      if [ -n "$nnew" ] && [ "$nboot" != "$nnew" ]; then
         reboot=yes
         why="''${why:+$why + }NVIDIA driver"
-      }
+      fi
 
+      if [ "$reboot" = no ]; then
+        # Same kernel and driver as the running system: nothing here needs a
+        # reboot, so apply it now like the timer always used to.
+        if rebuild switch >/dev/null 2>&1; then
+          runbe ${pkgs.coreutils}/bin/sh -c "rm -f '$MARKER'"
+          notify "NixOS updated" "Applied automatically (no reboot needed)."
+          exit 0
+        fi
+        notify -u critical "NixOS update" "automatic switch failed, see journalctl -u nix-flake-update"
+        exit 1
+      fi
+
+      # Kernel or driver change: stage it and hand the decision to the user.
       {
         echo "An updated system is built and staged, but NOT activated."
         echo ""
         echo "Built:   $NEW"
         echo "Running: $CUR"
         echo ""
-        if [ "$reboot" = yes ]; then
-          echo "This update changes the $why."
-          echo "It only takes effect after a reboot; until then nvidia-smi, the"
-          echo "CDI generator and GPU containers fail with a driver/library"
-          echo "mismatch. Apply when you can reboot: run  rebuild  then reboot."
-        else
-          echo "No kernel or driver change: running  rebuild  is enough, no reboot needed."
-        fi
+        echo "This update changes the $why."
+        echo "It only takes effect after a reboot; until then nvidia-smi, the"
+        echo "CDI generator and GPU containers fail with a driver/library"
+        echo "mismatch. Apply when you can reboot: run  rebuild  then reboot."
       } > /tmp/nixos-update-marker
 
       runbe ${pkgs.coreutils}/bin/sh -c \
         "mkdir -p '$(${pkgs.coreutils}/bin/dirname "$MARKER")' && cat /tmp/nixos-update-marker > '$MARKER'"
 
-      if [ "$reboot" = yes ]; then
-        notify -u normal "NixOS update ready (needs reboot)" \
-          "Includes a $why change. Run 'rebuild', then reboot. See 'os-update-status'."
-      else
-        notify -u normal "NixOS update ready" \
-          "No reboot needed. Run 'rebuild' when convenient. See 'os-update-status'."
-      fi
+      notify -u normal "NixOS update ready (needs reboot)" \
+        "Includes a $why change, so it was not applied. Run 'rebuild', then reboot. See 'os-update-status'."
       exit 0
     '';
   };
   config.systemd.timers.nix-flake-update = lib.mkIf config.mySystem.flakeUpdate.enable {
-    description = "Weekly Nix flake update check timer";
+    description = "Weekly Nix flake update timer";
     wantedBy = [ "timers.target" ];
     timerConfig = {
       OnCalendar = "Mon 04:00";
