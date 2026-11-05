@@ -16,6 +16,12 @@ import { writeAppendedPrompt } from "./prompt.ts";
 
 const PER_TASK_OUTPUT_CAP = 50 * 1024;
 
+/** Explicit extensions the parent session was started with, forwarded to each child. */
+const EXTENSIONS_ENV = "PI_SUBAGENT_EXTENSIONS";
+
+/** Ignored entries already reported, so a dispatch loop names each one once. */
+const reportedExtensionEntries = new Set<string>();
+
 export interface UsageStats {
 	input: number;
 	output: number;
@@ -97,6 +103,58 @@ function getPiInvocation(args: string[]): { command: string; args: string[] } {
 	return { command: "pi", args };
 }
 
+export interface ForwardedExtensions {
+	/** Child arguments, `--extension <path>` per usable entry, in the given order. */
+	args: string[];
+	/** One message per unusable entry, for the caller to surface. */
+	warnings: string[];
+}
+
+/**
+ * Child arguments for the extensions the parent session was started with.
+ *
+ * pi offers no way for an extension to learn which extensions the session
+ * loaded, so the list is supplied explicitly through PI_SUBAGENT_EXTENSIONS:
+ * absolute file paths, separated by the platform path delimiter. Without it a
+ * child runs with its own extension discovery only, and the guards that limit
+ * what the coordinator may do (role firewall, plan gate, file-size budget) are
+ * missing from the process that actually writes files.
+ *
+ * Entries are validated, not trusted. A relative path resolves against the
+ * child's working directory, which is the project being delegated into, so it
+ * can silently load a different file than the parent meant; silently loading
+ * the wrong guard is worse than skipping it. A path that does not exist is dead
+ * weight. Both are skipped and named in a warning. An unset variable, or one
+ * with no usable entry, adds nothing at all: forwarding is a no-op for every
+ * setup that never exports it.
+ */
+export function forwardedExtensionArgs(raw: string | undefined): ForwardedExtensions {
+	const args: string[] = [];
+	const warnings: string[] = [];
+	// A trailing or doubled delimiter yields an empty segment, which is not an
+	// entry, so it is skipped without a complaint. Whitespace-only segments are
+	// the same shape of mistake, while a real path may legitimately contain
+	// spaces and is never trimmed.
+	for (const entry of (raw ?? "").split(path.delimiter)) {
+		if (!entry.trim()) continue;
+
+		if (!path.isAbsolute(entry)) {
+			warnings.push(
+				`Ignoring ${EXTENSIONS_ENV} entry "${entry}": not an absolute path, so it would resolve differently in the subagent's working directory.`,
+			);
+			continue;
+		}
+
+		if (!fs.existsSync(entry)) {
+			warnings.push(`Ignoring ${EXTENSIONS_ENV} entry "${entry}": no such file.`);
+			continue;
+		}
+
+		args.push("--extension", entry);
+	}
+	return { args, warnings };
+}
+
 export type OnUpdateCallback = (partial: AgentToolResult<SubagentDetails>) => void;
 
 export interface DispatchDefaults {
@@ -146,6 +204,17 @@ export async function runSingleAgent(
 		args.push("--thinking", dispatchDefaults.thinkingLevel);
 	}
 	if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
+
+	// Guards the parent session was started with must reach the child too, or
+	// the coordinator is the only process they protect. See
+	// forwardedExtensionArgs for the format and why it is an env var.
+	const forwardedExtensions = forwardedExtensionArgs(process.env[EXTENSIONS_ENV]);
+	for (const warning of forwardedExtensions.warnings) {
+		if (reportedExtensionEntries.has(warning)) continue;
+		reportedExtensionEntries.add(warning);
+		onWarning?.(warning);
+	}
+	args.push(...forwardedExtensions.args);
 
 	let tmpPromptDir: string | null = null;
 	let tmpPromptPath: string | null = null;
