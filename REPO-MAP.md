@@ -20,7 +20,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 ├── home/                    # Shared home-manager config (user-level)
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
-│   ├── files/               # Dotfiles (hyprland.lua, hyprshell-config.toml, screenrc)
+│   ├── files/               # Dotfiles (hyprland.lua, screenrc, llama compose)
 │   └── modules/             # Home-manager modules (14 modules + hyprpaper.conf)
 ├── hosts/
 │   ├── theConstruct/        # Desktop: AMD Ryzen 5600 + RTX 3060 Ti
@@ -69,7 +69,9 @@ theme.json                   # Central design tokens — shared by ALL modules
   1. Host's own `default.nix`
   2. Home-manager with shared `home/home.nix` + host-specific `home/default.nix`
   3. Optional private secret modules (toggle by uncommenting the `nix-secrets` input)
-- No package overlays (hyprshell uses stock nixpkgs — the Lua config makes its IPC work natively)
+- No package overlays except one: `overlays/waybar-lua.nix` pins Waybar from
+  git master, because 0.15.0 cannot dispatch workspace clicks under a Lua
+  Hyprland config. Version-gated, see `NOTES.md`.
 
 ### Build commands (run from the repo checkout)
 ```bash
@@ -138,7 +140,7 @@ Shared across both machines. Imports all modules from `common/modules/`.
 | **Power** | fstrim (SSD trim), 8GB swapfile. thermald (Intel) is host-specific: enabled on foxyNix only. |
 | **Audio** | PipeWire with rtkit, 32-bit ALSA for Proton, low-latency config |
 | **Nix GC** | Daily auto-GC + weekly tiered profile cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d) |
-| **Auto-update** | Weekly `nix-flake-update` timer (Mon ~04:00 ± 2h) on **theConstruct only** (`mySystem.flakeUpdate.enable`): `nix flake update`, commit `flake.lock`, rebuild. foxyNix pulls and rebuilds manually. |
+| **Auto-update** | Weekly `nix-flake-update` timer (Mon ~04:00 ± 2h) on **theConstruct only** (`mySystem.flakeUpdate.enable`): `nix flake update`, commit `flake.lock`, build — then either switch (ordinary update) or stage as the boot default and notify (kernel/NVIDIA change). foxyNix pulls and rebuilds manually. |
 | **Docker** | Enabled |
 | **Flatpak** | Enabled |
 | **SSH** | OpenSSH server enabled |
@@ -177,7 +179,7 @@ mySystem.touchpad.enable = true;  # Enable in host's system/default.nix
 
 **`nix-gc.nix`** — Daily `nix.gc` + weekly tiered profile-generation cleanup (keep all ≤7d, 1/week ≤30d, 1/month ≤180d).
 
-**`flake-update.nix`** — Declares `mySystem.flakeUpdate.enable`; weekly `nix-flake-update` service + timer (Mon ~04:00 ± 2h), enabled on exactly one host.
+**`flake-update.nix`** — Declares `mySystem.flakeUpdate.enable`; weekly `nix-flake-update` service + timer (Mon ~04:00 ± 2h), enabled on exactly one host. The service never applies a kernel or NVIDIA driver change: it compares the built system's kernel and `libnvidia-ml` against `/run/booted-system` and, if either differs, runs `nixos-rebuild boot` (new generation + boot default, nothing activated) and notifies; otherwise it switches immediately. See `NOTES.md`.
 
 **`portals.nix`** — GNOME portal for `Background` (Packet tray), hyprland portal for ScreenCast/Screenshot/GlobalShortcuts/RemoteDesktop; GNOME portal auto-restarts on crash.
 
@@ -209,7 +211,7 @@ Imports all home modules and sets:
 - Bash aliases (`ll`, `conf`, `rebuild`)
 - Dconf dark mode for GTK4/libadwaita apps
 - udiskie auto-mount of removable media (USB/SD/external drives)
-- Deploys dotfiles: `~/.screenrc`, `~/.config/hyprshell/config.toml`, `~/.config/hypr/hyprland.lua`
+- Deploys dotfiles: `~/.screenrc`, `~/.config/hypr/hyprland.lua`
 
 ### `home/packages.nix` — Shared User Packages
 
@@ -218,7 +220,7 @@ Imports all home modules and sets:
 | **Communication** | obsidian, discord, signal-desktop (unstable), firefox, chromium, enpass |
 | **Fonts** | FiraCode, JetBrains Mono, Meslo LG (Nerd Fonts) |
 | **System Tools** | networkmanagerapplet, pavucontrol, pamixer, playerctl, fastfetch, nwg-look, tree, btop, eza, bat, brightnessctl |
-| **Hyprland Ecosystem** | hyprlock, hypridle, hyprshot, wofi, fuzzel, kitty, hyprpaper, wlogout, **hyprshell** |
+| **Hyprland Ecosystem** | hyprlock, hypridle, hyprshot, fuzzel, kitty, hyprpaper, wlogout |
 | **File Sharing** | packet (native Android Quick Share client) |
 | **Utilities** | fzf, screen, libnotify, swaynotificationcenter, wtype (Moonlight key injection), unzip |
 | **Yazi Deps** | ffmpegthumbnailer, jq, poppler, fd, ripgrep |
@@ -258,14 +260,13 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | Section | API | Details |
 |---|---|---|
 | Monitor | `hl.monitor({...})` | Default auto-detect; overridden by host's `hypr-host.lua` |
-| Autostart | `hl.on("hyprland.start", ...)` | Systemd activation, nm-applet, blueman, hyprpaper, hyprshell, wallpaper |
+| Autostart | `hl.on("hyprland.start", ...)` | Systemd activation, nm-applet, blueman, hyprpaper, wallpaper |
 | Env vars | `hl.env(...)` | PLAYWRIGHT_BROWSERS_PATH, HOME, cursor |
 | Look & feel | `hl.config({ general, decoration, misc })` | Gaps, borders, rounding, opacity, blur, shadow |
 | Input | `hl.config({ input })` | Keyboard layout `us+altgr-intl` |
 | Animations | `hl.curve()`, `hl.animation()` | Custom bezier, default animations |
 | Keybinds | `hl.bind(...)` | See keybinds table below |
 | Window rules | `hl.window_rule(...)` | Fix XWayland drag issues |
-| Layer rules | `hl.layer_rule(...)` | No-anim for hyprshell overlays |
 
 **Host overrides:** Each host's `home/hypr-host.lua` is loaded via `dofile()` in the main config. It can set monitors, workspace rules, touchpad, etc.
 
@@ -277,19 +278,15 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Super + M` | Exit Hyprland |
 | `Super + E` | Open Yazi (in kitty) |
 | `Super + V` | Toggle floating |
-| `Super + Space` | Wofi app launcher |
-| `Super + Shift + Space` | Fuzzel app launcher (alternative) |
+| `Super + Space` | Fuzzel app launcher |
 | `Super + P` | Toggle pseudo-tiling |
-| `Super + J` | Toggle split direction |
+| `Super + J` | Toggle split direction (needs `dwindle.preserve_split`) |
 | `Super + F` | Fullscreen |
-| `Alt + Tab` | **hyprshell window switcher** (thumbnails, all workspaces) |
-| `Alt + Shift + Tab` | hyprshell switcher (reversed) |
-| `Alt + Grave` | hyprshell switcher (reversed) |
 | `Super + L` | Lock screen (`hyprlock`; idle locking via hypridle, idle DPMS disabled) |
 | `Super + Ctrl + Shift + J` | `fix-jbl` — recover JBL Quantum 360X headset |
 | `Menu` | Inject a real Super keypress via `wtype` (Moonlight streaming; synthetic `send_shortcut` events are ignored by games) |
-| `Super + Shift + W` | Pick wallpaper (wofi picker) |
-| `Super + Shift + R` | Reload Lua config via `dofile` (picks up file changes) |
+| `Super + Shift + W` | Pick wallpaper (fuzzel picker) |
+| `Super + Shift + R` | Reload config via `hyprctl reload` (re-reads the file and re-registers binds) |
 | `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
 | `Print` | Screenshot full output |
 | `Super + Print` | Screenshot active window |
@@ -302,11 +299,11 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Super + 1-10` | Switch to workspace (sets random per-workspace wallpaper) |
 | `Super + Shift + 1-10` | Move window to workspace |
 
-**Release binds (registered by hyprshell via IPC):**
-- `Alt_L/R` release → closes switcher, focuses selected window
-- `Shift_L/R` release → closes switcher
+**No `Alt + Tab`:** hyprshell used to provide a thumbnail switcher on Alt+Tab and an
+overview on the Super key. It was removed: the overview opened whenever Super was
+pressed. Window switching is `Super + arrows` (movefocus) and `Super + 1..0`.
 
-**Autostart:** Systemd session activation → nm-applet → blueman-applet → hyprpaper → packet (2s) → hyprshell run → goto-workspace 1 → kitty (ws1) → yazi (ws3, 3s) → btop (ws10, 4s)
+**Autostart:** Systemd session activation → nm-applet → blueman-applet → hyprpaper → packet (2s) → goto-workspace 1 → kitty (ws1) → yazi (ws3, 3s) → btop (ws10, 4s)
 
 **Host-specific autostart** (in `hypr-host.lua` via `hl.on("hyprland.start")`):
 - theConstruct: Signal + Firefox on workspace 7 with 1/3-2/3 split
@@ -396,27 +393,6 @@ Systemd user timer that checks battery level every 2 minutes:
 - **10%**: Low urgency notification, 5s timeout
 - **5%**: Critical urgency, persistent notification
 - Only fires when discharging (not on charger)
-
-#### `hyprshell-config.toml` — Hyprshell Window Switcher Config
-
-**File:** `home/files/hyprshell-config.toml` → `~/.config/hyprshell/config.toml`
-
-Controls hyprshell's window switcher behavior:
-```toml
-[windows.switch]
-modifier = "alt"
-key = "Tab"
-filter_by = []           # Show ALL windows across workspaces/monitors
-switch_workspaces = true # Auto-switch to the selected window's workspace
-kill_key = "q"           # Press Q while holding Alt to kill the selected window
-
-[windows.overview]
-modifier = "super"
-key = "Super_L"
-# Also configures the app launcher (width, max_items, default_terminal)
-```
-
-**Important:** hyprshell's window switcher and overview register their own keybinds via Hyprland IPC (`eval hl.bind(...)` in Lua). These work natively because the active Hyprland config is Lua.
 
 ---
 
@@ -561,14 +537,19 @@ Pi coding agent default settings:
 GNU Screen config with vim-style tab navigation (Ctrl+A + h/j/k/l) and 4 initial tabs.
 
 ### `home/files/llama/`
-Local llama.cpp router on CUDA for theConstruct's RTX 3060 Ti. Both repo files are deployed to `~/.config/llama/` on **theConstruct only** (not on foxyNix, since the GPU device and the model directory are host-local), and they are the whole definition of the container: the lifecycle is manual, nothing starts the container at boot, and it is started and stopped by hand with `docker compose` (no systemd unit, `restart: "no"`).
+Local llama.cpp router on CUDA for theConstruct's RTX 3060 Ti. Both repo files are deployed to `~/.config/llama/` on **theConstruct only** (not on foxyNix, since the GPU device and the model directory are host-local), and they are the whole definition of the container: the lifecycle is manual, nothing starts the container at boot, and it is started and stopped with the `llama` command (`llama up | stop | down | restart | status | logs | help`), a `writeShellScriptBin` in `hosts/theConstruct/home/packages.nix` that wraps `docker compose` against this file (`restart: "no"`).
 
 - `compose.yaml` — the container: `ghcr.io/ggml-org/llama.cpp:server-cuda`, the CDI GPU device, the `mmap+mlock` limits for CPU-resident experts, and the router flags (one resident model, explicit loading only, flash attention, 8-bit KV cache)
 - `models.ini` — per-model presets passed to `--models-preset` (context size, `n-gpu-layers`, `n-cpu-moe`, batch sizes, `reasoning-budget`). Numbers are tuned against context length rather than decode speed: context sizes are driven by the `pi` agent's baseline prompt rather than by the model, and the `n-cpu-moe` values are the VRAM-for-speed trade that pays for them. Each context is bounded by its model's trained context (131072 and 262144), and every context size is now measurement-backed: both were raised until a load succeeded or failed, so the KV-cache cost per token is known rather than projected. The two figures differ for one reason: the Gemma 4 models use sliding-window attention, which costs 13.2 MiB of KV per 1024 tokens on the E4B, whereas the Qwen uses full attention and costs 51.0 MiB, so the same VRAM buys roughly four times less context on the Qwen (180224 was measured to fail there while allocating a 8976 MiB KV cache, which is why its preset stops at 81920). `reasoning-budget` caps how much of a reply the model may spend thinking, so a long think cannot consume the client's whole output budget and return an empty answer. No model is loaded at startup
 
 Port `21434` is published twice: on loopback (`127.0.0.1`) for the local agent on theConstruct, and on the reserved LAN address `192.168.100.12` for other devices on the home network. The LAN address is a DHCP lease with a router reservation, so it is always assigned, and binding it is only safe because the container is started by hand (by then the address exists; Docker refuses to start on a missing published address). It is never published on `0.0.0.0`. Published ports bypass the NixOS INPUT chain because Docker DNATs them first, so `networking.firewall` cannot filter them and the API key is the access control for both bindings. Models live in `/mnt/the-grail/llama-models` (mounted read-write as `/models`), on the dedicated ext4 data partition rather than in `/home`, and the presets are mounted read-only. `LLAMA_BASE_URL=http://127.0.0.1:21434` is exported on theConstruct only (see `hosts/theConstruct/home/default.nix`), for the pi agent's llama.cpp provider.
 
-**API key.** The server requires authentication. `~/.config/llama/api-key` is generated once by the `generateLlamaApiKey` home-manager activation (0600, from the system CSPRNG) and mounted read-only as `/run/secrets/llama-api-key`; the container starts with `--api-key-file`, so the key never appears in the process table or `docker inspect`, and a missing file stops the server instead of leaving it unauthenticated. The key is local-only: never committed and never copied into the Nix store. Rotate it by deleting the file, rebuilding (the activation only ever creates, so it regenerates), then re-running the pi agent's `/login` for the llama.cpp provider.
+**API key.** The server requires authentication. Two files are generated by the `generateLlamaApiKey` home-manager activation and mounted read-only:
+
+- `~/.config/llama/api-key` → `/run/secrets/llama-api-key`, passed as `--api-key-file`, so the key never appears in the process table or `docker inspect`. A missing file stops the server instead of leaving it unauthenticated.
+- `~/.config/llama/ui-config.json` → `/run/secrets/llama-ui-config.json`, passed as `--ui-config-file`. It is `{"apiKey": "<the key>"}`, rewitten on every activation from the key file, so the web interface at `:21434` is usable without typing the key. `--ui-config-file` (not inline `--ui-config`) keeps the value out of the process table for the same reason.
+
+Both files are 0600, local-only: never committed and never copied into the Nix store. Rotate by deleting `api-key`, rebuilding (the activation only ever creates it, so it regenerates, and the ui-config is rewritten to match), then re-running the pi agent's `/login` for the llama.cpp provider.
 
 **Tailnet exposure.** The tailnet reaches the stack through `tailscale serve`, declared as the `tailscale-serve-llama` systemd oneshot in `hosts/theConstruct/system/llama.nix` (`tailscale serve --bg --tcp=21434 tcp://127.0.0.1:21434`), not by publishing the Tailscale address. This path exists so remote nodes do not depend on the home LAN, and it is declared system-side rather than as a port binding because the Tailscale address can legitimately be absent, and Docker would then refuse to start the whole container, loopback binding included. The plain-TCP form is used because the default HTTPS form needs HTTPS certificates enabled for the tailnet in the admin console, which this tailnet does not have; raw TCP needs no certificate. The serve listener binds port `21434` on the tailnet, so `networking.firewall.interfaces.tailscale0.allowedTCPPorts` opens only that port (trusting the interface would expose ssh and every other listener). The proxy is lazy: a stopped container yields a gateway error from the tailnet while the exposure stays up.
 
@@ -615,7 +596,8 @@ Wallpapers are expected to live at `~/Pictures/Wallpapers/` on the live system (
 | Toggle touchpad | `common/modules/touchpad.nix` for X11, or host's `hypr-host.lua` for Hyprland |
 | Add a new wallpaper | Drop in `wallpapers/`, copy to `~/Pictures/Wallpapers/`, pick via `Super+Shift+W` |
 | Change monitor layout | Host's `hypr-host.lua` → `hl.monitor({...})` |
-| Change hyprshell behavior | `home/files/hyprshell-config.toml` |
+| Change window splitting | `home/files/hyprland.lua` (dwindle `preserve_split`, `Super + J`) |
+| Change the launcher | `home/modules/appearance.nix` (fuzzel) + `hl.bind` in `hyprland.lua` |
 | Change bootloader | Host's `system/default.nix` → `boot.loader` |
 
 ---
@@ -639,37 +621,32 @@ The Hyprland config is written in **Lua** (`home/files/hyprland.lua`) using the 
 
 ### Why Lua instead of hyprlang?
 
-1. **hyprshell compatibility** — hyprshell 4.x uses `eval hl.dispatch(...)` internally for window/workspace switching. This only works when Hyprland's Lua config manager is active.
-2. **hyprshell IPC** — hyprshell registers its own keybinds (Alt+Tab, Alt release, etc.) via `eval hl.bind(...)` at runtime. No manual socat commands needed.
-3. **Future-proof** — Hyprland is moving toward Lua as the primary config format.
+1. **Layout messages** — `Super + J` sends `hl.dsp.layout("togglesplit")` through
+   `hyprctl`, because binding the Lua layout dispatcher directly registers a
+   `__lua` dispatcher that never reaches dwindle (a silent no-op).
+2. **Future-proof** — Hyprland is moving toward Lua as the primary config format.
 
 ### How it works
 
 1. `greetd` launches `Hyprland -c ~/.config/hypr/hyprland.lua` (set in `common/modules/greetd.nix`)
 2. The Lua config loads and calls `hl.monitor()`, `hl.config()`, `hl.bind()`, etc.
 3. At the top of the main Lua file, it does `dofile("~/.config/hypr/host.lua")` to load host-specific overrides
-4. hyprshell starts via `hl.on("hyprland.start", ...)` and registers its own keybinds via IPC
-5. When you press Alt+Tab, hyprshell shows the switcher — selecting a window calls `hl.dsp.focus()` via IPC → works because Lua config is active
+4. Nothing registers keybinds at runtime; every bind is a plain `hl.bind` in the
+   config file, so `hyprctl reload` fully describes the bind set
 
 ---
 
-## 12. Keybinds: hyprshell Window Switcher
+## 12. Window switching
 
-The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs package):
-- Shows **thumbnails** of ALL windows across ALL workspaces
-- Cycles with Tab/Shift+Tab while holding Alt
-- **Auto-switches to the selected window's workspace** on Alt release
-- Press **Q** while holding Alt to kill the selected window
-- Also works as an **overview/launcher** with the Super key
+There is no Alt+Tab switcher. hyprshell provided one (plus an overview on the
+Super key) and was removed because the overview kept appearing whenever Super was
+pressed. Switching windows is:
 
-**Keybinds registered by hyprshell itself (via IPC):**
 | Key | Action |
 |---|---|
-| `Alt + Tab` | Open window switcher (forward) |
-| `Alt + Shift + Tab` | Open window switcher (reversed) |
-| `Alt + Grave` | Open window switcher (reversed) |
-| `Alt` release | Close switcher, focus selected window |
-| `Shift` release | Close switcher |
+| `Super + arrows` | Move focus to the window in that direction |
+| `Super + 1..0` | Focus a workspace (via `goto-workspace`, which also sets the wallpaper) |
+| `Super + Shift + 1..0` | Move the focused window to a workspace |
 
 ---
 
@@ -679,21 +656,20 @@ The Alt+Tab window switcher is provided by **hyprshell 4.10.7** (GTK4, nixpkgs p
 |---|---|
 | `sudo nixos-rebuild switch --flake .#theConstruct` | Build and switch to new generation |
 | `sudo nixos-rebuild test --flake .#theConstruct` | Test without making permanent |
-| `sudo nixos-rebuild boot --flake .#theConstruct` | Build for next boot only |
+| `sudo nixos-rebuild boot --flake .#theConstruct` | Build and set as boot default, without activating (use for kernel/NVIDIA changes) |
+| `rebuild` / `rebuild-boot` | Aliases for the two above against `$(hostname)` |
+| `os-update-status` | Show an update staged by the weekly check, and whether it needs a reboot |
+| `llama up` / `stop` / `status` / `logs` | Control the local llama.cpp container |
 | `sudo nix-collect-garbage -d` | Clean up old store paths |
 | `nix-env --list-generations -p /nix/var/nix/profiles/system` | List boot entries |
 | `sudo nix-env --delete-generations -p /nix/var/nix/profiles/system <N>` | Remove specific generation |
-| `hyprctl reload` | Reload config (hyprlang only — Lua config needs Super+Shift+R) |
-| `Super + Shift + R` | Re-evaluate the Lua config via `hyprctl eval 'dofile(...)'` (picks up file changes) |
+| `hyprctl reload` | Reload config from disk (re-registers binds cleanly) |
+| `Super + Shift + R` | Same, bound to `hyprctl reload` |
 | `set-wallpaper <path>` | Change wallpaper on every output (hyprpaper 0.8 requires a monitor name; the empty-monitor form is a no-op) |
 | `Super + Shift + W` | Interactive wallpaper picker |
-| `Super + Space` | Wofi app launcher |
-| `Super + Shift + Space` | Fuzzel app launcher |
+| `Super + Space` | Fuzzel app launcher |
 | `Super + L` | Lock screen (`hyprlock`) |
-| `Super + Shift + R` | Reload Lua config via `dofile` |
 | `Super + Shift + S` | Enter resize submap (arrows to resize, Shift+arrows to move, Esc to exit) |
-| `Alt + Tab` | hyprshell window switcher (thumbnails) |
-| `Alt + Grave` | hyprshell switcher (reversed) |
 | `nm-applet` | NetworkManager tray |
 | `blueman-applet` | Bluetooth tray |
 | `hyprshot -m output` | Screenshot full screen |

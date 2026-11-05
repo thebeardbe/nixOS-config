@@ -6,7 +6,7 @@
 --------------------
 local terminal    = "kitty"
 local fileManager = "kitty -e yazi"
-local menu        = "wofi --show drun"
+local menu        = "fuzzel"
 local mainMod     = "SUPER"
 
 
@@ -33,7 +33,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("blueman-applet")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("bash -c 'sleep 2 && packet'")
-    hl.exec_cmd("hyprshell run -c ~/.config/hyprshell/config.toml")
     hl.exec_cmd("bash -c 'sleep 1; set-wallpaper /home/thebeardbe/Pictures/Wallpapers/solid-bg.png; goto-workspace 1'")
 
     -- Autostart programs on all machines (after workspace 1 is ready)
@@ -150,8 +149,9 @@ hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
+-- Launcher: fuzzel. wofi (drun) was removed: it was slower to appear, and the
+-- fuzzel bind that used to sit on Super+Shift+Space now lives on Super+Space.
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + SHIFT + space", hl.dsp.exec_cmd("fuzzel"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 -- togglesplit via hyprctl, not hl.dsp.layout(...): binding the Lua layout
 -- dispatcher registers a __lua dispatcher that never reaches the dwindle
@@ -160,9 +160,9 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.layout("togglesplit")']]))
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 
--- Window switching: hyprshell registers its own Alt+Tab binds natively via IPC
--- (eval hl.dispatch works because Lua config is active)
--- hyprshell run is started in hl.on("hyprland.start") above
+-- Window switching: hyprshell was removed. Its overview opened on the Super
+-- key, so it kept popping up whenever Super was pressed. Window switching is
+-- Super + arrows (movefocus) and Super + 1..0 (workspaces); no Alt+Tab is bound.
 
 -- Menu key → send Super key to Moonlight for remote streaming
 -- Uses wtype to inject a real key event via virtual-keyboard protocol

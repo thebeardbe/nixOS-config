@@ -31,9 +31,7 @@
     hypridle               # Auto-sleep/idle daemon
     hyprshot               # Screenshot tool
     wl-clipboard           # Wayland clipboard (wl-copy/wl-paste for kitty/terminal copy)
-    hyprshell              # GTK4 window switcher with thumbnails (Alt+Tab)
-    wofi                   # Application launcher (Super + Space)
-    fuzzel                 # Application launcher (Super + Shift + Space)
+    fuzzel                 # Application launcher (Super + Space)
     packet                 # Quick Share client for Linux (native Android Quick Share protocol)
     kitty                  # Terminal emulator
     hyprpaper              # Dynamic wallpaper manager

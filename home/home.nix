@@ -4,7 +4,7 @@
   # Import all program/config modules — each one enables+configures a specific tool
   imports = [
      ./modules/yazi.nix       # Terminal file manager
-     ./modules/appearance.nix # GTK/Qt theming, cursor, kitty, wofi
+     ./modules/appearance.nix # GTK/Qt theming, cursor, kitty, fuzzel
      ./modules/hyprlock.nix   # Lockscreen
      ./modules/hypridle.nix   # Auto-sleep / idle management
     ./modules/battery-monitor.nix # Battery alerts at 10% and 5%
@@ -28,7 +28,6 @@
 
   home.file = {
     ".screenrc".source = ./files/screenrc;
-    ".config/hyprshell/config.toml".source = ./files/hyprshell-config.toml;
     ".config/hypr/hyprland.lua".source = ./files/hyprland.lua;
   };
 

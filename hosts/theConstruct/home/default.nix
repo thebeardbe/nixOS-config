@@ -41,6 +41,15 @@
       head -c 48 /dev/urandom | base64 | tr -d '\n' > "$keyFile"
       chmod 600 "$keyFile"
     fi
+
+    # Web UI defaults: pre-fill the UI's API key so the browser never prompts.
+    # Rewritten on every activation so it can never drift from the key (rotation
+    # means deleting the key and rebuilding). Mounted read-only by the compose
+    # file as --ui-config-file, which keeps the value out of the process table
+    # and out of `docker inspect`, unlike an inline --ui-config.
+    mkdir -p "$HOME/.config/llama"
+    printf '{"apiKey":"%s"}\n' "$(cat "$keyFile")" > "$HOME/.config/llama/ui-config.json"
+    chmod 600 "$HOME/.config/llama/ui-config.json"
   '';
 
   # Host-specific Hyprland Lua config (monitors, workspace assignments)

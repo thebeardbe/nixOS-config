@@ -64,41 +64,8 @@
     };
   };
 
-  # 6. Wofi (Application launcher) — themed via central theme.json
-  programs.wofi = {
-    enable = true;
-    style = ''
-      window {
-        background-color: rgba(13, 13, 13, 0.85);
-        color: ${theme.colors.text};
-        font-family: "${theme.font.family}";
-        font-size: 14px;
-        border: 2px solid ${theme.colors.accent};
-        border-radius: 10px;
-        padding: 20px;
-      }
-      #inner-box {
-        background-color: transparent;
-      }
-      #input {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: ${theme.colors.accent};
-        border: 1px solid ${theme.colors.border};
-        margin-bottom: 15px;
-        padding: 10px;
-      }
-      #entry {
-        padding: 10px;
-        border-radius: 5px;
-      }
-      #entry:selected {
-        background-color: ${theme.colors.accent};
-        color: white;
-      }
-    '';
-  };
-
-  # 7. Fuzzel (alternative launcher) — Super+Shift+Space
+  # 6. Fuzzel (application launcher) — Super+Space
+  # wofi/drun was removed: fuzzel appears faster and is the launcher in use.
   xdg.configFile."fuzzel/fuzzel.ini" = {
     enable = true;
     text =

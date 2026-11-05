@@ -84,7 +84,7 @@ with lib;
       mkdir -p "$(dirname "$STATE")"
       [[ -f "$STATE" ]] || echo "{}" > "$STATE"
 
-      NAME=$(find "$WALL" -maxdepth 1 \( -name "solid-bg.png" -prune -o -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) \) | sort | sed 's|^.*/otherland-||; s|\.[^.]*$||; s|-| |g' | wofi --dmenu --prompt "Wallpaper")
+      NAME=$(find "$WALL" -maxdepth 1 \( -name "solid-bg.png" -prune -o -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) \) | sort | sed 's|^.*/otherland-||; s|\.[^.]*$||; s|-| |g' | fuzzel --dmenu --prompt "Wallpaper")
 
       [[ -z "$NAME" ]] && exit 0
 
