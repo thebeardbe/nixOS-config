@@ -24,11 +24,11 @@ import {
 	type ExtensionAPI,
 	getAgentDir,
 	getMarkdownTheme,
-	withFileMutationQueue,
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.ts";
+import { writeAppendedPrompt } from "./prompt.ts";
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
@@ -236,16 +236,6 @@ async function mapWithConcurrencyLimit<TIn, TOut>(
 	return results;
 }
 
-async function writePromptToTempFile(agentName: string, prompt: string): Promise<{ dir: string; filePath: string }> {
-	const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "pi-subagent-"));
-	const safeName = agentName.replace(/[^\w.-]+/g, "_");
-	const filePath = path.join(tmpDir, `prompt-${safeName}.md`);
-	await withFileMutationQueue(filePath, async () => {
-		await fs.promises.writeFile(filePath, prompt, { encoding: "utf-8", mode: 0o600 });
-	});
-	return { dir: tmpDir, filePath };
-}
-
 function getPiInvocation(args: string[]): { command: string; args: string[] } {
 	const currentScript = process.argv[1];
 	const isBunVirtualScript = currentScript?.startsWith("/$bunfs/root/");
@@ -297,7 +287,12 @@ async function runSingleAgent(
 		};
 	}
 
-	const args: string[] = ["--mode", "json", "-p", "--no-session"];
+	// A subagent has one fixed job: discovered skills, slash-command templates and
+	// the global policy are weight it cannot act on (~4300 of the ~4725 tokens a
+	// child used to inherit, measured rather than assumed). Project conventions are
+	// kept because that is where a codebase's own rules live: ./prompt.ts appends
+	// them, which is what makes --no-context-files safe here.
+	const args: string[] = ["--mode", "json", "-p", "--no-session", "--no-skills", "--no-prompt-templates", "--no-context-files"];
 	const inheritsDispatchConfig = !agent.model;
 	const model = agent.profileModel ?? agent.model ?? dispatchDefaults.model;
 	if (model) args.push("--model", model);
@@ -331,10 +326,10 @@ async function runSingleAgent(
 	};
 
 	try {
-		if (agent.systemPrompt.trim()) {
-			const tmp = await writePromptToTempFile(agent.name, agent.systemPrompt);
-			tmpPromptDir = tmp.dir;
-			tmpPromptPath = tmp.filePath;
+		const appended = await writeAppendedPrompt(agent.name, agent.systemPrompt, cwd ?? defaultCwd);
+		if (appended) {
+			tmpPromptDir = appended.dir;
+			tmpPromptPath = appended.filePath;
 			args.push("--append-system-prompt", tmpPromptPath);
 		}
 
