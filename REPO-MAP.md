@@ -21,7 +21,7 @@ theme.json                   # Central design tokens — shared by ALL modules
 │   ├── home.nix             # Entry point
 │   ├── packages.nix         # Shared user packages
 │   ├── files/               # Dotfiles (hyprland.lua, screenrc, llama compose)
-│   └── modules/             # Home-manager modules (14 modules + hyprpaper.conf)
+│   └── modules/             # Home-manager modules (15 modules + hyprpaper.conf)
 ├── hosts/
 │   ├── theConstruct/        # Desktop: AMD Ryzen 5600 + RTX 3060 Ti
 │   │   ├── default.nix      # Host entry
@@ -247,7 +247,6 @@ This module only handles:
   - `dpms-off`: display off, but skips while media is playing (MPRIS via `playerctl`). Currently unused: automatic blanking is disabled (see `hypridle.nix`), turn the screens off by hand
   - `dpms-on`: turn the display back on by hand. It also runs `hyprctl reload` when the outputs are stuck at `0x0`, but that reload does NOT reliably restore the modes (measured), so it is not a repair
   - `resume-guard`: post-resume, enable DPMS and restart hyprlock if it died while holding the lock (nvidia Xid 13 / SIGABRT on resume), so the session is never left locked with no lock surface
-  - `fix-jbl` — JBL Quantum 360X recovery: profile toggle → PipeWire restart → USB reset
 - Deploying the `hyprpaper.conf` (splash only; wallpapers are applied per output by `set-wallpaper` from the Lua autostart and from `goto-workspace`)
 
 #### `home/files/hyprland.lua` — The Main Hyprland Config (Lua)
@@ -283,7 +282,6 @@ Complete Hyprland configuration using the native Lua `hl.*` API. This replaces t
 | `Super + J` | Toggle split direction (needs `dwindle.preserve_split`) |
 | `Super + F` | Fullscreen |
 | `Super + L` | Lock screen (`hyprlock`; idle locking via hypridle, idle DPMS disabled) |
-| `Super + Ctrl + Shift + J` | `fix-jbl` — recover JBL Quantum 360X headset |
 | `Menu` | Inject a real Super keypress via `wtype` (Moonlight streaming; synthetic `send_shortcut` events are ignored by games) |
 | `Super + Shift + W` | Pick wallpaper (fuzzel picker) |
 | `Super + Shift + R` | Reload config: re-runs the file with `dofile` (`hyprctl reload` is a no-op under the Lua provider — measured) |
@@ -315,7 +313,6 @@ pressed. Window switching is `Super + arrows` (movefocus) and `Super + 1..0`.
 - `dpms-off` — display off with media guard, currently unused (see hypridle section)
 - `dpms-on` — turn the display on by hand, plus a config reload when the outputs are stuck at `0x0` that is known not to be reliable (see hypridle section)
 - `resume-guard` — post-resume: enable DPMS, and restart hyprlock if it crashed while holding the lock (see hypridle section)
-- `fix-jbl` — JBL headset recovery (all scripts defined in `home/modules/hyprland.nix`)
 - (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
 
 #### `waybar.nix` — Status Bar
@@ -384,6 +381,33 @@ Otherland-themed lock screen:
 
 #### `secrets.nix` — Secret Option Declarations
 Declares `mySecrets.piAuth` option (nullable string). Values provided by the optional `nix-secrets` flake input.
+
+#### `audio.nix` — JBL USB Headset ALSA Fix
+
+**File:** `home/modules/audio.nix` (home-manager; not the system module `common/modules/audio.nix`)
+
+Deploys `~/.config/wireplumber/wireplumber.conf.d/99-jbl-period.conf`, a WirePlumber
+rule matching `alsa_output.usb-JBL.*` and `alsa_input.usb-JBL.*`:
+
+```conf
+api.alsa.period-size = 1024
+api.alsa.headroom    = 8192
+```
+
+JBL Quantum dongles (360X, 360, 350) open their ALSA node with a 1 ms period
+(48 frames at 48 kHz) on a 32768 frame buffer. PipeWire cannot feed that from a
+1024 frame graph, the stream underruns instantly, `snd_pcm_recover` never restarts
+it, and ALSA stays in XRUN: silence, `snd_pcm_avail after recover: Broken pipe`
+every 2 s, and any player stalling on that device. The rule forces
+`period_size 512` and the device works.
+
+Apply without a reboot with
+`systemctl --user restart wireplumber pipewire pipewire-pulse`.
+Verify with `head -1 /proc/asound/card1/pcm0p/sub0/status` (`RUNNING`, not `XRUN`)
+and `awk '/period_size/{print}' /proc/asound/card1/pcm0p/sub0/hw_params`.
+
+Investigation and evidence live outside the repo in
+`Documents/agent-notes/audio/jbl-quantum-xrun.md`.
 
 #### `battery-monitor.nix` — Battery Alerts
 
@@ -679,7 +703,6 @@ pressed. Switching windows is:
 | `Super + Ctrl + P` | Screenshot active window |
 | `Super + Alt + P` | Screenshot full screen |
 | `Menu` | Inject Super key (Moonlight streaming) |
-| `Super + Ctrl + Shift + J` | `fix-jbl` — JBL Quantum 360X recovery |
 | `unlock-session` | Unlock a logind session stuck after a hyprlock crash (from a free TTY) |
 | `wlogout` | Power menu |
 | `btop` | Resource monitor (click battery in Waybar) |

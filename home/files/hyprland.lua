@@ -234,9 +234,6 @@ bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
 -- repeated reloads do not stack duplicates.
 bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd([[hyprctl eval 'dofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")']]))
 
--- Fix JBL Quantum headset audio (Super + Ctrl + Shift + J)
-bind(mainMod .. " + CTRL + SHIFT + J", hl.dsp.exec_cmd("fix-jbl"))
-
 -- Mouse bindings: move/resize with Super + drag
 bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })

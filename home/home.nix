@@ -7,6 +7,7 @@
      ./modules/appearance.nix # GTK/Qt theming, cursor, kitty, fuzzel
      ./modules/hyprlock.nix   # Lockscreen
      ./modules/hypridle.nix   # Auto-sleep / idle management
+     ./modules/audio.nix      # PipeWire/WirePlumber quirks (JBL USB headsets)
     ./modules/battery-monitor.nix # Battery alerts at 10% and 5%
      ./modules/neovim.nix     # Neovim editor with LSPs
      ./modules/udiskie.nix   # Auto-mount USB/SD/external drives
