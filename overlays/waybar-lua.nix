@@ -20,7 +20,9 @@ in
 {
   waybar =
     if lib.versionOlder super.waybar.version "0.16" then
-      super.waybar.overrideAttrs (old: {
+      # `runTests = false` (not just `doCheck`) so meson drops `-Dtests=` too;
+      # otherwise the configure step still demands catch2 at build time.
+      (super.waybar.override { runTests = false; }).overrideAttrs (old: {
         version = "0.15.0-unstable-2026-10-18";
         src = super.fetchFromGitHub {
           owner = "Alexays";
@@ -35,6 +37,12 @@ in
         mesonFlags = (old.mesonFlags or [ ]) ++ [ "-Dwwan=disabled" "-Dcava=disabled" ];
         # Master still reports `Waybar v0.15.0`, so the version hook cannot match.
         doInstallCheck = false;
+        # Why tests are off (see `runTests = false` above): upstream's
+        # `SleeperThread control flags ...` test spawns a subprocess through a
+        # hardcoded `bash-interactive` path that is not in the build closure, so
+        # it always fails inside the Nix sandbox ("execl(.../bin/sh) failed in
+        # forkExec: No such file or directory"). Upstream test bug, not a
+        # Waybar defect. Revisit when the overlay goes away (waybar >= 0.16).
       })
     else
       super.waybar;

@@ -12,6 +12,12 @@ workspace in the bar, or scrolling on it, does nothing.
 The overlay is version-gated (`lib.versionOlder super.waybar.version "0.16"`), so
 it stops applying automatically once nixpkgs provides a newer Waybar.
 
+The overlay also builds Waybar with `runTests = false`: upstream's
+`SleeperThread control flags are stable under concurrent wake and stop` test
+execs a hardcoded `bash-interactive` path that is not part of the build closure,
+so the suite always fails inside the Nix sandbox. That is an upstream test bug,
+not a Waybar defect; the flag disappears together with this overlay.
+
 To confirm and clean up:
 
 ```bash
