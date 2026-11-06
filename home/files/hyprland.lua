@@ -9,6 +9,20 @@ local fileManager = "kitty -e yazi"
 local menu        = "fuzzel"
 local mainMod     = "SUPER"
 
+-- Reload-safe binding.
+--
+-- `hyprctl reload` does nothing under Hyprland's Lua config manager (measured:
+-- changing an option and reloading leaves it unchanged), so Super+Shift+R has to
+-- re-run this file with `dofile`. Re-running it would stack a duplicate of every
+-- binding, because Hyprland keeps an existing bind instead of replacing it, and
+-- the first match wins - which is exactly how a fixed bind stayed broken while
+-- three copies of it accumulated. Unbinding the combo first makes the re-run
+-- idempotent.
+local function bind(key, dispatcher, opts)
+    hl.unbind(key)
+    hl["bind"](key, dispatcher, opts)
+end
+
 
 ------------------
 ---- MONITORS ----
@@ -144,21 +158,21 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default
 ---- KEYBINDS ----
 -------------------
 -- Basic actions
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + C", hl.dsp.window.close())
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("hyprctl dispatch 'hl.dsp.exit()'"))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
+bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
+bind(mainMod .. " + C", hl.dsp.window.close())
+bind(mainMod .. " + M", hl.dsp.exec_cmd("hyprctl dispatch 'hl.dsp.exit()'"))
+bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
+bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 -- Launcher: fuzzel. wofi (drun) was removed: it was slower to appear, and the
 -- fuzzel bind that used to sit on Super+Shift+Space now lives on Super+Space.
-hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
+bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
+bind(mainMod .. " + P", hl.dsp.window.pseudo())
 -- togglesplit via hyprctl, not hl.dsp.layout(...): binding the Lua layout
 -- dispatcher registers a __lua dispatcher that never reaches the dwindle
 -- layout (silent no-op, no error in the journal), while the identical message
 -- sent through `hyprctl dispatch` works. Requires dwindle.preserve_split.
-hl.bind(mainMod .. " + J", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.layout("togglesplit")']]))
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
+bind(mainMod .. " + J", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.layout("togglesplit")']]))
+bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 
 -- Window switching: hyprshell was removed. Its overview opened on the Super
 -- key, so it kept popping up whenever Super was pressed. Window switching is
@@ -168,69 +182,67 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 -- Uses wtype to inject a real key event via virtual-keyboard protocol
 -- (send_shortcut sends synthetic events that Moonlight ignores)
 -- wtype uses 'logo' for the Super/Windows key
-hl.bind("Menu", hl.dsp.exec_cmd("wtype -M logo -m logo"))
+bind("Menu", hl.dsp.exec_cmd("wtype -M logo -m logo"))
 
 -- Move focus (Vim-style with arrow keys)
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
+bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
+bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
+bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
+bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
 -- Switch to workspace (Super + N) — also sets per-workspace wallpaper
 -- goto-workspace script uses Lua-compatible hyprctl dispatch syntax
 for i = 1, 9 do
-    hl.bind(mainMod .. " + " .. i, hl.dsp.exec_cmd("goto-workspace " .. i))
+    bind(mainMod .. " + " .. i, hl.dsp.exec_cmd("goto-workspace " .. i))
 end
-hl.bind(mainMod .. " + 0", hl.dsp.exec_cmd("goto-workspace 10"))
+bind(mainMod .. " + 0", hl.dsp.exec_cmd("goto-workspace 10"))
 
 -- Move window to workspace (Super + Shift + N)
 for i = 1, 9 do
-    hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 end
-hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }))
+bind(mainMod .. " + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }))
 
 -- Screenshots
-hl.bind("Print",          hl.dsp.exec_cmd("hyprshot -m output"))
-hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("hyprshot -m window"))
-hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"))  -- select area
-hl.bind(mainMod .. " + CTRL + P",  hl.dsp.exec_cmd("hyprshot -m window"))   -- active window
-hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd("hyprshot -m output"))   -- full screen
+bind("Print",          hl.dsp.exec_cmd("hyprshot -m output"))
+bind(mainMod .. " + Print", hl.dsp.exec_cmd("hyprshot -m window"))
+bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"))  -- select area
+bind(mainMod .. " + CTRL + P",  hl.dsp.exec_cmd("hyprshot -m window"))   -- active window
+bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd("hyprshot -m output"))   -- full screen
 
 -- Volume control (repeating for smooth adjustment)
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pamixer -i 5"), { repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pamixer -d 5"), { repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pamixer -t"))
+bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pamixer -i 5"), { repeating = true })
+bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pamixer -d 5"), { repeating = true })
+bind("XF86AudioMute",        hl.dsp.exec_cmd("pamixer -t"))
 
 -- Power button
-hl.bind("XF86PowerOff", hl.dsp.exec_cmd("wlogout"))
+bind("XF86PowerOff", hl.dsp.exec_cmd("wlogout"))
 
 -- Brightness control (repeating for smooth adjustment)
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"), { repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
+bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"), { repeating = true })
+bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
 
 -- Lock screen (hypridle handles idle DPMS via listeners)
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
+bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 
 -- Pick wallpaper (Super + Shift + W)
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
+bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pick-wallpaper"))
 
--- Reload Hyprland config (Super + Shift + R)
--- Use `hyprctl reload`, not `eval dofile(...)`. dofile re-executes the file but
--- hyprland does not replace an existing bind, so every reload stacked another
--- copy of every binding on top of the old one. Since the first match wins, a
--- reload could never apply a fixed bind and duplicates accumulated forever.
--- `hyprctl reload` re-reads the config file and re-registers the binds cleanly
--- (measured: 195 accumulated binds resolve back to the 71 real ones).
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
+-- Reload config (Super + Shift + R)
+-- `hyprctl reload` is a no-op under the Lua config manager, so re-run the file.
+-- Every binding goes through the `bind()` helper above, which unbinds first, so
+-- repeated reloads do not stack duplicates.
+bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd([[hyprctl eval 'dofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")']]))
 
 -- Fix JBL Quantum headset audio (Super + Ctrl + Shift + J)
-hl.bind(mainMod .. " + CTRL + SHIFT + J", hl.dsp.exec_cmd("fix-jbl"))
+bind(mainMod .. " + CTRL + SHIFT + J", hl.dsp.exec_cmd("fix-jbl"))
 
 -- Mouse bindings: move/resize with Super + drag
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Resize mode: Super + Shift + R enters resize submap, arrows resize, Escape exits
+-- Resize mode: Super + Shift + S enters the resize submap, arrows resize,
+-- Shift+arrows move the window, Escape exits.
 -- Factory function creates a fresh dispatcher table each call (required for repeating)
 local function resizeWindow(x, y)
   return function()
@@ -244,20 +256,29 @@ local function moveWin(dir)
   end
 end
 
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.submap("resize"))
-
+-- Submap binds also go through the reload-safe helper, otherwise define_submap
+-- appends nine more copies on every reload (measured: 10 -> 19 -> 28 -> 37).
+-- The catch: unbinding a combo from inside define_submap also removes the
+-- global bind of the same name, and the submap binds its own exit on
+-- Super+Shift+S. So the global entry bind is registered AFTER the submap, which
+-- restores it; the order is what makes both sides idempotent.
 hl.define_submap("resize", function()
-  hl.bind("left",  resizeWindow(-30, 0),  { repeating = true })
-  hl.bind("right", resizeWindow(30, 0),   { repeating = true })
-  hl.bind("up",    resizeWindow(0, -30),  { repeating = true })
-  hl.bind("down",  resizeWindow(0, 30),   { repeating = true })
-  hl.bind("SHIFT + left",  moveWin("l"), { repeating = true })
-  hl.bind("SHIFT + right", moveWin("r"), { repeating = true })
-  hl.bind("SHIFT + up",    moveWin("u"), { repeating = true })
-  hl.bind("SHIFT + down",  moveWin("d"), { repeating = true })
-  hl.bind("escape", hl.dsp.submap("reset"))
-  hl.bind(mainMod .. " + SHIFT + S", hl.dsp.submap("reset"))
+  bind("left",  resizeWindow(-30, 0),  { repeating = true })
+  bind("right", resizeWindow(30, 0),   { repeating = true })
+  bind("up",    resizeWindow(0, -30),  { repeating = true })
+  bind("down",  resizeWindow(0, 30),   { repeating = true })
+  bind("SHIFT + left",  moveWin("l"), { repeating = true })
+  bind("SHIFT + right", moveWin("r"), { repeating = true })
+  bind("SHIFT + up",    moveWin("u"), { repeating = true })
+  bind("SHIFT + down",  moveWin("d"), { repeating = true })
+  bind("escape", hl.dsp.submap("reset"))
+  -- No Super+Shift+S exit here on purpose: hl.unbind ignores the submap context,
+  -- so binding the same combo inside the submap and globally makes the two
+  -- remove each other on every reload. Escape exits; Super+Shift+S re-enters.
 end)
+
+-- Registered after the submap on purpose (see above).
+bind(mainMod .. " + SHIFT + S", hl.dsp.submap("resize"))
 
 
 ----------------------------

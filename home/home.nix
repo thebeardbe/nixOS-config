@@ -1,4 +1,4 @@
-{ config, pkgs, theme, ... }:
+{ config, lib, pkgs, theme, ... }:
 
 {
   # Import all program/config modules — each one enables+configures a specific tool
@@ -28,8 +28,21 @@
 
   home.file = {
     ".screenrc".source = ./files/screenrc;
-    ".config/hypr/hyprland.lua".source = ./files/hyprland.lua;
   };
+
+  # The main Hyprland config is deployed as a real file, not a home-manager
+  # symlink.
+  #
+  # greetd starts Hyprland with `-c ~/.config/hypr/hyprland.lua`, and Hyprland
+  # resolves that symlink once at startup. `hyprctl reload` (Super+Shift+R) then
+  # re-reads the resolved *store path*, so with a symlink it keeps reloading the
+  # generation that was current at login and never sees a rebuilt config - which
+  # makes Super+Shift+R silently useless. A real file keeps the path stable, so a
+  # rebuild followed by a reload picks up the new content.
+  home.activation.deployHyprlandLua = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run rm -f "$HOME/.config/hypr/hyprland.lua"
+    run install -m 0644 ${./files/hyprland.lua} "$HOME/.config/hypr/hyprland.lua"
+  '';
 
   # --- Bash config ---
   programs.bash = {
