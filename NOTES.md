@@ -2,22 +2,6 @@
 
 Deferred work and things to revisit. Remove an item once it is resolved.
 
-## JBL Quantum headsets: confirm the wireplumber ALSA rule on the 350 and on theConstruct
-
-`home/modules/audio.nix` forces `api.alsa.period-size = 1024` and
-`api.alsa.headroom = 8192` for every `usb-JBL*` node, which cured the permanent
-ALSA XRUN on the Quantum 360X under foxyNix. The rule matches by name, so it
-should cover the Quantum 350 (`0ecb:206b`) and theConstruct too, but neither has
-been measured. To confirm, with the headset playing:
-
-```bash
-head -1 /proc/asound/card1/pcm0p/sub0/status                      # expect RUNNING, not XRUN
-awk '/period_size|buffer_size/{print}' /proc/asound/card1/pcm0p/sub0/hw_params
-journalctl --user --since '-2min' | grep -c 'snd_pcm_avail after recover'   # expect 0
-```
-
-Investigation and evidence: `Documents/agent-notes/audio/jbl-quantum-xrun.md`.
-
 ## Waybar overlay — remove when nixpkgs ships waybar >= 0.16
 
 `overlays/waybar-lua.nix` pins Waybar to upstream commit `4e207a0` because the
