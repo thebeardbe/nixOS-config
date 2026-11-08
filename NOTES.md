@@ -84,3 +84,32 @@ To verify per-workspace switching:
 ```bash
 hyprctl hyprpaper listactive   # must name the path expected for that workspace
 ```
+
+## Umbriel trial: nested only, not yet a session
+
+`home/modules/umbriel.nix` installs Umbriel and `trial-umbriel`, and deploys
+`home/files/umbriel/config.toml` (keybinds mirroring `home/files/hyprland.lua`).
+The config is validated at build time by Umbriel's own validator, so a bad
+keybind fails the rebuild.
+
+Measured on theConstruct 2026-11-08, nested under Hyprland via
+`WLR_BACKENDS=wayland`: the whole compositor sits at ~174 MiB RSS versus
+Hyprland's ~220 MiB, with blur and shadows disabled. Nested mode sets `Mod` to
+Alt automatically, which is why the trial cannot collide with Hyprland's Super
+binds. It tracked a real client (`umbriel windows` showed a tiled kitty) and
+reported dwindle workspaces, so compositing is verified, not just started.
+
+Umbriel's docs show action arguments space-separated (`submap resize`), but this
+build requires a colon (`submap:resize`, `window-modify-primary-extent:-0.02`)
+and silently drops the binds otherwise. Trust `umbriel msg --help` over the
+docs, and keep the build-time validation.
+
+Still open, when the trial graduates to a real session: a `wayland-sessions`
+entry for this Hyprland Lua config, tuigreet session selection (tuigreet can list
+sessions itself, so the Noctalia greeter is optional), `pick-wallpaper` needs an
+Umbriel equivalent because it drives hyprpaper, and Hyprland's `pseudo` has no
+Umbriel counterpart.
+
+Unrelated but found here: `hyprshot -m output` hung for ten minutes on
+theConstruct and had to be killed. Worth checking against the Super+Print bind.
+

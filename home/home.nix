@@ -14,6 +14,7 @@
      ./modules/starship.nix   # Shell prompt + Zsh config
      ./packages.nix          # All user packages (apps, fonts, tools)
      ./modules/hyprland.nix   # Window manager + keybinds + hypr ecosystem
+     ./modules/umbriel.nix   # Trial compositor (nested only, Hyprland untouched)
      ./modules/waybar.nix     # Status bar
      ./modules/agent.nix      # Node.js / npm / pi-coding-agent
      ./modules/proton.nix    # Proton CLI (Mail, Drive, Calendar, Contacts) + share wrappers

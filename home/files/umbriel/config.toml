@@ -1,0 +1,117 @@
+# Umbriel trial configuration.
+#
+# Mirrors the keybinds in files/hyprland.lua so the muscle memory carries over,
+# so it is deployed by home/modules/umbriel.nix and validated with
+# `umbriel config validate` at build time.
+#
+# Two deliberate differences from the Hyprland session:
+#   * No `general.mod_key`. Umbriel then uses Super on a real (DRM) session and
+#     Alt when it runs nested in another desktop, which is exactly what the
+#     nested trial needs: Alt cannot collide with Hyprland's Super binds.
+#   * Effects are off. Blur and shadows are the parts that cost an iGPU, and the
+#     point of the trial on foxyNix is to measure without them first.
+#
+# Defining [keybinds] replaces the built-in bind set, so every bind that should
+# work is listed here.
+
+[include]
+files = []
+
+[include.optional]
+files = []
+
+[general]
+# The Hyprland autostart block (kitty, yazi, btop, signal, firefox) is
+# Hyprland-only: a second copy of them inside the trial would be noise.
+autostart = []
+xwayland = true
+
+[appearance.blur]
+enabled = false
+
+[appearance.shadow]
+enabled = false
+
+# Hyprland runs dwindle here, so start Umbriel in the same layout family.
+[layout]
+mode = "dwindle"
+
+[layout.dwindle]
+# Same reason as the Hyprland config: without this, toggling split resets the
+# orientation of the parent node.
+preserve_split = true
+
+[input.keyboard]
+numlock_toggle = true
+
+[keybinds]
+# --- applications and session ---------------------------------------------
+"Mod+Q" = { action = "spawn:kitty", repeat = false }
+"Mod+C" = { action = "window-close", repeat = false }
+"Mod+M" = { action = "session-quit", repeat = false }
+"Mod+E" = { action = "spawn:kitty -e yazi", repeat = false }
+"Mod+Space" = { action = "spawn:fuzzel", repeat = false }
+"Mod+V" = { action = "window-toggle-floating", repeat = false }
+"Mod+F" = { action = "window-toggle-fullscreen", repeat = false }
+"Mod+J" = { action = "layout-toggle-split", repeat = false }
+"Mod+L" = { action = "spawn:hyprlock", repeat = false }
+"Mod+Shift+W" = { action = "spawn:pick-wallpaper", repeat = false }
+"Menu" = { action = "spawn:wtype -M logo -m logo", repeat = false }
+
+# --- focus ----------------------------------------------------------------
+"Mod+Left" = "window-focus-left"
+"Mod+Right" = "window-focus-right"
+"Mod+Up" = "window-focus-up"
+"Mod+Down" = "window-focus-down"
+
+# --- workspaces (Hyprland uses 1..9 plus 0 for the tenth) ------------------
+"Mod+1" = "workspace-switch:1"
+"Mod+2" = "workspace-switch:2"
+"Mod+3" = "workspace-switch:3"
+"Mod+4" = "workspace-switch:4"
+"Mod+5" = "workspace-switch:5"
+"Mod+6" = "workspace-switch:6"
+"Mod+7" = "workspace-switch:7"
+"Mod+8" = "workspace-switch:8"
+"Mod+9" = "workspace-switch:9"
+"Mod+0" = "workspace-switch:10"
+"Mod+Shift+1" = "window-move-to-workspace:1"
+"Mod+Shift+2" = "window-move-to-workspace:2"
+"Mod+Shift+3" = "window-move-to-workspace:3"
+"Mod+Shift+4" = "window-move-to-workspace:4"
+"Mod+Shift+5" = "window-move-to-workspace:5"
+"Mod+Shift+6" = "window-move-to-workspace:6"
+"Mod+Shift+7" = "window-move-to-workspace:7"
+"Mod+Shift+8" = "window-move-to-workspace:8"
+"Mod+Shift+9" = "window-move-to-workspace:9"
+"Mod+Shift+0" = "window-move-to-workspace:10"
+
+# --- screenshots (same hyprshot commands the Lua config runs) ---------------
+"Print" = { action = "spawn:hyprshot -m output", repeat = false }
+"Mod+Print" = { action = "spawn:hyprshot -m window", repeat = false }
+"Mod+Shift+P" = { action = "spawn:hyprshot -m region", repeat = false }
+"Mod+Ctrl+P" = { action = "spawn:hyprshot -m window", repeat = false }
+"Mod+Alt+P" = { action = "spawn:hyprshot -m output", repeat = false }
+
+# --- media, volume, brightness: same tools as today -----------------------
+"XF86AudioRaiseVolume" = "spawn:pamixer -i 5"
+"XF86AudioLowerVolume" = "spawn:pamixer -d 5"
+"XF86AudioMute" = { action = "spawn:pamixer -t", repeat = false }
+"XF86MonBrightnessUp" = "spawn:brightnessctl set 5%+"
+"XF86MonBrightnessDown" = "spawn:brightnessctl set 5%-"
+"XF86PowerOff" = { action = "spawn:wlogout", repeat = false }
+
+# --- resize submap, the equivalent of Hyprland's "resize" submap -----------
+# Actions take their argument after a colon (`submap:resize`,
+# `window-modify-primary-extent:-0.02`). The docs still show the older
+# space-separated form, which this build rejects; the validator caught it.
+"Mod+Shift+S" = { action = "submap:resize", repeat = false }
+"submap[resize],Left" = "window-modify-primary-extent:-0.02"
+"submap[resize],Right" = "window-modify-primary-extent:+0.02"
+"submap[resize],Up" = "window-modify-secondary-extent:-0.02"
+"submap[resize],Down" = "window-modify-secondary-extent:+0.02"
+"submap[resize],Shift+Left" = "column-move-left"
+"submap[resize],Shift+Right" = "column-move-right"
+"submap[resize],Shift+Up" = "window-move-up"
+"submap[resize],Shift+Down" = "window-move-down"
+"submap[resize],Escape" = "submap:reset"
