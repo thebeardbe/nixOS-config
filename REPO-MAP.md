@@ -655,7 +655,7 @@ The Hyprland config is written in **Lua** (`home/files/hyprland.lua`) using the 
 1. `greetd` launches `Hyprland -c ~/.config/hypr/hyprland.lua` (set in `common/modules/greetd.nix`)
 2. The Lua config loads and calls `hl.monitor()`, `hl.config()`, `hl.bind()`, etc.
 3. At the top of the main Lua file, it loads host-specific overrides with `dofile("~/.config/hypr/host.lua")`
-4. `~/.config/hypr/hyprland.lua` is deployed as a **real file** (copied by a home-manager activation), not a store symlink: Hyprland resolves the `-c` path once at startup, so a symlink would pin it to the generation that was current at login
+4. `~/.config/hypr/hyprland.lua` is deployed as a **real file** (copied by a home-manager activation), not a store symlink: Hyprland resolves the `-c` path once at startup, so a symlink would pin it to the generation that was current at login. The copy is written to a sibling temp file and renamed over the target, because Hyprland reloads when the file changes: a delete-then-install left a window where the path did not exist and the on-screen config-error banner reported `cannot open .../hyprland.lua` during rebuilds
 5. `hyprctl reload` is a **no-op** with the Lua config provider (measured: an option change survives a reload unchanged), so `Super+Shift+R` re-runs the file with `dofile`. Every binding goes through a `bind()` helper that calls `hl.unbind(key)` first, which is what keeps repeated reloads idempotent (Hyprland keeps an existing bind instead of replacing it, and the first match wins). Submap binds use the helper too, but their global entry key is registered *after* `define_submap`, because `hl.unbind` ignores the submap context and the two would otherwise remove each other
 
 ---

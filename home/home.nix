@@ -40,9 +40,17 @@
   # generation that was current at login and never sees a rebuilt config - which
   # makes Super+Shift+R silently useless. A real file keeps the path stable, so a
   # rebuild followed by a reload picks up the new content.
+  #
+  # The swap must be atomic: Hyprland reloads when the file changes, so the old
+  # delete-then-install left a window in which the path did not exist and the
+  # compositor printed "cannot open .../hyprland.lua: No such file or directory"
+  # in its on-screen config-error banner (2026-11-08 09:27:50, the same second
+  # home-manager activated this hook). A sibling temp file renamed over the target
+  # means the path always holds either the old or the new content.
   home.activation.deployHyprlandLua = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run rm -f "$HOME/.config/hypr/hyprland.lua"
-    run install -m 0644 ${./files/hyprland.lua} "$HOME/.config/hypr/hyprland.lua"
+    run mkdir -p "$HOME/.config/hypr"
+    run install -m 0644 ${./files/hyprland.lua} "$HOME/.config/hypr/.hyprland.lua.new"
+    run mv -f "$HOME/.config/hypr/.hyprland.lua.new" "$HOME/.config/hypr/hyprland.lua"
   '';
 
   # --- Bash config ---
