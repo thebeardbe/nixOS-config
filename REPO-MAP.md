@@ -244,7 +244,7 @@ This module only handles:
 - Defining the `hyprland-session.target` user target (waybar, hypridle, … bind to it)
 - Deploying helper scripts via `writeShellScriptBin` (available on PATH):
   - `goto-workspace` / `pick-wallpaper` — per-workspace wallpaper switching
-  - `dpms-off`: display off, but skips while media is playing (MPRIS via `playerctl`). Currently unused: automatic blanking is disabled (see `hypridle.nix`), turn the screens off by hand
+  - `dpms-off`: display off, but skips while media is playing (MPRIS via `playerctl`). Used by foxyNix's idle listener (blank at 5.5 min); theConstruct has no idle blanking (see `hypridle.nix`), turn the screens off by hand there
   - `dpms-on`: turn the display back on by hand. It also runs `hyprctl reload` when the outputs are stuck at `0x0`, but that reload does NOT reliably restore the modes (measured), so it is not a repair
   - `resume-guard`: post-resume, enable DPMS and restart hyprlock if it died while holding the lock (nvidia Xid 13 / SIGABRT on resume), so the session is never left locked with no lock surface
 - Deploying the `hyprpaper.conf` (splash only; wallpapers are applied per output by `set-wallpaper` from the Lua autostart and from `goto-workspace`)
@@ -310,7 +310,7 @@ pressed. Window switching is `Super + arrows` (movefocus) and `Super + 1..0`.
 **Custom Scripts:**
 - `goto-workspace` — Changes workspace AND sets a random per-workspace wallpaper (cached in `~/.cache/workspace-wallpapers`)
 - `pick-wallpaper` — Wofi-based wallpaper picker, shows cleaned-up names (strips "otherland-" prefix), saves per-workspace
-- `dpms-off` — display off with media guard, currently unused (see hypridle section)
+- `dpms-off` — display off with media guard, bound to foxyNix's idle listener only (see hypridle section)
 - `dpms-on` — turn the display on by hand, plus a config reload when the outputs are stuck at `0x0` that is known not to be reliable (see hypridle section)
 - `resume-guard` — post-resume: enable DPMS, and restart hyprlock if it crashed while holding the lock (see hypridle section)
 - (no dedicated lock script — `loginctl lock-session` + hypridle `lock_cmd` handles everything)
@@ -352,7 +352,7 @@ Otherland-themed lock screen:
 - 5 min inactivity → `loginctl lock-session` → D-Bus lock → `lock_cmd` runs hyprlock
 - The lock listener deliberately has **no** `ignore_inhibit`: hypridle skips an inhibited listener, so a game or a video holds the idle lock off instead of being interrupted. `Super+L` and the lock-before-suspend path still lock on demand
 - **No idle-suspend listener.** Suspend is manual only (`systemctl suspend`). The GPU half is fixed (`powerManagement.enable` removed the `NVRM: Xid 13` errors and black screens), but every resume so far has come back with `hyprctl -j devices` empty, the same libseat/logind seat-toggle bug as a VT switch, so an unattended auto-suspend would leave the machine unusable
-- **The 5.5 min (330s) `dpms-off` listener is disabled.** Measured: a SHORT `hl.dsp.dpms()` off/on cycle is harmless, but a LONG off (around 10 minutes, long enough for the monitors to power down for real) leaves both outputs at `0x0` on wake (`failed to commit: Invalid argument`). hyprlock then only receives zero-size configures, so it holds the lock and draws nothing and the screen looks frozen. `hyprctl reload` does NOT reliably restore those modes, so there is no safe automatic repair. Prefer the monitor's own power button over `dpms-off`
+- **The 5.5 min (330s) `dpms-off` listener is disabled in the shared config.** Measured on theConstruct: a SHORT `hl.dsp.dpms()` off/on cycle is harmless, but a LONG off (around 10 minutes, long enough for the monitors to power down for real) leaves both outputs at `0x0` on wake (`failed to commit: Invalid argument`). hyprlock then only receives zero-size configures, so it holds the lock and draws nothing and the screen looks frozen. `hyprctl reload` does NOT reliably restore those modes, so there is no safe automatic repair. Prefer the monitor's own power button over `dpms-off`. **foxyNix overrides the listener list** (`hosts/foxyNix/home/default.nix`) to lock at 5 min and blank at 5.5 min: 15 minutes of DPMS off on its single Intel eDP panel came back at 1920x1080@59.997, and resuming input re-enabled the panel through `on-resume = dpms-on` (measured 2026-11-08). theConstruct keeps manual blanking
 - `dpms-off` still checks `playerctl` first — if media is Playing it exits without touching the display
 - Manual `Super+L` → runs `hyprlock` directly (no logind roundtrip)
 - Before suspend → `loginctl lock-session`; after resume → `resume-guard`, which enables DPMS and restarts hyprlock if it died while holding the lock (nvidia `Xid 13` on resume made hyprlock SIGABRT at `hyprlock.cpp:414` and left Hyprland locked with no lock surface)

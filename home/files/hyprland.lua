@@ -222,7 +222,8 @@ bind("XF86PowerOff", hl.dsp.exec_cmd("wlogout"))
 bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 5%+"), { repeating = true })
 bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
 
--- Lock screen (hypridle handles idle DPMS via listeners)
+-- Lock screen on demand (idle locking and, on foxyNix only, idle blanking come
+-- from hypridle listeners; theConstruct has no idle dpms-off listener)
 bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 
 -- Pick wallpaper (Super + Shift + W)

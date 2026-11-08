@@ -15,7 +15,7 @@
         after_sleep_cmd = "resume-guard";
       };
 
-      # No dpms-off listener on purpose. Measured on this machine: a SHORT
+      # No dpms-off listener here on purpose. Measured on theConstruct: a SHORT
       # hl.dsp.dpms() off/on cycle is harmless, but a LONG off (around 10 minutes,
       # long enough for the monitors to actually power down) leaves both outputs
       # at 0x0 on wake ("failed to commit: Invalid argument"). hyprlock then only
@@ -23,6 +23,11 @@
       # screen looks frozen and cannot be unlocked. hyprctl reload does NOT restore
       # the modes, so there is no safe automatic repair and no automatic blanking.
       # Turn the screens off by hand instead.
+      #
+      # foxyNix replaces this whole `listener` list (hosts/foxyNix/home/default.nix)
+      # to lock and then blank its single Intel eDP panel: 15 minutes of DPMS off
+      # there came back at the correct mode, so the 0x0 failure did not reproduce.
+      # Revert that override if the panel ever comes back black.
       #
       # Separately, a VT switch toggles the libseat/logind seat and the session can
       # come back holding no input devices at all (hyprctl -j devices empty). That
