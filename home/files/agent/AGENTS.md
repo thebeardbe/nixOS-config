@@ -210,3 +210,36 @@ Details: `session-hygiene` skill.
 - Admit and fix mistakes plainly. Surface uncertainty; ask when a choice
   materially changes the outcome.
 - On handoff: what changed, how to run it, the manual test plan, known gaps.
+
+## 14. Durable memory: `agent-notes` is the universal memory
+
+Anything worth remembering after this session ends goes into
+`~/Documents/agent-notes/`, which is a git repository synced through the private
+git server. It is the same repository on foxyNix and on theConstruct, so a fact
+learned on one machine is available on the other, and on every machine after a
+clone.
+
+- **The session is not storage.** A finding, a measurement, a decision or a dead
+  end that took real effort is written to `agent-notes` in the session that
+  produced it, while the evidence is still in front of you. Never rely on
+  `/compact`, on a summary, or on the next session rediscovering it.
+- **Before working in a known area**, `git pull` and read the topic `README.md`,
+  then the note it points at, in full. The notes exist so the same hours are not
+  spent twice.
+- **After a work item**, commit and push with a descriptive message, so the other
+  machine starts from the same state. Pull first if you have been idle a while.
+- **Follow that repository's own `AGENTS.md`** for note style: dated facts, how
+  each was verified ("measured", "user reported"), corrections marked as
+  corrections, history never deleted, relative markdown links.
+- **One directory per topic**, each with a `README.md` index. Add to the note that
+  covers the finding instead of starting another file; create a new topic only
+  when no existing one fits.
+- **Never write secrets there.** No passwords, tokens, keys, `.env` values or
+  private URLs. The repository is cloned read-only over plain HTTP on the LAN and
+  the tailnet, and it syncs to a server.
+- **Cross-reference both ways.** When a decision is recorded in code or in
+  `REPO-MAP.md`, link the note; when a note depends on a file in a repo, name the
+  path.
+
+Connection details: `ssh://sellars-git/srv/git/agent-notes.git` (SSH, read/write,
+key `~/.ssh/sellars`), `http://<sellars>:8082/git/agent-notes.git` (read-only).
