@@ -79,6 +79,15 @@
         hostname = "github.com";
         identityFile = "~/.ssh/github";
       };
+      # Private git server on sellars (sellars:~/Docker/git-server). SSH only for
+      # read/write; HTTP on port 8082 is read-only. Remotes look like:
+      #   ssh://sellars-git/srv/git/<repo>.git
+      "sellars-git" = {
+        hostname = "sellars";
+        user = "git";
+        port = 2222;
+        identityFile = "~/.ssh/sellars";
+      };
     };
   };
 
