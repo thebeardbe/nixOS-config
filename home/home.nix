@@ -88,6 +88,14 @@
         port = 2222;
         identityFile = "~/.ssh/sellars";
       };
+      # Plain shell on the same machine (hostname pop-os): the same key is
+      # authorized for both, so this needs no password once ~/.ssh/sellars is in
+      # place. Used for inspecting the git-server compose stack in ~/Docker.
+      "sellars" = {
+        hostname = "sellars";
+        user = "thebeardbe";
+        identityFile = "~/.ssh/sellars";
+      };
     };
   };
 
