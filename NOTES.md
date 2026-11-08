@@ -2,6 +2,36 @@
 
 Deferred work and things to revisit. Remove an item once it is resolved.
 
+## Declare the sellars key path on foxyNix
+
+The sellars SSH entries live in the shared `home/home.nix` with `hostname`, `user`
+and `port` only; `identityFile` moved to each host's home config, because a key
+path is local state on one machine. theConstruct declares `~/.ssh/sellars`.
+
+foxyNix declares nothing yet: it reaches sellars with its own key (authorized on
+the server as `thebeardbe@foxyNix->sellars`), but that file's name on this machine
+was never recorded, so guessing a path would risk a config that points at nothing.
+Until it is set, `ssh sellars` on foxyNix falls back to the agent and the default
+`~/.ssh/id_*` names, then to a password prompt, so nothing is broken, just
+unconfigured.
+
+To resolve, on foxyNix find the key whose public comment matches:
+
+```bash
+grep -l 'foxyNix->sellars' ~/.ssh/*.pub
+```
+
+Then add to `hosts/foxyNix/home/default.nix`, replacing the comment there:
+
+```nix
+programs.ssh.settings = {
+  "sellars-git".identityFile = "~/.ssh/<that file>";
+  "sellars".identityFile = "~/.ssh/<that file>";
+};
+```
+
+Verify with `ssh -G sellars | grep identityfile` and `ssh sellars hostname`.
+
 ## Waybar overlay — remove when nixpkgs ships waybar >= 0.16
 
 `overlays/waybar-lua.nix` pins Waybar to upstream commit `4e207a0` because the

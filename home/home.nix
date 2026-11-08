@@ -66,6 +66,11 @@
   services.ssh-agent.enable = true;
 
   # --- SSH config ---
+  # Split by what is shared: hostname/user/port describe how to reach a machine
+  # and are true for every host in this flake, so they are declared here. A key
+  # path is local state on one machine, so `identityFile` is declared in each
+  # host's home config (hosts/<host>/home/default.nix) instead of assuming the
+  # same file exists everywhere.
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
@@ -74,7 +79,9 @@
       "*" = {
         addKeysToAgent = "yes";
       };
-      # GitHub-specific: use the dedicated GitHub SSH key
+      # GitHub-specific: use the dedicated GitHub SSH key. Kept here because both
+      # machines have always carried the key at this exact path; if that stops
+      # being true, move it out the same way as the sellars entries below.
       "github.com" = {
         hostname = "github.com";
         identityFile = "~/.ssh/github";
@@ -86,15 +93,13 @@
         hostname = "sellars";
         user = "git";
         port = 2222;
-        identityFile = "~/.ssh/sellars";
       };
       # Plain shell on the same machine (hostname pop-os): the same key is
-      # authorized for both, so this needs no password once ~/.ssh/sellars is in
-      # place. Used for inspecting the git-server compose stack in ~/Docker.
+      # authorized for both. Used for inspecting the git-server compose stack in
+      # ~/Docker.
       "sellars" = {
         hostname = "sellars";
         user = "thebeardbe";
-        identityFile = "~/.ssh/sellars";
       };
     };
   };

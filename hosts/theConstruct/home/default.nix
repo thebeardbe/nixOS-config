@@ -3,6 +3,16 @@
     ./packages.nix
   ];
 
+  # Key path for the sellars entries declared in the shared home/home.nix. The
+  # dedicated key was generated on this host and authorized for both the git
+  # service (port 2222) and the shell (port 22), see
+  # ~/Documents/agent-notes/homelab/git-server.md. The path is host-local state,
+  # which is why it is set here and not in the shared module.
+  programs.ssh.settings = {
+    "sellars-git".identityFile = "~/.ssh/sellars";
+    "sellars".identityFile = "~/.ssh/sellars";
+  };
+
   # Smaller GTK font for the ultrawide (affects Firefox UI, etc.)
   gtk.font = lib.mkForce {
     name = "FiraCode Nerd Font";

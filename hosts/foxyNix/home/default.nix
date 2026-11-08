@@ -4,6 +4,14 @@
     ./packages.nix
   ];
 
+  # The sellars entries in the shared home/home.nix deliberately carry no
+  # identityFile: a key path is local to one machine. This host reaches sellars
+  # with its own key (authorized on the server as thebeardbe@foxyNix->sellars),
+  # but its file name here was never recorded, so nothing is declared rather than
+  # guessing a path that may not exist. Until it is set, ssh falls back to the
+  # agent and the default ~/.ssh/id_* names, then to a password prompt. See
+  # NOTES.md, "Declare the sellars key path on foxyNix".
+
   # Host-specific Hyprland Lua config (touchpad settings)
   home.file.".config/hypr/host.lua".source = ./hypr-host.lua;
 
