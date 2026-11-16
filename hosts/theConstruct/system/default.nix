@@ -5,6 +5,7 @@
     ./gpu.nix
     ./steam.nix
     ./llama.nix
+    ./party.nix
     # Future: ./audio.nix, ./boot.nix, etc.
   ];
 
@@ -44,6 +45,17 @@
 
   # Filesystem support for storage drives (exfat + NTFS via the kernel ntfs3 driver)
   boot.supportedFilesystems = [ "exfat" "ntfs3" ];
+
+  # Firewall: the local LAN is trusted outright. enp8s0 is the party LAN NIC
+  # (192.168.100.0/24) and the rigs need whatever port a game server decides to
+  # use (scoreboard 3000, UT 7777, DDNet 8303, SuperTuxKart 2757, Trackmania
+  # 2350, plus the query and RCON ports), so the interface is trusted instead of
+  # keeping an allow-list that breaks whenever a server changes.
+  # trustedInterfaces is honoured by both firewall backends; the nftables-only
+  # extraInputRules is silently ignored by the classic one, which is why it is
+  # not used here. Everything arriving on any other interface (tailscale0, the
+  # docker bridges, a USB tether) stays filtered and uses the port lists below.
+  networking.firewall.trustedInterfaces = [ "enp8s0" ];
 
   # Firewall: Packet (Quick Share with Android) — per GitHub issues: 9300/tcp, 5353/udp (mDNS), 5355/udp (LLMNR)
   networking.firewall.allowedTCPPorts = [ 9300 27000 27001 27002 27003 27004 27005 27006 27007 27008 27009 ];

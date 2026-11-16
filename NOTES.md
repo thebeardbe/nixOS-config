@@ -113,3 +113,42 @@ Umbriel counterpart.
 Unrelated but found here: `hyprshot -m output` hung for ten minutes on
 theConstruct and had to be killed. Worth checking against the Super+Print bind.
 
+
+## Disk filled, and the GC policy that allowed it (2026-11-09)
+
+The weekly `nix-flake-update.service` committed its lock bump at 05:26, spent 14
+minutes and 23 GB of writes rebuilding kernel 6.18.62 plus the NVIDIA modules,
+then died at 05:40 with `No space left on device`. A manual rebuild failed the
+same way twice more, once in CMake's tmp dir and once while linking `nvidia.ko`.
+Root filesystem was 99% full with a 102 GB store. A plain
+`nix-collect-garbage --delete-older-than 30d` freed 49 GB.
+
+Why it got there:
+
+- `nix.gc.options` defaults to `""` upstream, so the daily GC only removes
+  unreachable paths and **never deletes a generation**. All pruning depended on
+  the tiered script.
+- That script kept 1 generation per month for **six** months on top of a week of
+  dailies and four weeklies. Every generation is a full closure with Steam, OBS,
+  CUDA and the NVIDIA module tree, so ~15 generations is around 100 GB.
+- It hid its own failures: `nix-env --delete-generations … 2>/dev/null || true`
+  and `nix-collect-garbage 2>/dev/null || true`, and it only ever looked at the
+  system profile.
+- It also passed `id -un` into a per-user profile path, but the unit runs as
+  root, so that always resolved to `root`.
+
+Now: keep 3 days, 1 per week for 4 weeks, 1 per month for 3 months, hard cap 10
+generations, plus a **20 GiB free-space floor** that deletes the oldest
+non-current generation until it is met. The timer runs daily rather than weekly,
+because a weekly floor cannot save the machine from a fill that happens on a
+Tuesday. Errors go to the journal; nothing is swallowed. Retention numbers are
+`let` bindings at the top of `common/modules/nix-gc.nix`.
+
+Considered and rejected: letting `nix.gc.options = "--delete-older-than 30d"`
+replace the tiered script entirely. Simpler, but it drops every rollback older
+than a month, and the point of the tiering is keeping one old system to fall
+back on.
+
+Lesson for future rebuilds on this host: a kernel or NVIDIA change builds both
+from source and needs roughly 20 GB of scratch space on top of the closure.
+Check `df -h /` before starting one.
